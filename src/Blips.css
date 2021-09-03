@@ -1,0 +1,9 @@
+.blips {
+  display: flex;
+  justify-content: space-between;
+}
+
+.list-group {
+  border-width: 2px;
+  border-color: red;
+}
