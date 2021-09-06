@@ -9,16 +9,16 @@ const baseUrl = process.env.REACT_APP_DATABASE_URL;
 class App extends React.Component {
   constructor(props) {
     super(props);
-    
+
     this.handleParamsChange = this.handleParamsChange.bind(this);
     this.handleBlipsChange = this.handleBlipsChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    
+
     this.state = {
       parameters: [],
       blips: {
-        list1: [],
-        list2: [],
+        droppable1: [],
+        droppable2: [],
       },
     };
   }
@@ -69,12 +69,12 @@ class App extends React.Component {
         <Parameters
           onParamsChange={this.handleParamsChange}
           parameters={this.state.parameters}
-          baseUrl={baseUrl} 
+          baseUrl={baseUrl}
         />
         <Blips
           onBlipsChange={this.handleBlipsChange}
           blips={this.state.blips}
-          baseUrl={baseUrl} 
+          baseUrl={baseUrl}
         />
         <Submit
           onSubmit={this.handleSubmit}
