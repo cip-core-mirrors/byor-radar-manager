@@ -4,6 +4,6 @@
 }
 
 .list-group {
-  border-width: 2px;
-  border-color: red;
+  max-height: 75vh;
+  overflow-y: scroll;
 }
