@@ -15,8 +15,7 @@ class Blips extends React.Component {
         this.newRing = this.newRing.bind(this);
         this.getList = this.getList.bind(this);
 
-        this.lists = {};
-        Object.assign(this.lists, this.props.blips);
+        this.lists = Array.from(this.props.blips);
     }
 
     handleChange() {
@@ -26,16 +25,23 @@ class Blips extends React.Component {
     async componentDidMount() {
         const response = await fetch(`${this.props.baseUrl}/blips`);
         const data = await response.json();
-        this.lists.droppable0[0] = Object.values(data).flat();
+        this.lists[0] = [Object.values(data).flat()];
+
+        const firstSector = [];
+        const firstRing = [];
+        firstSector.push(firstRing);
+        this.lists.push(firstSector);
+
         this.handleChange();
     }
 
     getList = (droppableId) => {
         const delimiter = '-';
         const delimiterIndex = droppableId.indexOf(delimiter);
+        const sectorIndex = parseInt(droppableId.substring(0, delimiterIndex));
         const ringIndex = parseInt(droppableId.substring(delimiterIndex + 1));
 
-        return this.lists[droppableId.substring(0, delimiterIndex)][ringIndex];
+        return this.lists[sectorIndex][ringIndex];
     }
 
     // a little function to help us with reordering the result
@@ -78,16 +84,21 @@ class Blips extends React.Component {
     };
 
     newSector(event) {
+        const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
+        const index = parseInt(targetId.substring('new-sector-'.length));
+
         const sector = [];
         sector.push([]);
-        this.lists[`droppable${Object.keys(this.lists).length}`] = sector;
+        this.lists.splice(index + 1, 0, sector);
+
         this.handleChange();
     }
 
     newRing(event) {
         const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
-        const index = targetId.substring('new-ring-'.length);
-        this.lists[`droppable${index}`].push([]);
+        const index = parseInt(targetId.substring('new-ring-'.length));
+        this.lists[index].push([]);
+
         this.handleChange();
     }
 
@@ -129,10 +140,10 @@ class Blips extends React.Component {
             <div className="blips">
                 <DragDropContext onDragEnd={this.onDragEnd}>
                     {
-                        Object.entries(this.lists).map(function(entry, indexSector) {
-                            return <div className="list-grid" key={entry[0]}>
+                        this.lists.map(function(sector, indexSector) {
+                            return <div className="list-grid" key={indexSector}>
                                 {
-                                    entry[0] === 'droppable0' ?
+                                    indexSector === 0 ?
                                         <span className="blips-list-label">All blips</span>
                                         :
                                         <button
@@ -145,13 +156,13 @@ class Blips extends React.Component {
                                         </button>
                                 }
                                 {
-                                    entry[1].map(function(ring, indexRing) {
-                                        return <Droppable droppableId={`${entry[0]}-${indexRing}`} key={indexRing}>
+                                    sector.map(function(ring, indexRing) {
+                                        return <Droppable droppableId={`${indexSector}-${indexRing}`} key={indexRing}>
                                             {(provided, snapshot) => (
                                                 <ul
                                                     ref={provided.innerRef}
                                                     style={getListStyle(snapshot.isDraggingOver)}
-                                                    className={`list-group ${entry[0] === 'droppable0' ? 'blip-list' : ''}`}>
+                                                    className={`list-group ${indexSector === 0 ? 'blip-list' : ''}`}>
                                                     {ring.map(function(item, index) {
                                                             return <Draggable
                                                                 key={item.id_version}
@@ -181,7 +192,7 @@ class Blips extends React.Component {
                                     })
                                 }
                                 {
-                                    entry[0] === 'droppable0' ? <div /> :
+                                    indexSector === 0 ? <div /> :
                                         <button
                                             className="btn btn-lg btn-flat-primary new-ring-btn"
                                             id={`new-ring-${indexSector}`}
