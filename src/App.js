@@ -17,8 +17,12 @@ class App extends React.Component {
     this.state = {
       parameters: [],
       blips: {
-        droppable1: [],
-        droppable2: [],
+        droppable0: [
+            [],
+        ],
+        droppable1: [
+            [],
+        ],
       },
     };
   }
