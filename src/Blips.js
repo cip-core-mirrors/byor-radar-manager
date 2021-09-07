@@ -140,21 +140,9 @@ class Blips extends React.Component {
             <div className="blips">
                 <DragDropContext onDragEnd={this.onDragEnd}>
                     {
-                        this.lists.map(function(sector, indexSector) {
+                        this.lists.slice(0, 1).map(function(sector, indexSector) {
                             return <div className="list-grid" key={indexSector}>
-                                {
-                                    indexSector === 0 ?
-                                        <span className="blips-list-label">All blips</span>
-                                        :
-                                        <button
-                                            className="btn btn-lg btn-flat-primary new-sector-btn"
-                                            id={`new-sector-${indexSector}`}
-                                            onClick={parent.newSector}
-                                        >
-                                            <i className="icon icon-md">add</i>
-                                            <span className="new-sector-btn-label">New sector</span>
-                                        </button>
-                                }
+                                <span className="blips-list-label">All blips</span>
                                 {
                                     sector.map(function(ring, indexRing) {
                                         return <Droppable droppableId={`${indexSector}-${indexRing}`} key={indexRing}>
@@ -162,7 +150,57 @@ class Blips extends React.Component {
                                                 <ul
                                                     ref={provided.innerRef}
                                                     style={getListStyle(snapshot.isDraggingOver)}
-                                                    className={`list-group ${indexSector === 0 ? 'blip-list' : ''}`}>
+                                                    className="list-group blip-list">
+                                                    {ring.map(function(item, index) {
+                                                        return <Draggable
+                                                            key={item.id_version}
+                                                            draggableId={item.id_version}
+                                                            index={index}
+                                                            className="list-group-item list-group-item-action border-light">
+                                                            {(provided, snapshot) => (
+                                                                <li
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}
+                                                                    style={getItemStyle(
+                                                                        snapshot.isDragging,
+                                                                        provided.draggableProps.style
+                                                                    )}>
+                                                                    <span className="text-large font-weight-medium">{item.id.substring(0, item.id.lastIndexOf('-'))}</span><br/>
+                                                                    <span className="font-weight-normal">{item.name} </span>
+                                                                    <span className="text-light">(v{item.version})</span>
+                                                                </li>
+                                                            )}
+                                                        </Draggable>
+                                                    })}
+                                                    {provided.placeholder}
+                                                </ul>
+                                            )}
+                                        </Droppable>
+                                    })
+                                }
+                            </div>
+                        })
+                    }
+                    {
+                        this.lists.slice(1).map(function(sector, indexSector) {
+                            return <div className="list-grid" key={indexSector + 1}>
+                                <button
+                                    className="btn btn-lg btn-flat-primary new-sector-btn"
+                                    id={`new-sector-${indexSector + 1}`}
+                                    onClick={parent.newSector}
+                                >
+                                    <i className="icon icon-md">add</i>
+                                    <span className="new-sector-btn-label">New sector</span>
+                                </button>
+                                {
+                                    sector.map(function(ring, indexRing) {
+                                        return <Droppable droppableId={`${indexSector + 1}-${indexRing}`} key={indexRing}>
+                                            {(provided, snapshot) => (
+                                                <ul
+                                                    ref={provided.innerRef}
+                                                    style={getListStyle(snapshot.isDraggingOver)}
+                                                    className="list-group">
                                                     {ring.map(function(item, index) {
                                                             return <Draggable
                                                                 key={item.id_version}
@@ -191,17 +229,14 @@ class Blips extends React.Component {
                                         </Droppable>
                                     })
                                 }
-                                {
-                                    indexSector === 0 ? <div /> :
-                                        <button
-                                            className="btn btn-lg btn-flat-primary new-ring-btn"
-                                            id={`new-ring-${indexSector}`}
-                                            onClick={parent.newRing}
-                                        >
-                                            <i className="icon icon-md">add</i>
-                                            <span className="new-ring-btn-label">New ring</span>
-                                        </button>
-                                }
+                                <button
+                                    className="btn btn-lg btn-flat-primary new-ring-btn"
+                                    id={`new-ring-${indexSector + 1}`}
+                                    onClick={parent.newRing}
+                                >
+                                    <i className="icon icon-md">add</i>
+                                    <span className="new-ring-btn-label">New ring</span>
+                                </button>
                             </div>
                         })
                     }
