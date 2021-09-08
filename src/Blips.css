@@ -1,6 +1,10 @@
 .blips {
-  display: flex;
-  overflow-x: scroll;
+  display: grid;
+  grid-column-gap: 1em;
+  grid-auto-rows: auto;
+  grid-auto-columns: max-content;
+  column-gap: 1em;
+  width: 100%;
 }
 
 .list-group {
@@ -14,11 +18,35 @@
   min-width: 30vw;
 }
 
+.list-grid-blips {
+  grid-row-start: 1;
+  grid-row-end: 3;
+  grid-column: 1;
+}
+
+.sectors-grid {
+  display: grid;
+  grid-template-rows: min-content;
+  grid-row-gap: 1em;
+  max-width: 100%;
+  grid-row: 1;
+  grid-column: 2;
+  overflow: scroll;
+}
+
+.sectors-list {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  grid-column-gap: 1em;
+  height: fit-content;
+  width: 100%;
+}
+
 .list-grid {
   display: grid;
   height: fit-content;
   width: 100%;
-  margin-right: 1em;
   max-width: 30vw;
 }
 
@@ -37,5 +65,8 @@
 }
 
 .new-ring-btn {
+  height: fit-content;
   margin-top: -1em;
+  grid-row: 2;
+  grid-column: 2;
 }
