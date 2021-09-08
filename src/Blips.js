@@ -69,13 +69,17 @@ class Blips extends React.Component {
                 const ringIndex = this.rings.indexOf(blipLink.ring)
                 const sector = this.lists.slice(1)[sectorIndex];
                 const ring = sector[ringIndex];
-                const rawBlip = blips[blipLink.blip];
+                const rawBlipVersions = blips[blipLink.blip];
+                const rawBlip = rawBlipVersions.splice(blipLink.blip_version - 1, 1)[0];
                 ring.push({
                     id: blipLink.blip,
                     id_version: `${blipLink.blip}-${blipLink.blip_version}`,
-                    name: rawBlip[blipLink.blip_version - 1].name,
-                })
-                delete rawBlip[blipLink.blip_version - 1];
+                    name: rawBlip.name,
+                });
+
+                if (rawBlipVersions.length === 0) {
+                    delete blips[blipLink.blip];
+                }
             }
 
             // Remove used blips from list
