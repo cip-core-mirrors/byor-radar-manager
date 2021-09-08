@@ -1,37 +1,39 @@
 .blips {
   display: grid;
   grid-column-gap: 1em;
-  grid-auto-rows: auto;
-  grid-auto-columns: max-content;
-  column-gap: 1em;
+  grid-row-gap: 1em;
+  grid-template-rows: max-content max-content;
+  grid-template-columns: min-content auto;
   width: 100%;
 }
 
 .list-group {
   min-height: 70px;
-  max-height: 75vh;
-  overflow-y: scroll;
   margin-bottom: 1em;
+}
+
+.list-group > li > span {
 }
 
 .blip-list {
   min-width: 30vw;
+  max-height: 75vh;
+  overflow-y: scroll;
 }
 
 .list-grid-blips {
   grid-row-start: 1;
-  grid-row-end: 3;
+  grid-row-end: 4;
   grid-column: 1;
 }
 
-.sectors-grid {
-  display: grid;
-  grid-template-rows: min-content;
-  grid-row-gap: 1em;
-  max-width: 100%;
+.rings-list {
   grid-row: 1;
   grid-column: 2;
-  overflow: scroll;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-column-gap: 1em;
+  grid-row-gap: 0.5em;
 }
 
 .sectors-list {
@@ -39,13 +41,25 @@
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
   grid-column-gap: 1em;
+  grid-row: 2;
+  grid-column: 2;
+  max-height: 100%;
   height: fit-content;
   width: 100%;
+  overflow: scroll;
+
+  padding: 0.5em 0;
+  border-style: groove;
+  border-right: 0px;
+  border-left: 0;
+  border-width: thin;
 }
 
 .list-grid {
   display: grid;
+  grid-row-gap: 0.5em;
   height: fit-content;
+  max-height: 100%;
   width: 100%;
   max-width: 30vw;
 }
@@ -66,7 +80,26 @@
 
 .new-ring-btn {
   height: fit-content;
-  margin-top: -1em;
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 2;
+}
+
+.theme-0 {
+  background-color: var(--valencia);
+}
+
+.theme-1 {
+  background-color: var(--apricot);
+}
+
+.theme-2 {
+  background-color: var(--puerto-rico);
+}
+
+.theme-3 {
+  background-color: var(--cornflower-blue);
+}
+
+.theme-4 {
+  background-color: var(--victoria);
 }

@@ -14,23 +14,76 @@ class Blips extends React.Component {
         this.newSector = this.newSector.bind(this);
         this.newRing = this.newRing.bind(this);
         this.getList = this.getList.bind(this);
+        this.sectorNameChange = this.sectorNameChange.bind(this);
+        this.ringNameChange = this.ringNameChange.bind(this);
 
         this.lists = Array.from(this.props.blips);
+        this.sectors = [];
+        this.rings = [];
     }
 
     handleChange() {
         this.props.onBlipsChange(this.lists);
     }
 
-    async componentDidMount() {
-        const response = await fetch(`${this.props.baseUrl}/blips`);
-        const data = await response.json();
-        this.lists[0] = [Object.values(data).flat()];
+    handleParamsChange() {
+        this.props.onSectorNameChange(this.sectors);
+        this.props.onRingNameChange(this.rings);
+        this.handleChange();
+    }
 
-        const firstSector = [];
-        const firstRing = [];
-        firstSector.push(firstRing);
-        this.lists.push(firstSector);
+    onlyUnique(value, index, self) {
+        return self.indexOf(value) === index;
+    }
+
+    async componentDidMount() {
+        let blips = [];
+        const response1 = await fetch(`${this.props.baseUrl}/blips`);
+        if (response1.ok) {
+            blips = await response1.json();
+            this.lists[0] = [Object.values(blips).flat()];
+        } else {
+            this.lists[0] = [];
+        }
+
+        this.handleChange();
+
+        let blipLinks = [];
+        const radarId = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1);
+        const response2 = await fetch(`${this.props.baseUrl}/radar/${radarId}/blip-links`);
+        if (response2.ok) {
+            blipLinks = await response2.json();
+            const sectors = blipLinks.map(blipLink => blipLink.sector).filter(this.onlyUnique);
+            for (const sector of sectors) {
+                this.lists.push([]);
+                this.sectors.push(sector);
+            }
+            const rings = blipLinks.map(blipLink => blipLink.ring).filter(this.onlyUnique);
+            for (const ring of rings) {
+                this.newRing();
+                this.rings[this.rings.length - 1] = ring;
+            }
+
+            for (const blipLink of blipLinks) {
+                const sectorIndex = this.sectors.indexOf(blipLink.sector)
+                const ringIndex = this.rings.indexOf(blipLink.ring)
+                const sector = this.lists.slice(1)[sectorIndex];
+                const ring = sector[ringIndex];
+                const rawBlip = blips[blipLink.blip];
+                ring.push({
+                    id: blipLink.blip,
+                    id_version: `${blipLink.blip}-${blipLink.blip_version}`,
+                    name: rawBlip[blipLink.blip_version - 1].name,
+                })
+                delete rawBlip[blipLink.blip_version - 1];
+            }
+
+            // Remove used blips from list
+            this.lists[0] = [Object.values(blips).flat()];
+        } else {
+            this.newSector();
+            this.newRing();
+        }
 
         this.handleChange();
     }
@@ -84,22 +137,45 @@ class Blips extends React.Component {
     };
 
     newSector(event) {
-        const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
-        const index = parseInt(targetId.substring('new-sector-'.length));
+        let index = 0;
+        if (event) {
+            const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
+            index = parseInt(targetId.substring('new-sector-'.length));
+        }
 
         const sector = [];
-        for (let i = 0; i < this.lists[1].length; i++) {
+        for (let i = 0; i < this.rings.length; i++) {
             sector.push([]);
         }
         this.lists.splice(index + 1, 0, sector);
+        this.sectors.splice(index, 0, `Sector ${this.sectors.length + 1}`);
 
         this.handleChange();
     }
 
     newRing(event) {
         this.lists.slice(1).map(list => list.push([]));
+        this.rings.push(`Ring ${this.rings.length + 1}`);
 
         this.handleChange();
+    }
+
+    sectorNameChange(event) {
+        const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
+        const index = parseInt(targetId.substring('sector-name-'.length));
+
+        this.sectors[index] = event.target.value;
+
+        this.handleParamsChange();
+    }
+
+    ringNameChange(event) {
+        const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
+        const index = parseInt(targetId.substring('ring-name-'.length));
+
+        this.rings[index] = event.target.value;
+
+        this.handleParamsChange();
     }
 
     render() {
@@ -179,77 +255,100 @@ class Blips extends React.Component {
                                         </Droppable>
                                     })
                                 }
-                                {
-                                }
                             </div>
                         })
                     }
-                    <div className="sectors-grid">
-                        <div className="sectors-list">
-                            {
-                                this.lists.slice(1).map(function (sector, indexSector) {
-                                    return <div className="list-grid" key={indexSector + 1}>
-                                        <button
-                                            className="btn btn-lg btn-flat-primary new-sector-btn"
-                                            id={`new-sector-${indexSector + 1}`}
-                                            onClick={parent.newSector}
-                                        >
-                                            <i className="icon icon-md">add</i>
-                                            <span className="new-sector-btn-label">New sector</span>
-                                        </button>
-                                        {
-                                            sector.map(function (ring, indexRing) {
-                                                return <Droppable droppableId={`${indexSector + 1}-${indexRing}`}
-                                                                  key={indexRing}>
-                                                    {(provided, snapshot) => (
-                                                        <ul
-                                                            ref={provided.innerRef}
-                                                            style={getListStyle(snapshot.isDraggingOver)}
-                                                            className="list-group">
-                                                            {ring.map(function (item, index) {
-                                                                return <Draggable
-                                                                    key={item.id_version}
-                                                                    draggableId={item.id_version}
-                                                                    index={index}
-                                                                    className="list-group-item list-group-item-action border-light">
-                                                                    {(provided, snapshot) => (
-                                                                        <li
-                                                                            ref={provided.innerRef}
-                                                                            {...provided.draggableProps}
-                                                                            {...provided.dragHandleProps}
-                                                                            style={getItemStyle(
-                                                                                snapshot.isDragging,
-                                                                                provided.draggableProps.style
-                                                                            )}>
-                                                                        <span
-                                                                            className="text-large font-weight-medium">{item.id.substring(0, item.id.lastIndexOf('-'))}</span><br/>
-                                                                            <span
-                                                                                className="font-weight-normal">{item.name} </span>
-                                                                            <span
-                                                                                className="text-light">(v{item.version})</span>
-                                                                        </li>
-                                                                    )}
-                                                                </Draggable>
-                                                            })}
-                                                            {provided.placeholder}
-                                                        </ul>
-                                                    )}
-                                                </Droppable>
-                                            })
-                                        }
-                                    </div>
-                                })
-                            }
-                        </div>
+                    <div className="rings-list">
+                        {
+                            this.rings.map(function(ring, indexRing) {
+                                return <input
+                                    className={`ring-name theme-${indexRing}`}
+                                    id={`ring-name-${indexRing}`}
+                                    value={ring}
+                                    onChange={parent.ringNameChange}
+                                    key={indexRing}
+                                />
+                            })
+                        }
                     </div>
-                    <button
-                        className="btn btn-lg btn-flat-primary new-ring-btn"
-                        id="new-ring-btn"
-                        onClick={parent.newRing}
-                    >
-                        <i className="icon icon-md">add</i>
-                        <span className="new-ring-btn-label">New ring</span>
-                    </button>
+                    <div className="sectors-list">
+                        {
+                            this.lists.slice(1).map(function (sector, indexSector) {
+                                return <div className="list-grid" key={indexSector + 1}>
+                                    <button
+                                        className="btn btn-lg btn-flat-primary new-sector-btn"
+                                        id={`new-sector-${indexSector + 1}`}
+                                        onClick={parent.newSector}
+                                    >
+                                        <i className="icon icon-md">add</i>
+                                        <span className="new-sector-btn-label">New sector</span>
+                                    </button>
+                                    <input
+                                        className="form-control form-control-alt"
+                                        id={`sector-name-${indexSector}`}
+                                        value={parent.sectors[indexSector]}
+                                        onChange={parent.sectorNameChange}
+                                    />
+                                    {
+                                        sector.map(function (ring, indexRing) {
+                                            return <Droppable droppableId={`${indexSector + 1}-${indexRing}`}
+                                                              key={indexRing}>
+                                                {(provided, snapshot) => (
+                                                    <ul
+                                                        ref={provided.innerRef}
+                                                        style={getListStyle(snapshot.isDraggingOver)}
+                                                        className={`list-group theme-${indexRing}`}>
+                                                        {ring.map(function (item, index) {
+                                                            return <Draggable
+                                                                key={item.id_version}
+                                                                draggableId={item.id_version}
+                                                                index={index}
+                                                                className="list-group-item list-group-item-action border-light">
+                                                                {(provided, snapshot) => (
+                                                                    <li
+                                                                        ref={provided.innerRef}
+                                                                        {...provided.draggableProps}
+                                                                        {...provided.dragHandleProps}
+                                                                        style={getItemStyle(
+                                                                            snapshot.isDragging,
+                                                                            provided.draggableProps.style
+                                                                        )}>
+                                                                    <span
+                                                                        className="text-large font-weight-medium">{item.id.substring(0, item.id.lastIndexOf('-'))}</span><br/>
+                                                                        <span
+                                                                            className="font-weight-normal">{item.name} </span>
+                                                                        <span
+                                                                            className="text-light">(v{item.version})</span>
+                                                                    </li>
+                                                                )}
+                                                            </Draggable>
+                                                        })}
+                                                        {provided.placeholder}
+                                                    </ul>
+                                                )}
+                                            </Droppable>
+                                        })
+                                    }
+                                </div>
+                            })
+                        }
+                    </div>
+                    {
+                        this.lists.slice(1, 2).map(function(sector, indexSector) {
+                            if (sector.length < 5) {
+                                return <button
+                                    className="btn btn-lg btn-flat-primary new-ring-btn"
+                                    id="new-ring-btn"
+                                    onClick={parent.newRing}
+                                    key={indexSector}
+                                >
+                                    <i className="icon icon-md">add</i>
+                                    <span className="new-ring-btn-label">New ring</span>
+                                </button>
+                            }
+                            return <div key={indexSector}/>
+                        })
+                    }
                 </DragDropContext>
             </div>
         );
