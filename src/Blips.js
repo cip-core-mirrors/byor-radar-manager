@@ -281,7 +281,7 @@ class Blips extends React.Component {
             width: '15vw',
             listStyleType: 'none',
             color: '-internal-light-dark(black, white)',
-            display: 'inline-block',
+            display: 'grid',
             textAlign: 'center',
             alignItems: 'flex-start',
             padding: '1px 6px',
@@ -327,10 +327,20 @@ class Blips extends React.Component {
                                                                     style={parent.getItemStyle(
                                                                         snapshot.isDragging,
                                                                         provided.draggableProps.style
-                                                                    )}>
-                                                                    <span className="text-large font-weight-medium">{item.id.substring(0, item.id.lastIndexOf('-'))}</span><br/>
-                                                                    <span className="font-weight-normal">{item.name} </span>
-                                                                    <span className="text-light">(v{item.version})</span>
+                                                                    )}
+                                                                >
+                                                                    <span className="font-weight-medium">{item.name}</span>
+                                                                    <span
+                                                                        className="font-weight-normal"
+                                                                        style={{
+                                                                            'border-width': 'thin',
+                                                                            'border-top-style': 'groove',
+                                                                            //'border-bottom-style': 'groove',
+                                                                        }}
+                                                                    >
+                                                                        {item.id.substring(0, item.id.lastIndexOf('-'))}
+                                                                    </span>
+                                                                    <span className="text-light">Row {item.id.substring(item.id.lastIndexOf('-') + 1)} (v{item.version})</span>
                                                                 </li>
                                                             )}
                                                         </Draggable>
@@ -436,13 +446,20 @@ class Blips extends React.Component {
                                                                         style={parent.getItemStyle(
                                                                             snapshot.isDragging,
                                                                             provided.draggableProps.style
-                                                                        )}>
-                                                                    <span
-                                                                        className="text-large font-weight-medium">{item.id.substring(0, item.id.lastIndexOf('-'))}</span><br/>
+                                                                        )}
+                                                                    >
+                                                                        <span className="font-weight-medium">{item.name}</span>
                                                                         <span
-                                                                            className="font-weight-normal">{item.name} </span>
-                                                                        <span
-                                                                            className="text-light">(v{item.version})</span>
+                                                                            className="font-weight-normal"
+                                                                            style={{
+                                                                                'border-width': 'thin',
+                                                                                'border-top-style': 'groove',
+                                                                                //'border-bottom-style': 'groove',
+                                                                            }}
+                                                                        >
+                                                                            {item.id.substring(0, item.id.lastIndexOf('-'))}
+                                                                        </span>
+                                                                        <span className="text-light">Row {item.id.substring(item.id.lastIndexOf('-') + 1)} (v{item.version})</span>
                                                                     </li>
                                                                 )}
                                                             </Draggable>
