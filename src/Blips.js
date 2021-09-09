@@ -11,6 +11,8 @@ class Blips extends React.Component {
         this.reorder = this.reorder.bind(this);
         this.move = this.move.bind(this);
         this.onDragEnd = this.onDragEnd.bind(this);
+        this.getListStyle = this.getListStyle.bind(this);
+        this.getItemStyle = this.getItemStyle.bind(this);
 
         this.newSector = this.newSector.bind(this);
         this.moveSector = this.moveSector.bind(this);
@@ -261,42 +263,43 @@ class Blips extends React.Component {
         this.handleParamsChange();
     }
 
+    getListStyle(isDraggingOver) {
+        return {
+            padding: grid,
+            borderStyle: 'outset',
+            borderColor: 'var(--gray)',
+            borderWidth: 1,
+            //width: isDraggingOver ? 'min-content' : 'auto',
+        }
+    }
+
+    getItemStyle(isDragging, draggableStyle) {
+        return {
+            // some basic styles to make the items look a bit nicer
+            margin: `0 0 ${grid}px 0`,
+            opacity: isDragging ? 0.3 : 1,
+            width: '15vw',
+            listStyleType: 'none',
+            color: '-internal-light-dark(black, white)',
+            display: 'inline-block',
+            textAlign: 'center',
+            alignItems: 'flex-start',
+            padding: '1px 6px',
+            borderWidth: 2,
+            borderStyle: 'outset',
+            borderColor: 'var(--gray)',
+            backgroundColor: 'var(--bg-lvl3)',
+
+            // styles we need to apply on draggables
+            ...draggableStyle
+        }
+    }
+
     render() {
-        function getListStyle(isDraggingOver) {
-            return {
-                padding: grid,
-                borderStyle: 'outset',
-                borderColor: 'var(--gray)',
-                borderWidth: 1,
-            }
-        }
-
-        function getItemStyle(isDragging, draggableStyle) {
-            return {
-                // some basic styles to make the items look a bit nicer
-                margin: `0 0 ${grid}px 0`,
-                //opacity: isDragging ? 0.3 : 1,
-                width: '100%',
-                listStyleType: 'none',
-                color: '-internal-light-dark(black, white)',
-                display: 'inline-block',
-                textAlign: 'center',
-                alignItems: 'flex-start',
-                padding: '1px 6px',
-                borderWidth: 2,
-                borderStyle: 'outset',
-                borderColor: 'var(--gray)',
-                backgroundColor: 'var(--bg-lvl3)',
-
-                // styles we need to apply on draggables
-                ...draggableStyle
-            }
-        }
-
         const parent = this;
 
         return (
-            <div className="blips">
+            <div className="blips border-top">
                 <DragDropContext onDragEnd={this.onDragEnd}>
                     {
                         this.lists.slice(0, 1).map(function(sector, indexSector) {
@@ -308,7 +311,7 @@ class Blips extends React.Component {
                                             {(provided, snapshot) => (
                                                 <ul
                                                     ref={provided.innerRef}
-                                                    style={getListStyle(snapshot.isDraggingOver)}
+                                                    style={parent.getListStyle(snapshot.isDraggingOver)}
                                                     className="list-group blip-list">
                                                     {ring.map(function(item, index) {
                                                         return <Draggable
@@ -321,7 +324,7 @@ class Blips extends React.Component {
                                                                     ref={provided.innerRef}
                                                                     {...provided.draggableProps}
                                                                     {...provided.dragHandleProps}
-                                                                    style={getItemStyle(
+                                                                    style={parent.getItemStyle(
                                                                         snapshot.isDragging,
                                                                         provided.draggableProps.style
                                                                     )}>
@@ -341,7 +344,7 @@ class Blips extends React.Component {
                             </div>
                         })
                     }
-                    <div className="rings-list">
+                    <div className="rings-list border-bottom">
                         {
                             this.rings.map(function(ring, indexRing) {
                                 return <div className="ring-name-grid">
@@ -417,7 +420,7 @@ class Blips extends React.Component {
                                                 {(provided, snapshot) => (
                                                     <ul
                                                         ref={provided.innerRef}
-                                                        style={getListStyle(snapshot.isDraggingOver)}
+                                                        style={parent.getListStyle(snapshot.isDraggingOver)}
                                                         className={`list-group theme-${indexRing}`}>
                                                         {ring.map(function (item, index) {
                                                             return <Draggable
@@ -430,7 +433,7 @@ class Blips extends React.Component {
                                                                         ref={provided.innerRef}
                                                                         {...provided.draggableProps}
                                                                         {...provided.dragHandleProps}
-                                                                        style={getItemStyle(
+                                                                        style={parent.getItemStyle(
                                                                             snapshot.isDragging,
                                                                             provided.draggableProps.style
                                                                         )}>
@@ -454,7 +457,7 @@ class Blips extends React.Component {
                             })
                         }
                     </div>
-                    <div className="new-buttons-grid">
+                    <div className="new-buttons-grid border-top">
                         <button
                             className="btn btn-lg btn-flat-primary new-sector-btn"
                             id="new-sector-btn"

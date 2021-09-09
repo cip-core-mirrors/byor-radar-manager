@@ -7,17 +7,27 @@
   width: 100%;
 }
 
+.border-top {
+  padding-top: 0.5em;
+  border-top-width: thin;
+  border-top-style: groove;
+}
+
+.border-bottom {
+  padding-bottom: 0.5em;
+  border-bottom-width: thin;
+  border-bottom-style: groove;
+}
+
 .list-group {
   min-height: 70px;
+  width: calc(15vw + 10px); /* grid variable in Blips.js */
   margin-bottom: 1em;
 }
 
-.list-group > li > span {
-}
-
 .blip-list {
-  min-width: 30vw;
-  max-height: 75vh;
+  width: fit-content;
+  max-height: 80vh;
   overflow-y: scroll;
 }
 
@@ -71,22 +81,14 @@
 }
 
 .sectors-list {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  grid-column-gap: 1em;
+  display: flex;
+  column-gap: 1em;
   grid-row: 2;
   grid-column: 2;
   max-height: 100%;
-  height: fit-content;
+  height: 75vh;
   width: 100%;
   overflow: scroll;
-
-  padding: 0.5em 0;
-  border-style: groove;
-  border-right: 0px;
-  border-left: 0;
-  border-width: thin;
 }
 
 .list-grid {
@@ -94,12 +96,13 @@
   grid-row-gap: 0.5em;
   height: fit-content;
   max-height: 100%;
-  width: 100%;
+  width: fit-content;
   max-width: 30vw;
 }
 
 .list-buttons {
   display: grid;
+  width: fit-content;
 }
 
 .sector-left-btn {
@@ -118,6 +121,7 @@
 }
 
 .sector-name {
+  width: calc(15vw + 10px); /* grid variable in Blips.js */
   grid-row: 2;
   grid-column-start: 1;
   grid-column-end: 4;
