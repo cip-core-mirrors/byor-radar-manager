@@ -64,6 +64,8 @@ class Blips extends React.Component {
                 this.rings[this.rings.length - 1] = ring;
             }
 
+            this.handleParamsChange();
+
             for (const blipLink of blipLinks) {
                 const sectorIndex = this.sectors.indexOf(blipLink.sector)
                 const ringIndex = this.rings.indexOf(blipLink.ring)
@@ -71,11 +73,13 @@ class Blips extends React.Component {
                 const ring = sector[ringIndex];
                 const rawBlipVersions = blips[blipLink.blip];
                 const rawBlip = rawBlipVersions.splice(blipLink.blip_version - 1, 1)[0];
-                ring.push({
+                const toPush = {
                     id: blipLink.blip,
                     id_version: `${blipLink.blip}-${blipLink.blip_version}`,
                     name: rawBlip.name,
-                });
+                    version: blipLink.blip_version,
+                };
+                ring.push(toPush);
 
                 if (rawBlipVersions.length === 0) {
                     delete blips[blipLink.blip];

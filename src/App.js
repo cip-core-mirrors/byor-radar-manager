@@ -53,13 +53,14 @@ class App extends React.Component {
       let ringIndex = 0;
       for (const ring of sector) {
         for (const blip of ring) {
-          links.push({
+          const toPush = {
             blip: blip.id,
             oldRing: '',
             ring: this.state.rings[ringIndex],
             sector: this.state.sectors[sectorIndex],
             value: '0',
-          });
+          };
+          links.push(toPush);
         }
         ringIndex++;
       }
