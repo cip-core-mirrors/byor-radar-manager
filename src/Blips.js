@@ -11,13 +11,18 @@ class Blips extends React.Component {
         this.reorder = this.reorder.bind(this);
         this.move = this.move.bind(this);
         this.onDragEnd = this.onDragEnd.bind(this);
+
         this.newSector = this.newSector.bind(this);
         this.moveSector = this.moveSector.bind(this);
         this.deleteSector = this.deleteSector.bind(this);
-        this.newRing = this.newRing.bind(this);
-        this.getList = this.getList.bind(this);
         this.sectorNameChange = this.sectorNameChange.bind(this);
+
+        this.newRing = this.newRing.bind(this);
+        this.moveRing = this.moveRing.bind(this);
+        this.deleteRing = this.deleteRing.bind(this);
         this.ringNameChange = this.ringNameChange.bind(this);
+
+        this.getList = this.getList.bind(this);
 
         this.lists = Array.from(this.props.blips);
         this.sectors = [];
@@ -95,7 +100,7 @@ class Blips extends React.Component {
             this.newRing();
         }
 
-        this.handleChange();
+        this.handleParamsChange();
     }
 
     getList = (droppableId) => {
@@ -154,14 +159,14 @@ class Blips extends React.Component {
         this.lists.push(sector);
         this.sectors.push(`Sector ${this.sectors.length + 1}`);
 
-        this.handleChange();
+        this.handleParamsChange();
     }
 
     newRing(event) {
         this.lists.slice(1).map(list => list.push([]));
         this.rings.push(`Ring ${this.rings.length + 1}`);
 
-        this.handleChange();
+        this.handleParamsChange();
     }
 
     sectorNameChange(event) {
@@ -178,6 +183,46 @@ class Blips extends React.Component {
         const index = parseInt(targetId.substring('ring-name-'.length));
 
         this.rings[index] = event.target.value;
+
+        this.handleParamsChange();
+    }
+
+    moveRing(event) {
+        const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
+        let srcIndex = 0;
+        let destIndex = 0;
+        if (targetId.indexOf('ring-left') !== -1) {
+            srcIndex = parseInt(targetId.substring('ring-left-'.length));
+            destIndex = srcIndex - 1;
+        } else if (targetId.indexOf('ring-right') !== -1) {
+            srcIndex = parseInt(targetId.substring('ring-right-'.length));
+            destIndex = srcIndex + 1;
+        }
+
+        const srcRingName = this.rings[srcIndex];
+        this.rings[srcIndex] = this.rings[destIndex];
+        this.rings[destIndex] = srcRingName;
+
+        for (const sector of this.lists.slice(1)) {
+            const srcRing = sector[srcIndex];
+            sector[srcIndex] = sector[destIndex];
+            sector[destIndex] = srcRing;
+        }
+
+        this.handleParamsChange();
+    }
+
+    deleteRing(event) {
+        const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
+        const index = parseInt(targetId.substring('delete-ring-'.length));
+
+        this.rings.splice(index, 1);
+        const blips = [];
+        for (const sector of this.lists.slice(1)) {
+            const ring = sector.splice(index, 1)[0];
+            blips.push(...ring);
+        }
+        this.lists[0][0].push(...blips);
 
         this.handleParamsChange();
     }
@@ -203,7 +248,6 @@ class Blips extends React.Component {
         this.lists[destIndex + 1] = srcSector;
 
         this.handleParamsChange();
-        this.handleChange();
     }
 
     deleteSector(event) {
@@ -300,13 +344,36 @@ class Blips extends React.Component {
                     <div className="rings-list">
                         {
                             this.rings.map(function(ring, indexRing) {
-                                return <input
-                                    className={`ring-name theme-${indexRing}`}
-                                    id={`ring-name-${indexRing}`}
-                                    value={ring}
-                                    onChange={parent.ringNameChange}
-                                    key={indexRing}
-                                />
+                                return <div className="ring-name-grid">
+                                    <button
+                                        className="btn btn-lg delete-ring-btn"
+                                        id={`delete-ring-${indexRing}`}
+                                        onClick={parent.deleteRing}
+                                    >
+                                        <i className="icon icon-md">delete</i>
+                                    </button>
+                                    <button
+                                        className="btn btn-lg ring-left-btn"
+                                        id={`ring-left-${indexRing}`}
+                                        onClick={parent.moveRing}
+                                    >
+                                        <i className="icon icon-md">arrow_back</i>
+                                    </button>
+                                    <button
+                                        className="btn btn-lg ring-right-btn"
+                                        id={`ring-right-${indexRing}`}
+                                        onClick={parent.moveRing}
+                                    >
+                                        <i className="icon icon-md">arrow_forward</i>
+                                    </button>
+                                    <input
+                                        className={`ring-name theme-${indexRing}`}
+                                        id={`ring-name-${indexRing}`}
+                                        value={ring}
+                                        onChange={parent.ringNameChange}
+                                        key={indexRing}
+                                    />
+                                </div>
                             })
                         }
                     </div>
@@ -396,16 +463,17 @@ class Blips extends React.Component {
                             <i className="icon icon-md">add</i>
                             <span className="new-sector-btn-label">New sector</span>
                         </button>
-                        {
-                            this.rings.length < 5 ? <button
-                                className="btn btn-lg btn-flat-primary new-ring-btn"
-                                id="new-ring-btn"
-                                onClick={parent.newRing}
-                            >
-                                <i className="icon icon-md">add</i>
-                                <span className="new-ring-btn-label">New ring</span>
-                            </button> : <div/>
-                        }
+                        <button
+                            className="btn btn-lg btn-flat-primary new-ring-btn"
+                            id="new-ring-btn"
+                            style={{
+                                display: this.rings.length < 5 ? 'block' : 'none'
+                            }}
+                            onClick={parent.newRing}
+                        >
+                            <i className="icon icon-md">add</i>
+                            <span className="new-ring-btn-label">New ring</span>
+                        </button>
                     </div>
                 </DragDropContext>
             </div>
