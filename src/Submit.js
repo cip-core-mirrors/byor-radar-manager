@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 class Submit extends React.Component {
 
     constructor(props) {
         super(props);
         this.handleSubmit = this.handleSubmit.bind(this);
-        
+
         this.state = {
             submitting: false,
             success: undefined,
@@ -19,7 +19,7 @@ class Submit extends React.Component {
 
         this.state.submitting = true;
         this.setState(this.state);
-        
+
         const response = await this.props.onSubmit();
         if (response.ok) {
             this.state.success = true;
@@ -27,8 +27,13 @@ class Submit extends React.Component {
             this.state.success = false;
         }
 
-        this.state.submitting = false;
         this.setState(this.state);
+        const parent = this;
+        setTimeout(() => {
+            parent.state.success = undefined;
+            parent.state.submitting = false;
+            parent.setState(this.state);
+        }, 5000);
     }
 
     render() {
