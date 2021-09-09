@@ -21,6 +21,12 @@
   overflow-y: scroll;
 }
 
+.blips-list-label {
+  font-weight: 500;
+  padding: 10px 19px;
+  text-align: center;
+}
+
 .list-grid-blips {
   grid-row-start: 1;
   grid-row-end: 4;
@@ -64,10 +70,35 @@
   max-width: 30vw;
 }
 
-.blips-list-label {
-  font-weight: 500;
-  padding: 10px 19px;
-  text-align: center;
+.list-buttons {
+  display: grid;
+}
+
+.delete-sector-btn {
+  grid-row: 1;
+  grid-column-start: 1;
+  grid-column-end: 3;
+}
+
+.sector-name {
+  grid-row: 2;
+  grid-column-start: 1;
+  grid-column-end: 3;
+}
+
+.sector-left-btn {
+  grid-row: 3;
+  grid-column: 1;
+}
+
+.sector-right-btn {
+  grid-row: 3;
+  grid-column: 2;
+}
+
+.new-buttons-grid {
+  display: grid;
+  grid-auto-flow: column;
 }
 
 .new-sector-btn-label {
@@ -78,10 +109,12 @@
   margin-left: 1em;
 }
 
+.new-sector-btn {
+  height: fit-content;
+}
+
 .new-ring-btn {
   height: fit-content;
-  grid-row: 3;
-  grid-column: 2;
 }
 
 .theme-0 {
