@@ -474,7 +474,7 @@ class Blips extends React.Component {
                             })
                         }
                     </div>
-                    <div className="new-buttons-grid border-top">
+                    <div className="new-buttons-grid border-bottom">
                         <button
                             className="btn btn-lg btn-flat-primary new-sector-btn"
                             id="new-sector-btn"
