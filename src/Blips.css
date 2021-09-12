@@ -149,6 +149,31 @@
   height: fit-content;
 }
 
+.blip-name {
+  grid-row: 1;
+  grid-column-start: 1;
+  grid-column-end: 3;
+}
+
+.blip-sheet {
+  grid-row: 2;
+  grid-column-start: 1;
+  grid-column-end: 3;
+}
+
+.blip-version {
+  grid-row: 3;
+  grid-column-start: 1;
+  grid-column-end: 2;
+  white-space: nowrap;
+}
+
+.blip-value {
+  grid-row: 3;
+  grid-column-start: 2;
+  grid-column-end: 3;
+}
+
 .theme-0 {
   background-color: var(--valencia);
 }
@@ -167,4 +192,55 @@
 
 .theme-4 {
   background-color: var(--victoria);
+}
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+  display: none;
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+  padding: 0 2em;
+  /*
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  */
+}
+
+/* Show the dropdown menu on hover */
+.dropdown:hover .dropdown-content {
+  display: grid;
+  grid-auto-flow: row;
+  position: absolute;
+  top: 1em;
+  left: 0em;
+  padding: 0.1em 0;
+  background-color: var(--bg-lvl1);
+  width: fit-content;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover {
+  background-color: red;
+}
+
+/* Change the background color of the dropdown button when the dropdown content is shown */
+.dropdown-toggle:hover .dropbtn {
+  background-color: var(--dark);
+}
+
+svg {
+  width: 10px;
+  height: 10px;
 }

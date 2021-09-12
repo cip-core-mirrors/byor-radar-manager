@@ -58,7 +58,7 @@ class App extends React.Component {
             oldRing: '',
             ring: this.state.rings[ringIndex],
             sector: this.state.sectors[sectorIndex],
-            value: '0',
+            value: blip.value,
           };
           links.push(toPush);
         }

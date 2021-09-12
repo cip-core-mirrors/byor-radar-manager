@@ -2,7 +2,15 @@ import React from 'react';
 import {DragDropContext, Draggable, Droppable} from 'react-beautiful-dnd';
 import './Blips.css';
 
+import * as d3 from 'd3';
+
 const grid = 5;
+const svgWidth = 10;
+const svgValues = [
+    'svg-circle',
+    'svg-square',
+    'svg-star',
+];
 
 class Blips extends React.Component {
     constructor(props) {
@@ -24,11 +32,15 @@ class Blips extends React.Component {
         this.deleteRing = this.deleteRing.bind(this);
         this.ringNameChange = this.ringNameChange.bind(this);
 
+        this.setBlipValue = this.setBlipValue.bind(this);
+
         this.getList = this.getList.bind(this);
 
         this.lists = Array.from(this.props.blips);
         this.sectors = [];
         this.rings = [];
+
+        this.svgRefs = [];
     }
 
     handleChange() {
@@ -43,6 +55,87 @@ class Blips extends React.Component {
 
     onlyUnique(value, index, self) {
         return self.indexOf(value) === index;
+    }
+
+    drawSvgs() {
+        const starPoints = [
+            {x: 0.50, y: 0.00},
+            {x: 0.28, y: 0.45},
+            {x: 0.19, y: 0.95},
+            {x: 0.64, y: 0.71},
+            {x: 1.00, y: 0.36},
+            {x: 0.50, y: 0.28},
+            {x: 0.00, y: 0.36},
+            {x: 0.36, y: 0.71},
+            {x: 0.81, y: 0.95},
+            {x: 0.72, y: 0.45},
+        ];
+
+        this.handleChange();
+
+        for (const svg of this.svgRefs) {
+            if (!svg) continue;
+            const classList = svg.classList;
+            if (classList.contains('svg-circle')) {
+                d3.select(svg)
+                    .append('circle')
+                    .attr('cx', svgWidth / 2)
+                    .attr('cy', svgWidth / 2)
+                    .attr('r', svgWidth / 2);
+            } else if (classList.contains('svg-square')) {
+                d3.select(svg)
+                    .append("rect")
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("width", svgWidth)
+                    .attr("height", svgWidth)
+            } else if (classList.contains('svg-star')) {
+                d3.select(svg)
+                    .append('polygon')
+                    .attr('points', starPoints.map(point => `${point.x * svgWidth},${point.y * svgWidth}`).join(' '))
+            }
+        }
+
+        this.handleSvgChange();
+        this.handleChange();
+    }
+
+    handleSvgChange() {
+        const starPoints = [
+            {x: 0.50, y: 0.00},
+            {x: 0.28, y: 0.45},
+            {x: 0.19, y: 0.95},
+            {x: 0.64, y: 0.71},
+            {x: 1.00, y: 0.36},
+            {x: 0.50, y: 0.28},
+            {x: 0.00, y: 0.36},
+            {x: 0.36, y: 0.71},
+            {x: 0.81, y: 0.95},
+            {x: 0.72, y: 0.45},
+        ];
+
+        for (const blip of this.lists.slice(1).flat().flat()) {
+            const svg = d3.select(blip.ref);
+            svg.selectAll("*").remove();
+            const svgName = svgValues[blip.value];
+            if (svgName === 'svg-circle') {
+                svg.append('circle')
+                    .attr('cx', svgWidth / 2)
+                    .attr('cy', svgWidth / 2)
+                    .attr('r', svgWidth / 2);
+            } else if (svgName === 'svg-square') {
+                svg.append("rect")
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("width", svgWidth)
+                    .attr("height", svgWidth)
+            } else if (svgName === 'svg-star') {
+                svg.append('polygon')
+                    .attr('points', starPoints.map(point => `${point.x * svgWidth},${point.y * svgWidth}`).join(' '))
+            }
+        }
+
+        this.handleChange();
     }
 
     async componentDidMount() {
@@ -87,6 +180,7 @@ class Blips extends React.Component {
                     id_version: `${blipLink.blip}-${blipLink.blip_version}`,
                     name: rawBlip.name,
                     version: blipLink.blip_version,
+                    value: blipLink.value,
                 };
                 ring.push(toPush);
 
@@ -103,6 +197,7 @@ class Blips extends React.Component {
         }
 
         this.handleParamsChange();
+        this.drawSvgs();
     }
 
     getList = (droppableId) => {
@@ -283,7 +378,7 @@ class Blips extends React.Component {
             color: '-internal-light-dark(black, white)',
             display: 'grid',
             textAlign: 'center',
-            alignItems: 'flex-start',
+            alignItems: 'center',
             padding: '1px 6px',
             borderWidth: 2,
             borderStyle: 'outset',
@@ -293,6 +388,25 @@ class Blips extends React.Component {
             // styles we need to apply on draggables
             ...draggableStyle
         }
+    }
+
+    setBlipValue(event) {
+        let dataValue = event.target;
+        while (!dataValue.getAttribute('data-value')) {
+            dataValue = dataValue.parentElement;
+        }
+        let element = dataValue;
+        while (!element.id) {
+            element = element.parentElement;
+        }
+
+        for (const blip of this.lists.slice(1).flat().flat()) {
+            if (blip.id_version === element.id) {
+                blip.value = parseInt(dataValue.getAttribute('data-value'));
+                break;
+            }
+        }
+        this.handleSvgChange();
     }
 
     render() {
@@ -333,9 +447,8 @@ class Blips extends React.Component {
                                                                     <span
                                                                         className="font-weight-normal"
                                                                         style={{
-                                                                            'border-width': 'thin',
-                                                                            'border-top-style': 'groove',
-                                                                            //'border-bottom-style': 'groove',
+                                                                            borderWidth: 'thin',
+                                                                            borderTopStyle: 'groove',
                                                                         }}
                                                                     >
                                                                         {item.id.substring(0, item.id.lastIndexOf('-'))}
@@ -357,7 +470,7 @@ class Blips extends React.Component {
                     <div className="rings-list border-bottom">
                         {
                             this.rings.map(function(ring, indexRing) {
-                                return <div className="ring-name-grid">
+                                return <div className="ring-name-grid" key={indexRing}>
                                     <button
                                         className="btn btn-lg delete-ring-btn"
                                         id={`delete-ring-${indexRing}`}
@@ -448,18 +561,45 @@ class Blips extends React.Component {
                                                                             provided.draggableProps.style
                                                                         )}
                                                                     >
-                                                                        <span className="font-weight-medium">{item.name}</span>
+                                                                        <span className="font-weight-medium blip-name">{item.name}</span>
                                                                         <span
-                                                                            className="font-weight-normal"
+                                                                            className="font-weight-normal blip-sheet"
                                                                             style={{
-                                                                                'border-width': 'thin',
-                                                                                'border-top-style': 'groove',
-                                                                                //'border-bottom-style': 'groove',
+                                                                                borderWidth: 'thin',
+                                                                                borderTopStyle: 'groove',
                                                                             }}
                                                                         >
                                                                             {item.id.substring(0, item.id.lastIndexOf('-'))}
                                                                         </span>
-                                                                        <span className="text-light">Row {item.id.substring(item.id.lastIndexOf('-') + 1)} (v{item.version})</span>
+                                                                        <span className="text-light blip-version">Row {item.id.substring(item.id.lastIndexOf('-') + 1)} (v{item.version})</span>
+                                                                        <div
+                                                                            className="dropdown blip-value"
+                                                                            id={item.id_version}
+                                                                        >
+                                                                            <button
+                                                                                className="btn btn-sm btn-outline-secondary dropdownMenuButton"
+                                                                            >
+                                                                                <svg
+                                                                                    className={svgValues[item.value]}
+                                                                                    ref={node => item.ref = node}
+                                                                                />
+                                                                            </button>
+                                                                            <div className="dropdown-content">
+                                                                                {svgValues.map(function(svgName, indexSvg) {
+                                                                                    return <button
+                                                                                        className="btn btn-lg btn-link dropdown-item"
+                                                                                        data-value={indexSvg}
+                                                                                        onClick={parent.setBlipValue}
+                                                                                        key={indexSvg}
+                                                                                    >
+                                                                                        <svg
+                                                                                            className={svgName}
+                                                                                            ref={node => parent.svgRefs.push(node)}
+                                                                                        />
+                                                                                    </button>
+                                                                                })}
+                                                                            </div>
+                                                                        </div>
                                                                     </li>
                                                                 )}
                                                             </Draggable>
