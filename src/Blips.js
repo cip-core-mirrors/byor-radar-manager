@@ -7,9 +7,71 @@ import * as d3 from 'd3';
 const grid = 5;
 const svgWidth = 10;
 const svgValues = [
-    'svg-circle',
-    'svg-square',
-    'svg-star',
+    {
+        name: 'svg-triangle',
+        callback: function(svg) {
+            d3.select(svg)
+                .append('polygon')
+                .attr('points', trianglePoints.map(point => `${point.x * svgWidth},${point.y * svgWidth}`).join(' '))
+        },
+    },
+    {
+        name: 'svg-circle',
+        callback: function(svg) {
+            d3.select(svg)
+                .append('circle')
+                .attr('cx', svgWidth / 2)
+                .attr('cy', svgWidth / 2)
+                .attr('r', svgWidth / 2);
+        },
+    },
+    {
+        name: 'svg-square',
+        callback: function(svg) {
+            d3.select(svg)
+                .append("rect")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", svgWidth)
+                .attr("height", svgWidth)
+        },
+    },
+    {
+        name: 'svg-diamond',
+        callback: function(svg) {
+            d3.select(svg)
+                .append('polygon')
+                .attr('points', diamondPoints.map(point => `${point.x * svgWidth},${point.y * svgWidth}`).join(' '))
+        },
+    },
+    {
+        name: 'svg-wye',
+        callback: function(svg) {
+            const symbol = d3.symbol().type(d3.symbolWye).size(svgWidth * svgWidth / 2);
+            d3.select(svg)
+                .append('path')
+                .attr('d', symbol)
+                .attr('transform', `translate(${svgWidth / 2}, ${svgWidth / 2})`)
+        },
+    },
+    {
+        name: 'svg-star',
+        callback: function(svg) {
+            d3.select(svg)
+                .append('polygon')
+                .attr('points', starPoints.map(point => `${point.x * svgWidth},${point.y * svgWidth}`).join(' '))
+        },
+    },
+    {
+        name: 'svg-cross',
+        callback: function(svg) {
+            const symbol = d3.symbol().type(d3.symbolCross).size(svgWidth * svgWidth / 2);
+            d3.select(svg)
+                .append('path')
+                .attr('d', symbol)
+                .attr('transform', `translate(${svgWidth / 2}, ${svgWidth / 2})`)
+        },
+    },
 ];
 
 const starPoints = [
@@ -23,6 +85,19 @@ const starPoints = [
     {x: 0.36, y: 0.71},
     {x: 0.81, y: 0.95},
     {x: 0.72, y: 0.45},
+];
+
+const trianglePoints = [
+    {x: 0.00, y: 1.00},
+    {x: 0.50, y: 0.00},
+    {x: 1.00, y: 1.00},
+];
+
+const diamondPoints = [
+    {x: 0.50, y: 0.00},
+    {x: 0.90, y: 0.50},
+    {x: 0.50, y: 1.00},
+    {x: 0.10, y: 0.50},
 ];
 
 class Blips extends React.Component {
@@ -79,23 +154,11 @@ class Blips extends React.Component {
                 if (svg.firstChild) continue;
 
                 const classList = svg.classList;
-                if (classList.contains('svg-circle')) {
-                    d3.select(svg)
-                        .append('circle')
-                        .attr('cx', svgWidth / 2)
-                        .attr('cy', svgWidth / 2)
-                        .attr('r', svgWidth / 2);
-                } else if (classList.contains('svg-square')) {
-                    d3.select(svg)
-                        .append("rect")
-                        .attr("x", 0)
-                        .attr("y", 0)
-                        .attr("width", svgWidth)
-                        .attr("height", svgWidth)
-                } else if (classList.contains('svg-star')) {
-                    d3.select(svg)
-                        .append('polygon')
-                        .attr('points', starPoints.map(point => `${point.x * svgWidth},${point.y * svgWidth}`).join(' '))
+                for (const svgObject of svgValues) {
+                    if (classList.contains(svgObject.name)) {
+                        svgObject.callback(svg);
+                        break;
+                    }
                 }
             }
         }
@@ -107,22 +170,8 @@ class Blips extends React.Component {
         for (const blip of this.lists.slice(1).flat().flat()) {
             const svg = d3.select(blip.ref);
             svg.selectAll("*").remove();
-            const svgName = svgValues[blip.value];
-            if (svgName === 'svg-circle') {
-                svg.append('circle')
-                    .attr('cx', svgWidth / 2)
-                    .attr('cy', svgWidth / 2)
-                    .attr('r', svgWidth / 2);
-            } else if (svgName === 'svg-square') {
-                svg.append("rect")
-                    .attr("x", 0)
-                    .attr("y", 0)
-                    .attr("width", svgWidth)
-                    .attr("height", svgWidth)
-            } else if (svgName === 'svg-star') {
-                svg.append('polygon')
-                    .attr('points', starPoints.map(point => `${point.x * svgWidth},${point.y * svgWidth}`).join(' '))
-            }
+            const svgObject = svgValues[blip.value];
+            svgObject.callback(blip.ref);
         }
 
         this.handleChange();
@@ -583,12 +632,12 @@ class Blips extends React.Component {
                                                                                 className="btn btn-sm btn-outline-secondary dropdownMenuButton"
                                                                             >
                                                                                 <svg
-                                                                                    className={svgValues[item.value]}
+                                                                                    className={svgValues[item.value].name}
                                                                                     ref={node => item.ref = node}
                                                                                 />
                                                                             </button>
                                                                             <div className="dropdown-content">
-                                                                                {svgValues.map(function(svgName, indexSvg) {
+                                                                                {svgValues.map(function(svgObject, indexSvg) {
                                                                                     return <button
                                                                                         className="btn btn-lg btn-link dropdown-item"
                                                                                         data-value={indexSvg}
@@ -596,7 +645,7 @@ class Blips extends React.Component {
                                                                                         key={indexSvg}
                                                                                     >
                                                                                         <svg
-                                                                                            className={svgName}
+                                                                                            className={svgObject.name}
                                                                                             ref={function(node) {
                                                                                                 let svgRefs = parent.svgRefs[item.id_version];
                                                                                                 if (!svgRefs) {
