@@ -12,6 +12,19 @@ const svgValues = [
     'svg-star',
 ];
 
+const starPoints = [
+    {x: 0.50, y: 0.00},
+    {x: 0.28, y: 0.45},
+    {x: 0.19, y: 0.95},
+    {x: 0.64, y: 0.71},
+    {x: 1.00, y: 0.36},
+    {x: 0.50, y: 0.28},
+    {x: 0.00, y: 0.36},
+    {x: 0.36, y: 0.71},
+    {x: 0.81, y: 0.95},
+    {x: 0.72, y: 0.45},
+];
+
 class Blips extends React.Component {
     constructor(props) {
         super(props);
@@ -40,7 +53,7 @@ class Blips extends React.Component {
         this.sectors = [];
         this.rings = [];
 
-        this.svgRefs = [];
+        this.svgRefs = {};
     }
 
     handleChange() {
@@ -58,62 +71,39 @@ class Blips extends React.Component {
     }
 
     drawSvgs() {
-        const starPoints = [
-            {x: 0.50, y: 0.00},
-            {x: 0.28, y: 0.45},
-            {x: 0.19, y: 0.95},
-            {x: 0.64, y: 0.71},
-            {x: 1.00, y: 0.36},
-            {x: 0.50, y: 0.28},
-            {x: 0.00, y: 0.36},
-            {x: 0.36, y: 0.71},
-            {x: 0.81, y: 0.95},
-            {x: 0.72, y: 0.45},
-        ];
+        this.handleParamsChange();
 
-        this.handleChange();
+        for (const svgRefs of Object.values(this.svgRefs)) {
+            for (const svg of Object.values(svgRefs)) {
+                if (!svg) continue;
+                if (svg.firstChild) continue;
 
-        for (const svg of this.svgRefs) {
-            if (!svg) continue;
-            const classList = svg.classList;
-            if (classList.contains('svg-circle')) {
-                d3.select(svg)
-                    .append('circle')
-                    .attr('cx', svgWidth / 2)
-                    .attr('cy', svgWidth / 2)
-                    .attr('r', svgWidth / 2);
-            } else if (classList.contains('svg-square')) {
-                d3.select(svg)
-                    .append("rect")
-                    .attr("x", 0)
-                    .attr("y", 0)
-                    .attr("width", svgWidth)
-                    .attr("height", svgWidth)
-            } else if (classList.contains('svg-star')) {
-                d3.select(svg)
-                    .append('polygon')
-                    .attr('points', starPoints.map(point => `${point.x * svgWidth},${point.y * svgWidth}`).join(' '))
+                const classList = svg.classList;
+                if (classList.contains('svg-circle')) {
+                    d3.select(svg)
+                        .append('circle')
+                        .attr('cx', svgWidth / 2)
+                        .attr('cy', svgWidth / 2)
+                        .attr('r', svgWidth / 2);
+                } else if (classList.contains('svg-square')) {
+                    d3.select(svg)
+                        .append("rect")
+                        .attr("x", 0)
+                        .attr("y", 0)
+                        .attr("width", svgWidth)
+                        .attr("height", svgWidth)
+                } else if (classList.contains('svg-star')) {
+                    d3.select(svg)
+                        .append('polygon')
+                        .attr('points', starPoints.map(point => `${point.x * svgWidth},${point.y * svgWidth}`).join(' '))
+                }
             }
         }
 
         this.handleSvgChange();
-        this.handleChange();
     }
 
     handleSvgChange() {
-        const starPoints = [
-            {x: 0.50, y: 0.00},
-            {x: 0.28, y: 0.45},
-            {x: 0.19, y: 0.95},
-            {x: 0.64, y: 0.71},
-            {x: 1.00, y: 0.36},
-            {x: 0.50, y: 0.28},
-            {x: 0.00, y: 0.36},
-            {x: 0.36, y: 0.71},
-            {x: 0.81, y: 0.95},
-            {x: 0.72, y: 0.45},
-        ];
-
         for (const blip of this.lists.slice(1).flat().flat()) {
             const svg = d3.select(blip.ref);
             svg.selectAll("*").remove();
@@ -196,7 +186,6 @@ class Blips extends React.Component {
             this.newRing();
         }
 
-        this.handleParamsChange();
         this.drawSvgs();
     }
 
@@ -228,8 +217,22 @@ class Blips extends React.Component {
         const destination = this.getList(droppableDestination.droppableId);
 
         const [removed] = source.splice(droppableSource.index, 1);
+        const inserted = {
+            id: removed.id,
+            id_version: `${removed.id}-${removed.version}`,
+            name: removed.name,
+            version: removed.version,
+            value: removed.value || 0,
+        };
 
-        destination.splice(droppableDestination.index, 0, removed);
+        destination.splice(droppableDestination.index, 0, inserted);
+
+        if (droppableSource.droppableId === '0-0') {
+            const parent = this;
+            setTimeout(function() {
+                parent.drawSvgs();
+            }, 400);
+        }
     };
 
     onDragEnd(result) {
@@ -594,7 +597,14 @@ class Blips extends React.Component {
                                                                                     >
                                                                                         <svg
                                                                                             className={svgName}
-                                                                                            ref={node => parent.svgRefs.push(node)}
+                                                                                            ref={function(node) {
+                                                                                                let svgRefs = parent.svgRefs[item.id_version];
+                                                                                                if (!svgRefs) {
+                                                                                                    svgRefs = {};
+                                                                                                    parent.svgRefs[item.id_version] = svgRefs;
+                                                                                                }
+                                                                                                svgRefs[indexSvg] = node;
+                                                                                            }}
                                                                                         />
                                                                                     </button>
                                                                                 })}
