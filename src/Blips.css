@@ -18,6 +18,20 @@
   border-bottom-style: groove;
 }
 
+.default-blip {
+  display: grid;
+  grid-auto-flow: column;
+  width: fit-content;
+  grid-column-gap: 0.5em;
+  justify-self: center;
+}
+
+.default-blip-label {
+}
+
+.default-blip-value {
+}
+
 .list-group {
   min-height: 70px;
   width: calc(15vw + 10px); /* grid variable in Blips.js */
@@ -26,7 +40,7 @@
 
 .blip-list {
   width: fit-content;
-  max-height: 87vh;
+  max-height: 81vh;
   overflow-y: scroll;
 }
 

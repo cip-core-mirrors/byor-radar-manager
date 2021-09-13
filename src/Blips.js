@@ -121,6 +121,7 @@ class Blips extends React.Component {
         this.ringNameChange = this.ringNameChange.bind(this);
 
         this.setBlipValue = this.setBlipValue.bind(this);
+        this.setDefaultBlipValue = this.setDefaultBlipValue.bind(this);
 
         this.getList = this.getList.bind(this);
 
@@ -129,6 +130,10 @@ class Blips extends React.Component {
         this.rings = [];
 
         this.svgRefs = {};
+
+        this.selectedDefaultRef = 0;
+        this.defaultRef = undefined;
+        this.defaultRefs = {};
     }
 
     handleChange() {
@@ -166,12 +171,19 @@ class Blips extends React.Component {
         this.handleSvgChange();
     }
 
-    handleSvgChange() {
-        for (const blip of this.lists.slice(1).flat().flat()) {
+    handleSvgChange(blip) {
+        if (blip) {
             const svg = d3.select(blip.ref);
             svg.selectAll("*").remove();
             const svgObject = svgValues[blip.value];
             svgObject.callback(blip.ref);
+        } else {
+            for (const blip of this.lists.slice(1).flat().flat()) {
+                const svg = d3.select(blip.ref);
+                svg.selectAll("*").remove();
+                const svgObject = svgValues[blip.value];
+                svgObject.callback(blip.ref);
+            }
         }
 
         this.handleChange();
@@ -235,6 +247,8 @@ class Blips extends React.Component {
             this.newRing();
         }
 
+        svgValues[this.selectedDefaultRef].callback(this.defaultRef);
+
         this.drawSvgs();
     }
 
@@ -271,7 +285,7 @@ class Blips extends React.Component {
             id_version: `${removed.id}-${removed.version}`,
             name: removed.name,
             version: removed.version,
-            value: removed.value || 0,
+            value: removed.value || this.selectedDefaultRef,
         };
 
         destination.splice(droppableDestination.index, 0, inserted);
@@ -455,10 +469,29 @@ class Blips extends React.Component {
         for (const blip of this.lists.slice(1).flat().flat()) {
             if (blip.id_version === element.id) {
                 blip.value = parseInt(dataValue.getAttribute('data-value'));
+                this.handleSvgChange(blip);
                 break;
             }
         }
-        this.handleSvgChange();
+    }
+
+    setDefaultBlipValue(event) {
+        let dataValue = event.target;
+        while (!dataValue.getAttribute('data-value')) {
+            dataValue = dataValue.parentElement;
+        }
+        let element = dataValue;
+        while (!element.id) {
+            element = element.parentElement;
+        }
+
+        this.selectedDefaultRef = parseInt(dataValue.getAttribute('data-value'));
+        const parent = this;
+        setTimeout(function() {
+            const svg = d3.select(parent.defaultRef);
+            svg.selectAll("*").remove();
+            svgValues[parent.selectedDefaultRef].callback(parent.defaultRef);
+        }, 400);
     }
 
     render() {
@@ -471,6 +504,44 @@ class Blips extends React.Component {
                         this.lists.slice(0, 1).map(function(sector, indexSector) {
                             return <div className="list-grid list-grid-blips" key={indexSector}>
                                 <span className="blips-list-label">All blips</span>
+                                <div className="default-blip">
+                                    <span className="default-blip-label">Default :</span>
+                                    <div
+                                        className="dropdown default-blip-value"
+                                    >
+                                        <button
+                                            className="btn btn-sm btn-outline-secondary dropdownMenuButton"
+                                        >
+                                            <svg
+                                                className={svgValues[parent.selectedDefaultRef].name}
+                                                ref={node => parent.defaultRef = node}
+                                            />
+                                        </button>
+                                        <div className="dropdown-content">
+                                            {svgValues.map(function(svgObject, indexSvg) {
+                                                return <button
+                                                    className="btn btn-lg btn-link dropdown-item"
+                                                    data-value={indexSvg}
+                                                    onClick={parent.setDefaultBlipValue}
+                                                    key={indexSvg}
+                                                >
+                                                    <svg
+                                                        className={svgObject.name}
+                                                        ref={function(node) {
+                                                            let svgRefs = parent.defaultRefs[indexSvg];
+                                                            if (!svgRefs) {
+                                                                svgRefs = {};
+                                                                parent.svgRefs[indexSvg] = svgRefs;
+                                                            }
+                                                            svgRefs[indexSvg] = node;
+                                                        }}
+                                                    />
+                                                </button>
+                                            })}
+                                        </div>
+                                    </div>
+
+                                </div>
                                 {
                                     sector.map(function(ring, indexRing) {
                                         return <Droppable droppableId={`${indexSector}-${indexRing}`} key={indexRing}>
