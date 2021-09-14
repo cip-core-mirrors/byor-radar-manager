@@ -51,6 +51,7 @@
 }
 
 .list-grid-blips {
+  width: max-content !important;
   grid-row-start: 1;
   grid-row-end: 4;
   grid-column: 1;
