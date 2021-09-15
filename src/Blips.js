@@ -507,7 +507,7 @@ class Blips extends React.Component {
                     {
                         this.lists.slice(0, 1).map(function(sector, indexSector) {
                             return <div className="list-grid list-grid-blips" key={indexSector}>
-                                <span className="blips-list-label">All blips</span>
+                                <span className="blips-list-label">All items</span>
                                 <div className="default-blip">
                                     <span className="default-blip-label">Default :</span>
                                     <div
