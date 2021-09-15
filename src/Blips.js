@@ -227,10 +227,10 @@ class Blips extends React.Component {
                 const rawBlipVersions = blips[blipLink.blip];
                 const rawBlip = rawBlipVersions.splice(blipLink.blip_version - 1, 1)[0];
                 const toPush = {
-                    id: blipLink.blip,
-                    id_version: `${blipLink.blip}-${blipLink.blip_version}`,
+                    id: rawBlip.id,
+                    id_version: rawBlip.id_version,
                     name: rawBlip.name,
-                    version: blipLink.blip_version,
+                    version: rawBlip.version,
                     value: blipLink.value,
                 };
                 ring.push(toPush);
