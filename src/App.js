@@ -55,6 +55,7 @@ class App extends React.Component {
         for (const blip of ring) {
           const toPush = {
             blip: blip.id,
+            version: blip.version,
             oldRing: '',
             ring: this.state.rings[ringIndex],
             sector: this.state.sectors[sectorIndex],
