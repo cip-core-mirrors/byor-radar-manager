@@ -1,8 +1,10 @@
 import React from 'react';
 import './App.css';
+import Navbar from './Navbar';
 import Parameters from './Parameters';
 import Blips from './Blips';
 import Submit from './Submit';
+import Footer from './Footer';
 
 const baseUrl = process.env.REACT_APP_DATABASE_URL;
 
@@ -96,6 +98,7 @@ class App extends React.Component {
   render() {
     return (
       <div className="App">
+        <Navbar />
         <Parameters
           onParamsChange={this.handleParamsChange}
           parameters={this.state.parameters}
@@ -111,6 +114,7 @@ class App extends React.Component {
         <Submit
           onSubmit={this.handleSubmit}
         />
+        <Footer />
       </div>
     )
   }

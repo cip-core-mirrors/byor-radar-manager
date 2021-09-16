@@ -1,0 +1,302 @@
+.sgwt-widgets-icon {
+    line-height: 1 !important;
+    display: inline-block;
+    height: 24px;
+    width: 24px;
+}
+
+.sgwt-widgets-icon.icon-sm {
+    height: 18px;
+    width: 18px;
+}
+
+.sgwt-widgets-icon.icon-lg {
+    height: 32px;
+    width: 32px;
+}
+
+.sgwt-widgets-icon.icon-xl {
+    height: 48px;
+    width: 48px;
+}
+
+.sgwt-account-center.webview-embedded
+.sgwt-account-center-my-services,
+.sgwt-account-center.webview-embedded
+.sgwt-account-center-sign-out-button,
+.sgwt-account-center.webview-embedded
+.sgwt-account-center-user-button,
+.sgwt-account-center.webview-embedded
+.sgwt-account-center-user-info {
+    display: none !important;
+}
+
+.sgwt-account-center .btn.btn-flat-black:focus,
+.sgwt-account-center .btn.btn-flat-black:hover {
+    color: #303333;
+}
+
+.sgwt-account-center .sgwt-menu-item {
+    font-weight: 500;
+    color: #95a1a2;
+}
+
+.sgwt-account-center .sgwt-menu-item-action {
+    font-weight: 500;
+    cursor: pointer;
+    color: #95a1a2;
+}
+
+.sgwt-account-center .sgcib-only {
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 16px 16px 0;
+    border-color: transparent #e60026 transparent
+    transparent;
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 20;
+}
+
+.sgwt-account-center .sgwt-account-center-user {
+    max-width: 16em;
+}
+
+@media screen and (max-width: 992px) {
+    .sgwt-account-center
+    .sgwt-account-center-user
+    .sgwt-account-center-user-mail-domain {
+        display: none;
+    }
+}
+
+.sgwt-account-center .sgwt-account-center-tags {
+    position: fixed;
+    top: 0;
+    display: flex;
+    align-items: flex-start;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1111;
+}
+
+@media screen and (max-width: 576px) {
+    .sgwt-account-center .sgwt-account-center-tags {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+.sgwt-account-center
+.sgwt-account-center-tags
+.sgwt-account-center-tag {
+    color: #fff;
+}
+
+.sgwt-account-center
+.sgwt-account-center-tags
+.sgwt-account-center-tag:focus,
+.sgwt-account-center
+.sgwt-account-center-tags
+.sgwt-account-center-tag:hover {
+    opacity: 0.75;
+}
+
+.sgwt-account-center
+.sgwt-account-center-tags
+.sgwt-account-center-environment-tag {
+    background-color: #38699f;
+    white-space: nowrap;
+    text-transform: uppercase;
+}
+
+.sgwt-account-center .sgwt-account-center-card {
+    position: absolute;
+    width: 320px;
+    z-index: 1024;
+}
+
+@media screen and (max-width: 576px) {
+    .sgwt-account-center .sgwt-account-center-card {
+        right: 16px !important;
+    }
+}
+
+.sgwt-account-center
+.sgwt-account-center-card
+.sgwt-user-initials {
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    height: 80px;
+    width: 80px;
+    border: 1px solid #e7eaeb !important;
+}
+
+.sgwt-account-center
+.sgwt-account-center-card
+.sgwt-user-initials
+span {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sgwt-account-center
+.sgwt-account-center-card
+.list-group-item.border-light:focus,
+.sgwt-account-center
+.sgwt-account-center-card
+.list-group-item.border-light:hover {
+    color: #303333;
+}
+
+.sgwt-account-center
+.sgwt-account-center-card
+.btn.btn-discreet-primary {
+    color: #303333;
+    background-color: rgba(48, 51, 51, 0.1);
+}
+
+.sgwt-account-center
+.sgwt-account-center-card
+.btn.btn-discreet-primary:focus,
+.sgwt-account-center
+.sgwt-account-center-card
+.btn.btn-discreet-primary:hover {
+    color: #fff;
+    background-color: #303333;
+    border-color: #303333;
+}
+
+.sgwt-account-center .sgwt-badge-notifcations {
+    height: 8px;
+    right: 10px;
+    top: 11px;
+    width: 8px;
+}
+
+.sgwt-account-center .sgwt-notifications .card-body {
+    max-height: 411px;
+    overflow-y: auto;
+}
+
+.sgwt-account-center
+.sgwt-notifications
+.list-group-item.list-group-item-action {
+    color: #303333;
+    border-bottom-color: #e7eaeb !important;
+}
+
+.sgwt-account-center
+.sgwt-notifications
+.list-group-item.list-group-item-action
+.sgwt-account-center-initials-box {
+    border-color: #e7eaeb !important;
+}
+
+.sgwt-account-center
+.sgwt-notifications
+.list-group-item.list-group-item-action
+.text-secondary {
+    color: #8a9496 !important;
+}
+
+.sgwt-account-center
+.sgwt-notifications
+.list-group-item.list-group-item-action:focus,
+.sgwt-account-center
+.sgwt-notifications
+.list-group-item.list-group-item-action:hover {
+    background-color: #f7f9fa !important;
+    border-bottom-color: #f7f9fa !important;
+}
+
+.sgwt-account-center
+.sgwt-notifications
+.list-group-item.list-group-item-action:focus
+.sgwt-account-center-initials-box,
+.sgwt-account-center
+.sgwt-notifications
+.list-group-item.list-group-item-action:hover
+.sgwt-account-center-initials-box {
+    background-color: #f7f9fa !important;
+}
+
+.sgwt-account-center
+.sgwt-notifications
+.sgwt-account-center-initials-box {
+    position: relative;
+    height: 48px;
+    width: 48px;
+    text-decoration: none;
+}
+
+.sgwt-account-center
+.sgwt-notifications
+.btn.btn-discreet-primary {
+    color: #303333;
+    background-color: rgba(48, 51, 51, 0.1);
+}
+
+.sgwt-account-center
+.sgwt-notifications
+.btn.btn-discreet-primary:focus,
+.sgwt-account-center
+.sgwt-notifications
+.btn.btn-discreet-primary:hover {
+    color: #fff;
+    background-color: #303333;
+    border-color: #303333;
+}
+
+.sgwt-account-center
+.sgwt-my-services
+.sgwt-account-center-discover-more:focus,
+.sgwt-account-center
+.sgwt-my-services
+.sgwt-account-center-discover-more:hover {
+    color: #303333;
+}
+
+.sgwt-account-center
+.sgwt-my-services
+.sgwt-account-center-discover-more
+.sgwt-account-center-initials-box {
+    background-color: #f7f9fa;
+}
+
+.sgwt-account-center
+.sgwt-my-services
+.sgwt-account-center-initials-box {
+    position: relative;
+    height: 72px;
+    width: 72px;
+}
+
+@media (max-width: 576px) {
+    .sgwt-account-center .card.sgwt-account-center-card,
+    .sgwt-account-center .card.sgwt-notifications,
+    .sgwt-account-center .card.sgwt-personalisation {
+        height: 100vh;
+        left: 0 !important;
+        overflow: auto;
+        position: fixed !important;
+        top: 0 !important;
+        width: 100vw !important;
+        z-index: 1030;
+    }
+
+    .sgwt-account-center
+    .card.sgwt-personalisation
+    > .card-header {
+        display: block !important;
+    }
+}
