@@ -33,7 +33,7 @@ fieldset {
 
 .help-tooltip {
     display: flex;
-    height: min-content;
+    height: 24px;
 }
 
 .help-tooltip:hover > .tooltip {
