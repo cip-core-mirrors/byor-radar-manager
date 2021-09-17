@@ -99,16 +99,16 @@ class App extends React.Component {
     return (
       <div className="App">
         <Navbar />
+        <Blips
+            onBlipsChange={this.handleBlipsChange}
+            onSectorNameChange={this.handleSectorNameChange}
+            onRingNameChange={this.handleRingNameChange}
+            blips={this.state.blips}
+            baseUrl={baseUrl}
+        />
         <Parameters
           onParamsChange={this.handleParamsChange}
           parameters={this.state.parameters}
-          baseUrl={baseUrl}
-        />
-        <Blips
-          onBlipsChange={this.handleBlipsChange}
-          onSectorNameChange={this.handleSectorNameChange}
-          onRingNameChange={this.handleRingNameChange}
-          blips={this.state.blips}
           baseUrl={baseUrl}
         />
         <Submit

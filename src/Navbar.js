@@ -87,7 +87,7 @@ class Navbar extends React.Component {
                     <svg className="d-none d-md-block overflow-visible ml-3" height="32" width="160">
                         <text x="0" y="16" fontSize="1.5em">SG</text>
                         <rect fill="#E60028" height="16" width="1.7" x="31.5" y="0"/>
-                        <text fontWeight="bold" fontSize="1.5em" y="16" x="37">MARKETS</text>
+                        <text fontWeight="bold" fontSize="1.5em" y="16" x="37">RESG/GTS</text>
                         <text className="font-family-display" x="0" y="32" height="16" width="160">
                             Technical Strategy Note
                         </text>
@@ -96,21 +96,8 @@ class Navbar extends React.Component {
 
                 <div className="collapse navbar-collapse justify-content-end" id="navbar-default">
                     <ul className="navbar-nav mr-xl-auto">
-                        <li className="nav-item">
-                            <a tabIndex="3" className="nav-link" href="#"> Markets </a>
-                        </li>
                         <li className="nav-item active">
-                            <a tabIndex="3" className="nav-link" href="#">
-                                Financing <span className="sr-only">(current)</span>
-                            </a>
-                        </li>
-                        <li className="nav-item">
-                            <a tabIndex="3" className="nav-link" href="#">
-                                Cash management
-                            </a>
-                        </li>
-                        <li className="nav-item">
-                            <a tabIndex="3" className="nav-link" href="#"> Securities </a>
+                            <a tabIndex="3" className="nav-link" href="http://go/tsn" target="_blank"> TSN </a>
                         </li>
                     </ul>
                 </div>

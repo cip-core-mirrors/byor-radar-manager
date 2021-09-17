@@ -4,3 +4,27 @@
     margin: 1.5em;
     grid-row-gap: 1em;
 }
+
+.border-top {
+    padding-top: 0.5em;
+    border-top-width: thin;
+    border-top-style: groove;
+}
+
+.border-bottom {
+    padding-bottom: 0.5em;
+    border-bottom-width: thin;
+    border-bottom-style: groove;
+}
+
+.border-left {
+    padding-left: 0.5em;
+    border-left-width: thin;
+    border-left-style: groove;
+}
+
+.border-right {
+    padding-right: 0.5em;
+    border-right-width: thin;
+    border-right-style: groove;
+}

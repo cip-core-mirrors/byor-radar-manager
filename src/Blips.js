@@ -502,7 +502,7 @@ class Blips extends React.Component {
         const parent = this;
 
         return (
-            <div className="blips border-top">
+            <div className="blips border-bottom">
                 <DragDropContext onDragEnd={this.onDragEnd}>
                     {
                         this.lists.slice(0, 1).map(function(sector, indexSector) {

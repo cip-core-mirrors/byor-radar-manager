@@ -9,7 +9,7 @@ class Parameters extends React.Component {
 
     async componentDidMount() {
         const parameters = await (await fetch(`${this.props.baseUrl}/parameters`)).json();
-    
+
         const radarId = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1);
         const response = await fetch(`${this.props.baseUrl}/radar/${radarId}/parameters`);
         const data = await response.json();
@@ -23,7 +23,7 @@ class Parameters extends React.Component {
                 }
             }
         }
-    
+
         this.handleChange(parameters);
     }
 
@@ -70,14 +70,66 @@ class Parameters extends React.Component {
                                                 handleChange(parameters);
                                             }}
                                         />
-                                        <label className="paramName custom-control-label" htmlFor={param.name}>{param.name}</label>
+                                        <label className="paramName custom-control-label" htmlFor={param.name}>{param.name}&nbsp;</label>
+                                        {
+                                            param.tooltip ?
+                                                <span className="help-tooltip">
+                                                    <i className="icon icon-md">help_outline</i>
+                                                    <div className="tooltip bs-tooltip-top" role="tooltip">
+                                                        <div className="tooltip-inner">{param.tooltip}</div>
+                                                    </div>
+                                                </span>
+                                            : <span className="help-tooltip"/>
+                                        }
                                     </div>
+                                </div>
+                            )
+                        } else if (param.name === 'titlePageHTML') {
+                            return (
+                                <div className="form-group" key={param.name}>
+                                    <label className="paramName">{param.name}&nbsp;</label>
+                                    {
+                                        param.tooltip ?
+                                            <span className="help-tooltip">
+                                                <i className="icon icon-md">help_outline</i>
+                                                <div className="tooltip bs-tooltip-top" role="tooltip">
+                                                    <div className="tooltip-inner">{param.tooltip}</div>
+                                                </div>
+                                            </span>
+                                        : <span className="help-tooltip"/>
+                                    }
+                                    <textarea
+                                        className="form-control form-control-lg"
+                                        id={param.name}
+                                        rows="5"
+                                        style={{
+                                            marginBottom: '1em',
+                                        }}
+                                        defaultValue={param.value || (param.default || "")}
+                                        onChange={function(e) {
+                                            param.value = e.target.value
+                                            handleChange(parameters);
+                                        }}
+                                    />
+                                    <div className="dangerousInnerHTML border-bottom border-top border-left border-right" dangerouslySetInnerHTML={{
+                                        __html: param.value,
+                                    }} />
                                 </div>
                             )
                         }
                         return (
                             <div className="form-group" key={param.name}>
-                                <label className="paramName">{param.name}</label>
+                                <label className="paramName">{param.name}&nbsp;</label>
+                                {
+                                    param.tooltip ?
+                                        <span className="help-tooltip">
+                                            <i className="icon icon-md">help_outline</i>
+                                            <div className="tooltip bs-tooltip-top" role="tooltip">
+                                                <div className="tooltip-inner">{param.tooltip}</div>
+                                            </div>
+                                        </span>
+                                    : <span className="help-tooltip"/>
+                                }
                                 <input
                                     type="text"
                                     className="form-control form-control-alt"
