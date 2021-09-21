@@ -2,15 +2,13 @@ require('dotenv').config();
 const replace = require('replace-in-file');
 const fs = require('fs');
 
-const options = {
-    files: [
-        'public/index.html',
-    ],
-};
+const options =  require('./build-files');
 
 async function replaceAll() {
     try {
-        fs.copyFileSync('public/index.html', 'tmp.html');
+        for (const file of options.files) {
+            fs.copyFileSync(file, `${file}.tmp`);
+        }
 
         for (const entry of Object.entries(process.env)) {
             if (entry[0].indexOf('REACT_APP_') === 0) {

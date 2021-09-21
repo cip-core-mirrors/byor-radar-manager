@@ -1,12 +1,32 @@
 import React from 'react';
+import Keycloak from 'keycloak-js';
 import './Navbar.css';
 
 class Navbar extends React.Component {
     constructor(props) {
-        super(props);
+      super(props);
+      this.state = {
+        keycloak: Keycloak('/keycloak.json'),
+        authenticated: false,
+        userInfo: undefined,
+      };
+    }
+    
+    async componentDidMount() {
+      const keycloak = this.state.keycloak;
+      const authenticated = await keycloak.init({onLoad: 'check-sso'});
+      if (authenticated) {
+        const userInfo = await keycloak.loadUserInfo();
+        this.state.userInfo = userInfo;
+      }
+      this.state.authenticated = authenticated;
+      this.state.keycloak = keycloak;
+
+      this.setState(this.state);
     }
 
     render() {
+      const keycloak = this.state.keycloak;
         return <div className="border">
             <header className="navbar navbar-expand-xl">
                 <div className="d-flex">
@@ -60,27 +80,34 @@ class Navbar extends React.Component {
                     </button>
                   </div>
                   <div
-                      className="text-left text-small ml-2 d-none d-md-block align-self-center sgwt-account-center-user-info">
-                    <div className="text-capitalize text-truncate sgwt-account-center-user">
-                      fabien zibi
-                    </div>
-                    <a tabIndex="-1" className="text-secondary" style={{cursor: 'pointer'}}>Sign out</a>
-                  </div>
-                  <div className="sgwt-account-center-tags">
-                    <div
-                        className="btn-group btn-group-sm sgwt-account-center-tag sgwt-account-center-navigation-as-tag mb-2">
-                      <button className="btn btn-info btn-sm px-0">
-                        <em className="sgwt-widgets-icon icon-sm">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" id="close" fill="currentColor">
-                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                            <path d="M0 0h24v24H0z" fill="none"/>
-                          </svg>
-                        </em></button><button type="button"
-                                              className="btn btn-info dropdown-toggle dropdown-toggle-split px-1">
-                        <span className="mr-1">Navigate as SG staff</span><span
-                        className="sr-only">Toggle Dropdown</span>
-                      </button>
-                    </div>
+                    className="text-left text-small ml-2 d-none d-md-block align-self-center sgwt-account-center-user-info"
+                  >
+                    {
+                      this.state.userInfo ? 
+                      <div className="text-capitalize text-truncate sgwt-account-center-user">
+                        {this.state.userInfo.given_name} {this.state.userInfo.family_name}
+                      </div> : <div/>
+                    }
+                    {
+                      this.state.authenticated ?
+                      <a
+                        tabIndex="-1"
+                        className="text-secondary"
+                        style={{cursor: 'pointer'}}
+                        onClick={keycloak.logout}
+                      >
+                        Sign out
+                      </a>
+                      : 
+                      <a
+                        tabIndex="-1"
+                        className="text-secondary"
+                        style={{cursor: 'pointer'}}
+                        href={`${keycloak.authServerUrl}realms/${keycloak.realm}/protocol/openid-connect/auth?client_id=${keycloak.clientId}&redirect_uri=${encodeURIComponent(window.location.href)}&response_mode=fragment&response_type=code&scope=openid`}
+                      >
+                        Sign in
+                      </a>
+                    }
                   </div>
                 </div>
               </span></sgwt-account-center>

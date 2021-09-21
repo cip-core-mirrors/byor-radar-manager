@@ -1,0 +1,8 @@
+{
+  "realm": "CIP-DEV",
+  "auth-server-url": "https://iam-gts-tsi-cip.hmlogp.dns21.socgen/auth/",
+  "ssl-required": "external",
+  "resource": "cip-oss-radar",
+  "public-client": true,
+  "confidential-port": 0
+}
