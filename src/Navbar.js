@@ -11,7 +11,7 @@ class Navbar extends React.Component {
         userInfo: undefined,
       };
     }
-    
+
     async componentDidMount() {
       const keycloak = this.state.keycloak;
       const authenticated = await keycloak.init({onLoad: 'check-sso'});
@@ -83,7 +83,7 @@ class Navbar extends React.Component {
                     className="text-left text-small ml-2 d-none d-md-block align-self-center sgwt-account-center-user-info"
                   >
                     {
-                      this.state.userInfo ? 
+                      this.state.userInfo ?
                       <div className="text-capitalize text-truncate sgwt-account-center-user">
                         {this.state.userInfo.given_name} {this.state.userInfo.family_name}
                       </div> : <div/>
@@ -98,12 +98,12 @@ class Navbar extends React.Component {
                       >
                         Sign out
                       </a>
-                      : 
+                      :
                       <a
                         tabIndex="-1"
                         className="text-secondary"
                         style={{cursor: 'pointer'}}
-                        href={`${keycloak.authServerUrl}realms/${keycloak.realm}/protocol/openid-connect/auth?client_id=${keycloak.clientId}&redirect_uri=${encodeURIComponent(window.location.href)}&response_mode=fragment&response_type=code&scope=openid`}
+                        href={`${keycloak.authServerUrl}${keycloak.authServerUrl[keycloak.authServerUrl.length - 1] !== '/' ? '/' : ''}realms/${keycloak.realm}/protocol/openid-connect/auth?client_id=${keycloak.clientId}&redirect_uri=${encodeURIComponent(window.location.href)}&response_mode=fragment&response_type=code&scope=openid`}
                       >
                         Sign in
                       </a>
