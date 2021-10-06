@@ -1,32 +1,82 @@
 import React from 'react';
-import Keycloak from 'keycloak-js';
 import './Navbar.css';
+
+const scope = process.env.REACT_APP_IAM_SCOPE;
+const clientId = process.env.REACT_APP_IAM_CLIENT_ID;
+const signIn = `${process.env.REACT_APP_IAM_URL}/authorize?response_type=id_token%20token&client_id=${clientId}&redirect_uri=${encodeURIComponent(window.location.href)}&scope=${encodeURIComponent(scope)}&nonce=${new Date().getTime()}`;
 
 class Navbar extends React.Component {
     constructor(props) {
       super(props);
       this.state = {
-        keycloak: Keycloak('/keycloak.json'),
-        authenticated: false,
-        userInfo: undefined,
+        authenticated: this.props.authenticated,
+        userInfo: this.props.userInfo,
       };
     }
 
-    async componentDidMount() {
-      const keycloak = this.state.keycloak;
-      const authenticated = await keycloak.init({onLoad: 'check-sso'});
-      if (authenticated) {
-        const userInfo = await keycloak.loadUserInfo();
-        this.state.userInfo = userInfo;
-      }
-      this.state.authenticated = authenticated;
-      this.state.keycloak = keycloak;
+    handleUserInfo() {
+      this.props.onUserInfoChange(this.state.userInfo, this.state.authenticated)
+    }
 
-      this.setState(this.state);
+    async getAccessToken() {
+      const hash = {}
+      for (const entry of (window.location.hash || '#').substring(1).split('&').map(x => x.split('='))) {
+        hash[entry[0]] = entry[1]
+      }
+
+      const localStorage = window.localStorage;
+      if (!hash.access_token) {
+        if (!localStorage.getItem('access_token')) {
+          window.location.replace(signIn);
+        }
+      } else {
+        localStorage.setItem('access_token', hash.access_token);
+      }
+
+      return localStorage.getItem('access_token');
+    }
+
+    async getUserInfo(accessToken) {
+      let response
+      try {
+        response = await fetch(`${process.env.REACT_APP_IAM_URL}/userinfo`, {
+          headers: {
+            authorization: `Bearer ${accessToken}`,
+          },
+          mode: 'cors',
+        })
+      } catch(e) {
+        response = {
+          ok: false,
+        }
+      }
+
+      if (!response.ok) {
+        console.error('Error when authenticating');
+        if (process.env.REACT_APP_IAM_TEST_USER) {
+          // Test user
+          console.log('Test user:')
+          this.state.userInfo = JSON.parse(process.env.REACT_APP_IAM_TEST_USER);
+          this.state.authenticated = true;
+          console.log(this.state)
+          this.handleUserInfo()
+        }
+        return;
+      }
+
+      const userInfo = await response.json();
+      this.state.userInfo = userInfo;
+      this.state.authenticated = true;
+
+      this.handleUserInfo()
+    }
+
+    async componentDidMount() {
+      const accessToken = await this.getAccessToken();
+      await this.getUserInfo(accessToken);
     }
 
     render() {
-      const keycloak = this.state.keycloak;
         return <div className="border">
             <header className="navbar navbar-expand-xl">
                 <div className="d-flex">
@@ -85,25 +135,17 @@ class Navbar extends React.Component {
                     {
                       this.state.userInfo ?
                       <div className="text-capitalize text-truncate sgwt-account-center-user">
-                        {this.state.userInfo.given_name} {this.state.userInfo.family_name}
+                        {this.state.userInfo.first_name} {this.state.userInfo.last_name}
                       </div> : <div/>
                     }
                     {
-                      this.state.authenticated ?
-                      <a
-                        tabIndex="-1"
-                        className="text-secondary"
-                        style={{cursor: 'pointer'}}
-                        onClick={keycloak.logout}
-                      >
-                        Sign out
-                      </a>
+                      this.state.authenticated ? <div />
                       :
                       <a
                         tabIndex="-1"
                         className="text-secondary"
                         style={{cursor: 'pointer'}}
-                        href={`${keycloak.authServerUrl}${keycloak.authServerUrl[keycloak.authServerUrl.length - 1] !== '/' ? '/' : ''}realms/${keycloak.realm}/protocol/openid-connect/auth?client_id=${keycloak.clientId}&redirect_uri=${encodeURIComponent(window.location.href)}&response_mode=fragment&response_type=code&scope=openid`}
+                        href={signIn}
                       >
                         Sign in
                       </a>

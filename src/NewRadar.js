@@ -7,8 +7,6 @@ class NewRadar extends React.Component {
     }
 
     async componentDidMount() {
-        console.log(this.props.baseUrl)
-        console.log(this.props.keycloak)
     }
 
     handleChange = (event) => {
@@ -16,12 +14,11 @@ class NewRadar extends React.Component {
     };
 
     handleSubmit = (event) => {
-        console.log(this.props.keycloak)
+        console.log(this.props.userInfo)
     };
 
     render() {
-        const keycloak = this.props.keycloak;
-        if (keycloak.authenticated) {
+        if (this.props.authenticated) {
             return (
                 <div className="new-radar">
                     <form className="create-radar">

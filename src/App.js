@@ -1,5 +1,7 @@
 import React from 'react';
 import './App.css';
+
+import NewRadar from './NewRadar';
 import Navbar from './Navbar';
 import Parameters from './Parameters';
 import Blips from './Blips';
@@ -12,6 +14,7 @@ class App extends React.Component {
   constructor(props) {
     super(props);
 
+    this.handleUserInfoChange = this.handleUserInfoChange.bind(this);
     this.handleParamsChange = this.handleParamsChange.bind(this);
     this.handleBlipsChange = this.handleBlipsChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -25,7 +28,15 @@ class App extends React.Component {
       ],
       sectors: [],
       rings: [],
+      authenticated: false,
+      userInfo: undefined,
     };
+  }
+
+  handleUserInfoChange(userInfo, authenticated) {
+    this.state.authenticated = authenticated;
+    this.state.userInfo = userInfo;
+    this.setState(this.state);
   }
 
   handleParamsChange(params) {
@@ -96,9 +107,28 @@ class App extends React.Component {
   }
 
   render() {
+    if (window.location.pathname === '/') {
+      return (
+        <div className="App">
+          <Navbar
+            onUserInfoChange={this.handleUserInfoChange}
+            authenticated={this.state.authenticated}
+            userInfo={this.state.userInfo}
+          />
+          <NewRadar 
+            authenticated={this.state.authenticated}
+            userInfo={this.state.userInfo}
+          />
+        </div>
+      )
+    }
     return (
       <div className="App">
-        <Navbar />
+        <Navbar
+          onUserInfoChange={this.handleUserInfoChange}
+          authenticated={this.state.authenticated}
+          userInfo={this.state.userInfo}
+        />
         <Blips
             onBlipsChange={this.handleBlipsChange}
             onSectorNameChange={this.handleSectorNameChange}
