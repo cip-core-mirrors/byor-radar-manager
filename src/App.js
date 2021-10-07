@@ -94,13 +94,19 @@ class App extends React.Component {
     };
 
     const radarId = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1);
+    const headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    };
+    const accessToken = window.localStorage.getItem('access_token');
+    if (accessToken) {
+      headers.authorization = `Bearer ${accessToken}`;
+    }
+    
     return await fetch(`${baseUrl}/radar/${radarId}`, {
       method: 'PUT',
-      headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-      },
+      headers: headers,
       //mode: 'no-cors',
       body: JSON.stringify(data),
     });
