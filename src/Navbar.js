@@ -39,7 +39,6 @@ class Navbar extends React.Component {
           headers: {
             authorization: `Bearer ${accessToken}`,
           },
-          mode: 'cors',
         })
       } catch(e) {
         response = {
