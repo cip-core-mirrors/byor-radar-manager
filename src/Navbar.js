@@ -25,11 +25,7 @@ class Navbar extends React.Component {
       }
 
       const localStorage = window.localStorage;
-      if (!hash.access_token) {
-        if (!localStorage.getItem('access_token')) {
-          window.location.replace(signIn);
-        }
-      } else {
+      if (hash.access_token) {
         localStorage.setItem('access_token', hash.access_token);
       }
 
@@ -60,6 +56,8 @@ class Navbar extends React.Component {
           this.state.authenticated = true;
           console.log(this.state)
           this.handleUserInfo()
+        } else {
+          window.localStorage.removeItem('access_token');
         }
         return;
       }
