@@ -39,7 +39,7 @@ class Navbar extends React.Component {
     async getUserInfo(accessToken) {
       let response
       try {
-        response = await fetch(`${process.env.REACT_APP_IAM_URL}/userinfo`, {
+        response = await fetch(`${process.env.REACT_APP_IAM_SERVICE || process.env.REACT_APP_IAM_URL}/userinfo`, {
           headers: {
             authorization: `Bearer ${accessToken}`,
           },
