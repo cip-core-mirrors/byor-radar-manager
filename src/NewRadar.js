@@ -8,6 +8,7 @@ class NewRadar extends React.Component {
             radarName: undefined,
             errorMessage: undefined,
             radarsList: [],
+            deletingRadar: undefined,
         }
     }
 
@@ -21,6 +22,18 @@ class NewRadar extends React.Component {
         const response = await this.props.callApi('GET', `${this.props.baseUrl}/radar`);
         this.state.radarsList = await response.json();
         this.setState(this.state);
+    }
+
+    async deleteRadar(radarId) {
+        if (this.state.deletingRadar) return;
+
+        this.state.deletingRadar = radarId;
+        const response = await this.props.callApi('DELETE', `${this.props.baseUrl}/radar/${radarId}`);
+        this.state.deletingRadar = undefined;
+
+        if (response.ok) {
+            await this.updateRadarsList();
+        }
     }
 
     handleSubmit = async (event) => {
@@ -45,6 +58,7 @@ class NewRadar extends React.Component {
     };
 
     render() {
+        const parent = this;
         const state = this.state;
         if (!this.props.authenticated) {
             return (
@@ -85,6 +99,12 @@ class NewRadar extends React.Component {
                                         {
                                             radar.rights.indexOf('owner') !== -1 ?
                                             <a
+                                                style={{
+                                                    cursor: 'pointer',
+                                                }}
+                                                onClick={function(e) {
+                                                    parent.deleteRadar(radar.id);
+                                                }}
                                             >
                                                 Delete
                                             </a> :
