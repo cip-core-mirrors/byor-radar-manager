@@ -116,6 +116,9 @@ class App extends React.Component {
             clearInterval(intervalId);
             response = await fetch(url, config);
             resolve(response);
+          } else if (signInWindow.closed) {
+            clearInterval(intervalId);
+            resolve(response);
           }
         }, 500);
       } else {
