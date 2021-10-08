@@ -117,6 +117,7 @@ class App extends React.Component {
             response = await fetch(url, config);
             resolve(response);
           } else if (signInWindow.closed) {
+            signInWindow = undefined;
             clearInterval(intervalId);
             resolve(response);
           }
