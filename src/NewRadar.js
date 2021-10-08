@@ -37,7 +37,6 @@ class NewRadar extends React.Component {
             if (response.ok) {
                 document.getElementById('radar-id').value = '';
                 await this.updateRadarsList();
-                //window.location.href = window.location.origin + window.location.pathname + (window.location.pathname.endsWith('/') ? '' : '/') + radarId;
             }
         } else {
             this.state.errorMessage = 'Name should be alphanumerical';
@@ -46,7 +45,6 @@ class NewRadar extends React.Component {
     };
 
     render() {
-        const radarUrl = 'https://byor-graphing-cip-oss-radar.apps.c1.ocp.dev.sgcip.com/'
         const state = this.state;
         if (!this.props.authenticated) {
             return (
@@ -68,7 +66,7 @@ class NewRadar extends React.Component {
                                         {
                                             true ?
                                             <a
-                                                href={`${radarUrl}?sheetId=${radar.id}`}
+                                                href={`${process.env.REACT_APP_RADAR_URL}?sheetId=${radar.id}`}
                                                 target="_blank"
                                             >
                                                 View
