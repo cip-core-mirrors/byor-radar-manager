@@ -1,0 +1,21 @@
+.new-radar {
+    display: grid;
+    grid-auto-rows: 55vh auto;
+}
+
+.radars-list {
+    display: grid;
+    grid-template-rows: min-content auto;
+    margin-bottom: 1em;
+}
+
+.radar-list-group {
+    width: fit-content;
+    overflow-y: scroll;
+}
+
+.radar-item {
+    display: grid;
+    grid-auto-flow: column;
+    grid-column-gap: 1em;
+}

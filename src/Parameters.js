@@ -8,24 +8,10 @@ class Parameters extends React.Component {
     }
 
     async componentDidMount() {
-        const headers = {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-        };
-        const accessToken = window.localStorage.getItem('access_token');
-        if (accessToken) {
-            headers.authorization = `Bearer ${accessToken}`;
-        }
-
-        const parameters = await (await fetch(`${this.props.baseUrl}/parameters`, {
-            headers: headers,
-        })).json();
+        const parameters = await (await this.props.callApi('GET', `${this.props.baseUrl}/parameters`)).json();
 
         const radarId = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1);
-        const response = await fetch(`${this.props.baseUrl}/radar/${radarId}/parameters`, {
-            headers: headers,
-        });
+        const response = await this.props.callApi('GET', `${this.props.baseUrl}/radar/${radarId}/parameters`);
         const data = await response.json();
         for (const p1 of data) {
             for (const p2 of parameters) {

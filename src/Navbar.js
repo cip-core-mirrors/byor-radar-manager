@@ -1,45 +1,25 @@
 import React from 'react';
 import './Navbar.css';
 
-const scope = process.env.REACT_APP_IAM_SCOPE;
-const clientId = process.env.REACT_APP_IAM_CLIENT_ID;
-const signIn = `${process.env.REACT_APP_IAM_URL}/authorize?response_type=id_token%20token&client_id=${clientId}&redirect_uri=${encodeURIComponent(window.location.href)}&scope=${encodeURIComponent(scope)}&nonce=${new Date().getTime()}`;
-
 class Navbar extends React.Component {
     constructor(props) {
       super(props);
       this.state = {
         authenticated: this.props.authenticated,
         userInfo: this.props.userInfo,
+        permissions: this.props.permissions,
       };
     }
 
     handleUserInfo() {
-      this.props.onUserInfoChange(this.state.userInfo, this.state.authenticated)
+      this.props.onUserInfoChange(this.state.userInfo, this.state.permissions, this.state.authenticated)
     }
 
-    async getAccessToken() {
-      const hash = {}
-      for (const entry of (window.location.hash || '#').substring(1).split('&').map(x => x.split('='))) {
-        hash[entry[0]] = entry[1]
-      }
-
-      const localStorage = window.localStorage;
-      if (hash.access_token) {
-        localStorage.setItem('access_token', hash.access_token);
-      }
-
-      return localStorage.getItem('access_token');
-    }
-
-    async getUserInfo(accessToken) {
+    async getUserInfo() {
+      const baseUrl = process.env.REACT_APP_IAM_SERVICE || process.env.REACT_APP_IAM_URL; 
       let response
       try {
-        response = await fetch(`${process.env.REACT_APP_IAM_SERVICE || process.env.REACT_APP_IAM_URL}/userinfo`, {
-          headers: {
-            authorization: `Bearer ${accessToken}`,
-          },
-        })
+        response = await this.props.callApi('GET', `${baseUrl}/userinfo`);
       } catch(e) {
         response = {
           ok: false,
@@ -48,29 +28,28 @@ class Navbar extends React.Component {
 
       if (!response.ok) {
         console.error('Error when authenticating');
-        if (process.env.REACT_APP_IAM_TEST_USER) {
-          // Test user
-          console.log('Test user:')
-          this.state.userInfo = JSON.parse(process.env.REACT_APP_IAM_TEST_USER);
-          this.state.authenticated = true;
-          console.log(this.state)
-          this.handleUserInfo()
-        } else {
-          window.localStorage.removeItem('access_token');
-        }
+        window.localStorage.removeItem('access_token');
+        this.state.userInfo = undefined;
+        this.state.authenticated = false;
+        this.state.permissions = {};
+        this.handleUserInfo();
         return;
       }
 
       const userInfo = await response.json();
       this.state.userInfo = userInfo;
       this.state.authenticated = true;
+      this.handleUserInfo();
 
-      this.handleUserInfo()
+      response = await this.props.callApi('GET', `${this.props.baseUrl}/permissions`);
+      const permissions = await response.json();
+      this.state.permissions.createRadar = permissions.create_radar;
+
+      this.handleUserInfo();
     }
 
     async componentDidMount() {
-      const accessToken = await this.getAccessToken();
-      await this.getUserInfo(accessToken);
+      await this.getUserInfo();
     }
 
     render() {
@@ -142,7 +121,7 @@ class Navbar extends React.Component {
                         tabIndex="-1"
                         className="text-secondary"
                         style={{cursor: 'pointer'}}
-                        href={signIn}
+                        href={this.props.signIn}
                       >
                         Sign in
                       </a>

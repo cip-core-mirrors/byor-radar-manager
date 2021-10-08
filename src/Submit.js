@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
 class Submit extends React.Component {
-
     constructor(props) {
         super(props);
         this.handleSubmit = this.handleSubmit.bind(this);

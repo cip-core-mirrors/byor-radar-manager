@@ -9,6 +9,24 @@ import Submit from './Submit';
 import Footer from './Footer';
 
 const baseUrl = process.env.REACT_APP_DATABASE_URL;
+const scope = process.env.REACT_APP_IAM_SCOPE;
+const clientId = process.env.REACT_APP_IAM_CLIENT_ID;
+const signIn = `${process.env.REACT_APP_IAM_URL}/authorize?response_type=id_token%20token&client_id=${clientId}&redirect_uri=${encodeURIComponent(window.location.origin + '/')}&scope=${encodeURIComponent(scope)}&nonce=${new Date().getTime()}`;
+let signInWindow = undefined;
+
+async function getAccessToken() {
+  const hash = {}
+  for (const entry of (window.location.hash || '#').substring(1).split('&').map(x => x.split('='))) {
+    hash[entry[0]] = entry[1]
+  }
+
+  const localStorage = window.localStorage;
+  if (hash.access_token) {
+    localStorage.setItem('access_token', hash.access_token);
+  }
+
+  return localStorage.getItem('access_token');
+}
 
 class App extends React.Component {
   constructor(props) {
@@ -30,11 +48,13 @@ class App extends React.Component {
       rings: [],
       authenticated: false,
       userInfo: undefined,
+      permissions: {},
     };
   }
 
-  handleUserInfoChange(userInfo, authenticated) {
+  handleUserInfoChange(userInfo, permissions, authenticated) {
     this.state.authenticated = authenticated;
+    this.state.permissions = permissions;
     this.state.userInfo = userInfo;
     this.setState(this.state);
   }
@@ -57,6 +77,51 @@ class App extends React.Component {
   handleRingNameChange(ringsName) {
     this.state.rings = ringsName;
     this.setState(this.state);
+  }
+
+  async callApi(method, url, data) {
+    const headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    };
+    
+    const accessToken = await getAccessToken();
+    if (accessToken) {
+      headers.authorization = `Bearer ${accessToken}`;
+    }
+
+    const config = {
+      method: method,
+      headers: headers,
+      //mode: 'no-cors',
+    }
+    if (data) config.body = JSON.stringify(data);
+
+    return new Promise(async function(resolve, reject) {
+      let response = await fetch(url, config);
+      if (response.status === 401 || response.status === 403) {
+        window.localStorage.removeItem('access_token');
+        if (!signInWindow) {
+          signInWindow = window.open(signIn, '_blank', 'location=yes,height=570,width=520,scrollbars=yes,status=yes');
+        }
+        const intervalId = setInterval(async function() {
+          const accessToken = window.localStorage.getItem('access_token');
+          if (accessToken) {
+            headers.authorization = `Bearer ${accessToken}`;
+            if (signInWindow) {
+              signInWindow.close();
+              signInWindow = undefined;
+            } 
+            clearInterval(intervalId);
+            response = await fetch(url, config);
+            resolve(response);
+          }
+        }, 500);
+      } else {
+        resolve(response);
+      }
+    })
   }
 
   async handleSubmit() {
@@ -94,22 +159,7 @@ class App extends React.Component {
     };
 
     const radarId = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1);
-    const headers = {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-    };
-    const accessToken = window.localStorage.getItem('access_token');
-    if (accessToken) {
-      headers.authorization = `Bearer ${accessToken}`;
-    }
-    
-    return await fetch(`${baseUrl}/radar/${radarId}`, {
-      method: 'PUT',
-      headers: headers,
-      //mode: 'no-cors',
-      body: JSON.stringify(data),
-    });
+    return await this.callApi('PUT', `${baseUrl}/radar/${radarId}`, data);
   }
 
   render() {
@@ -119,11 +169,18 @@ class App extends React.Component {
           <Navbar
             onUserInfoChange={this.handleUserInfoChange}
             authenticated={this.state.authenticated}
+            permissions={this.state.permissions}
             userInfo={this.state.userInfo}
+            baseUrl={baseUrl}
+            callApi={this.callApi}
+            signIn={signIn}
           />
           <NewRadar 
+            key={this.state.userInfo}
             authenticated={this.state.authenticated}
-            userInfo={this.state.userInfo}
+            permissions={this.state.permissions}
+            baseUrl={baseUrl}
+            callApi={this.callApi}
           />
         </div>
       )
@@ -133,19 +190,25 @@ class App extends React.Component {
         <Navbar
           onUserInfoChange={this.handleUserInfoChange}
           authenticated={this.state.authenticated}
+          permissions={this.state.permissions}
           userInfo={this.state.userInfo}
+          baseUrl={baseUrl}
+          callApi={this.callApi}
+          signIn={signIn}
         />
         <Blips
-            onBlipsChange={this.handleBlipsChange}
-            onSectorNameChange={this.handleSectorNameChange}
-            onRingNameChange={this.handleRingNameChange}
-            blips={this.state.blips}
-            baseUrl={baseUrl}
+          onBlipsChange={this.handleBlipsChange}
+          onSectorNameChange={this.handleSectorNameChange}
+          onRingNameChange={this.handleRingNameChange}
+          blips={this.state.blips}
+          baseUrl={baseUrl}
+          callApi={this.callApi}
         />
         <Parameters
           onParamsChange={this.handleParamsChange}
           parameters={this.state.parameters}
           baseUrl={baseUrl}
+          callApi={this.callApi}
         />
         <Submit
           onSubmit={this.handleSubmit}

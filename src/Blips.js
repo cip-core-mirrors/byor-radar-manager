@@ -192,19 +192,7 @@ class Blips extends React.Component {
     async componentDidMount() {
         let blips = [];
 
-        const headers = {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-        };
-        const accessToken = window.localStorage.getItem('access_token');
-        if (accessToken) {
-            headers.authorization = `Bearer ${accessToken}`;
-        }
-
-        const response1 = await fetch(`${this.props.baseUrl}/blips`, {
-            headers: headers,
-        });
+        const response1 = await this.props.callApi('GET', `${this.props.baseUrl}/blips`);
         if (response1.ok) {
             blips = await response1.json();
             this.lists[0] = [Object.values(blips).flat()];
@@ -216,9 +204,7 @@ class Blips extends React.Component {
 
         let blipLinks = [];
         const radarId = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1);
-        const response2 = await fetch(`${this.props.baseUrl}/radar/${radarId}/blip-links`, {
-            headers: headers,
-        });
+        const response2 = await this.props.callApi('GET', `${this.props.baseUrl}/radar/${radarId}/blip-links`);
         if (response2.ok) {
             blipLinks = await response2.json();
             const sectors = blipLinks.map(blipLink => blipLink.sector).filter(this.onlyUnique);
