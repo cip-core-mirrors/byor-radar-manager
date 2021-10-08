@@ -76,10 +76,18 @@ class NewRadar extends React.Component {
                                         className="radar-item list-group-item border-light"
                                         key={radar.id}
                                     >
-                                        <label>{radar.id}</label>
+                                        <label
+                                            className="radar-label"
+                                            style={{
+                                                marginBottom: 0,
+                                            }}
+                                        >
+                                            {radar.id}
+                                        </label>
                                         {
                                             true ?
                                             <a
+                                                className="radar-view"
                                                 href={`${process.env.REACT_APP_RADAR_URL}?sheetId=${radar.id}`}
                                                 target="_blank"
                                             >
@@ -90,6 +98,7 @@ class NewRadar extends React.Component {
                                         {
                                             radar.rights.indexOf('edit') !== -1 ?
                                             <a
+                                                className="radar-edit"
                                                 href={`./${radar.id}`}
                                             >
                                                 Edit
@@ -99,15 +108,39 @@ class NewRadar extends React.Component {
                                         {
                                             radar.rights.indexOf('owner') !== -1 ?
                                             <a
-                                                style={{
-                                                    cursor: 'pointer',
-                                                }}
+                                                className="radar-delete"
                                                 onClick={function(e) {
                                                     parent.deleteRadar(radar.id);
                                                 }}
                                             >
                                                 Delete
                                             </a> :
+                                            <div/>
+                                        }
+                                        {
+                                            radar.rights.indexOf('owner') !== -1 ?
+                                            <ul
+                                                className="radar-editors list-group-flush"
+                                            >
+                                                <p
+                                                    className="font-weight-bold text-secondary"
+                                                    style={{
+                                                        marginBottom: 0,
+                                                    }}
+                                                >
+                                                    Editors
+                                                </p>
+                                                {
+                                                    radar.editors.map(editor => 
+                                                        <li
+                                                            key={editor}
+                                                            className="radar-editor-item list-group-item border-light"
+                                                        >
+                                                            {editor}
+                                                        </li>
+                                                    )
+                                                }
+                                            </ul> :
                                             <div/>
                                         }
                                     </li>
