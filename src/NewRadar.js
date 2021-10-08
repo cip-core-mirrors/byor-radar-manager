@@ -36,7 +36,7 @@ class NewRadar extends React.Component {
         }
     }
 
-    handleSubmit = async (event) => {
+    async createRadar() {
         let radarId = (this.state.radarName || '').trim();
         radarId = radarId.toLowerCase();
         radarId = radarId.replace(/\s\s+/g, ' ');
@@ -50,12 +50,15 @@ class NewRadar extends React.Component {
             if (response.ok) {
                 document.getElementById('radar-id').value = '';
                 await this.updateRadarsList();
+            } else if (response.status === 404) {
+                const data = await response.json();
+                this.state.errorMessage = data.message;
             }
         } else {
             this.state.errorMessage = 'Name should be alphanumerical';
         }
         this.setState(this.state);
-    };
+    }
 
     render() {
         const parent = this;
@@ -164,7 +167,10 @@ class NewRadar extends React.Component {
                                     />
                                     <label
                                         className="text-danger"
-                                        display={this.state.errorMessage ? 'block' : 'hidden'}
+                                        style={{
+                                            display: this.state.errorMessage ? 'inline-block' : 'none',
+                                            marginBottom: 0,
+                                        }}
                                     >
                                         {this.state.errorMessage}
                                     </label>
@@ -174,7 +180,9 @@ class NewRadar extends React.Component {
                                 readOnly
                                 value="Create radar"
                                 className="submit-btn btn btn-lg btn-primary"
-                                onClick={this.handleSubmit}
+                                onClick={async function(e) {
+                                    await parent.createRadar()
+                                }}
                             />
                         </div> :
                         <div className="grid">
