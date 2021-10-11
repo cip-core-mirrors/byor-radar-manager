@@ -7,32 +7,6 @@ class CreateRadar extends React.Component {
         this.state = {
             radarName: undefined,
             errorMessage: undefined,
-            radarsList: [],
-            deletingRadar: undefined,
-        }
-    }
-
-    async componentDidMount() {
-        if (!this.props.authenticated) return;
-
-        await this.updateRadarsList();
-    }
-
-    async updateRadarsList() {
-        const response = await this.props.callApi('GET', `${this.props.baseUrl}/radar`);
-        this.state.radarsList = await response.json();
-        this.setState(this.state);
-    }
-
-    async deleteRadar(radarId) {
-        if (this.state.deletingRadar) return;
-
-        this.state.deletingRadar = radarId;
-        const response = await this.props.callApi('DELETE', `${this.props.baseUrl}/radar/${radarId}`);
-        this.state.deletingRadar = undefined;
-
-        if (response.ok) {
-            await this.updateRadarsList();
         }
     }
 
@@ -53,7 +27,7 @@ class CreateRadar extends React.Component {
             });
             if (response.ok) {
                 document.getElementById('radar-id').value = '';
-                await this.updateRadarsList();
+                await this.props.updateRadarsList();
             } else if (response.status === 404) {
                 const data = await response.json();
                 this.state.errorMessage = data.message;
@@ -64,37 +38,12 @@ class CreateRadar extends React.Component {
         this.setState(this.state);
     }
 
-    async addEditor(userId, radarId) {
-        userId = userId.trim();
-        const match = userId.match(/^\S+@\S+\.\S+$/);
-        if (match) {
-            const response = await this.props.callApi('PUT', `${this.props.baseUrl}/radar/${radarId}`, {
-                permissions: [
-                    {
-                        user_id: userId,
-                        rights: ['edit'],
-                    },
-                ],
-            });
-            if (response.ok) {
-                document.getElementById(`add-editor-${radarId}`).value = '';
-                await this.updateRadarsList();
-            } else if (response.state === 403) {
-                const data = await response.json();
-                this.state.errorMessage = data.message;
-            }
-        } else {
-            this.state.errorMessage = 'Please enter a valid email address';
-        }
-        this.setState(this.state);
-    }
-
     render() {
         const parent = this;
         const state = parent.state;
         if (this.props.permissions.createRadar) {
             return (
-                <div className="new-radar-grid">
+                <div className="new-radar-grid border-left">
                     <form className="create-radar">
                         <div className="form-group">
                             <label className="paramName">Radar name &nbsp;</label>
@@ -127,12 +76,14 @@ class CreateRadar extends React.Component {
                     />
                 </div>
             )
-        } else {
+        } else if (this.props.authenticated) {
             return (
                 <div className="new-radar-grid">
                     <div className="new-radar border-top">You are not authorized to create a radar</div>
                 </div>
             )
+        } else {
+            return null;
         }
     }
 }

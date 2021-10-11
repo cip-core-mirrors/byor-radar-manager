@@ -1,6 +1,8 @@
 import React from 'react';
 import './MyRadars.css';
 
+import CreateRadar from './CreateRadar';
+
 class MyRadars extends React.Component {
     constructor(props) {
         super(props)
@@ -34,34 +36,6 @@ class MyRadars extends React.Component {
         if (response.ok) {
             await this.updateRadarsList();
         }
-    }
-
-    async createRadar() {
-        let radarId = (this.state.radarName || '').trim();
-        radarId = radarId.toLowerCase();
-        radarId = radarId.replace(/\s\s+/g, ' ');
-        radarId = radarId.replace(/ /g, '-');
-        const match = radarId.match(/^[a-z0-9\-]+$/i);
-        if (radarId.length < 3) {
-            this.state.errorMessage = 'Name too short (must be at least 3 characters)';
-        } else if (radarId.length > 256) {
-            this.state.errorMessage = 'Name too long (should not exceed 256 characters)';
-        } else if (match) {
-            this.state.errorMessage = undefined;
-            const response = await this.props.callApi('POST',  `${this.props.baseUrl}/radar`, {
-                id: radarId,
-            });
-            if (response.ok) {
-                document.getElementById('radar-id').value = '';
-                await this.updateRadarsList();
-            } else if (response.status === 404) {
-                const data = await response.json();
-                this.state.errorMessage = data.message;
-            }
-        } else {
-            this.state.errorMessage = 'Name should be alphanumerical';
-        }
-        this.setState(this.state);
     }
 
     async addEditor(userId, radarId) {
@@ -98,7 +72,6 @@ class MyRadars extends React.Component {
 
     render() {
         const parent = this;
-        const state = this.state;
         if (!this.props.authenticated) {
             return (
                 <div className="new-radar">Please login in order to create a radar</div>
@@ -201,24 +174,27 @@ class MyRadars extends React.Component {
                                                         </li>
                                                     )
                                                 }
-                                                <div
-                                                    className="input-group mb-3"
-                                                    style={{
-                                                        marginTop: "0.3em",
-                                                    }}
-                                                >
-                                                    <input className="form-control form-control-lg" id={`add-editor-${radar.id}`} type="text" placeholder="john.doe@socgen.com" aria-label="" />
-                                                    <button
-                                                        className="btn btn-lg btn-discreet-success"
-                                                        type="button"
-                                                        onClick={async function(e) {
-                                                            const email = document.getElementById(`add-editor-${radar.id}`).value;
-                                                            parent.addEditor(email, radar.id);
+                                                {
+                                                    radar.rights.indexOf('owner') !== -1 ?
+                                                    <div
+                                                        className="input-group mb-3"
+                                                        style={{
+                                                            marginTop: "0.3em",
                                                         }}
                                                     >
-                                                        <i className="icon">add</i>
-                                                    </button>
-                                                </div>
+                                                        <input className="form-control form-control-lg" id={`add-editor-${radar.id}`} type="text" placeholder="john.doe@socgen.com" aria-label="" />
+                                                        <button
+                                                            className="btn btn-lg btn-discreet-success"
+                                                            type="button"
+                                                            onClick={async function(e) {
+                                                                const email = document.getElementById(`add-editor-${radar.id}`).value;
+                                                                parent.addEditor(email, radar.id);
+                                                            }}
+                                                        >
+                                                            <i className="icon">add</i>
+                                                        </button>
+                                                    </div> : null
+                                                }
                                             </ul>
                                         }
                                     </li>
@@ -226,6 +202,16 @@ class MyRadars extends React.Component {
                             }
                         </ul>
                     </div>
+                    <CreateRadar 
+                        key={this.props.authenticated}
+                        authenticated={this.props.authenticated}
+                        permissions={this.props.permissions}
+                        baseUrl={this.props.baseUrl}
+                        callApi={this.props.callApi}
+                        updateRadarsList={async function() {
+                            await parent.updateRadarsList();
+                        }}
+                    />
                 </div>
             )
         }

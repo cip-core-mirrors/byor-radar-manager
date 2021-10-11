@@ -1,7 +1,6 @@
 import React from 'react';
 import './App.css';
 
-import CreateRadar from './CreateRadar';
 import MyRadars from './MyRadars';
 import Navbar from './Navbar';
 import Parameters from './Parameters';
@@ -182,14 +181,6 @@ class App extends React.Component {
           />
           <MyRadars
             key={this.state.userInfo}
-            authenticated={this.state.authenticated}
-            userInfo={this.state.userInfo}
-            permissions={this.state.permissions}
-            baseUrl={baseUrl}
-            callApi={this.callApi}
-          />
-          <CreateRadar 
-            key={this.state.authenticated}
             authenticated={this.state.authenticated}
             userInfo={this.state.userInfo}
             permissions={this.state.permissions}

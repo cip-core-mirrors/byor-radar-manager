@@ -1,6 +1,7 @@
 .new-radar {
     display: grid;
-    grid-auto-rows: 55vh auto;
+    grid-auto-flow: column;
+    justify-content: flex-start;
 }
 
 .radars-list {
