@@ -1,7 +1,7 @@
 import React from 'react';
-import './NewRadar.css';
+import './MyRadars.css';
 
-class NewRadar extends React.Component {
+class MyRadars extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
@@ -42,7 +42,11 @@ class NewRadar extends React.Component {
         radarId = radarId.replace(/\s\s+/g, ' ');
         radarId = radarId.replace(/ /g, '-');
         const match = radarId.match(/^[a-z0-9\-]+$/i);
-        if (match) {
+        if (radarId.length < 3) {
+            this.state.errorMessage = 'Name too short (must be at least 3 characters)';
+        } else if (radarId.length > 256) {
+            this.state.errorMessage = 'Name too long (should not exceed 256 characters)';
+        } else if (match) {
             this.state.errorMessage = undefined;
             const response = await this.props.callApi('POST',  `${this.props.baseUrl}/radar`, {
                 id: radarId,
@@ -58,6 +62,38 @@ class NewRadar extends React.Component {
             this.state.errorMessage = 'Name should be alphanumerical';
         }
         this.setState(this.state);
+    }
+
+    async addEditor(userId, radarId) {
+        userId = userId.trim();
+        const match = userId.match(/^\S+@\S+\.\S+$/);
+        if (match) {
+            const response = await this.props.callApi('POST', `${this.props.baseUrl}/radar/${radarId}/permissions`, {
+                user_id: userId,
+                rights: ['edit'],
+            });
+            if (response.ok) {
+                document.getElementById(`add-editor-${radarId}`).value = '';
+                await this.updateRadarsList();
+            } else if (response.state === 403) {
+                const data = await response.json();
+                this.state.errorMessage = data.message;
+            }
+        } else {
+            this.state.errorMessage = 'Please enter a valid email address';
+        }
+        this.setState(this.state);
+    }
+
+    async removeEditor(userId, radarId) {
+        const response = await this.props.callApi('DELETE', `${this.props.baseUrl}/radar/${radarId}/permissions/${userId}`);
+        if (response.ok) {
+            document.getElementById(`add-editor-${radarId}`).value = '';
+            await this.updateRadarsList();
+        } else if (response.state === 403) {
+            const data = await response.json();
+            this.state.errorMessage = data.message;
+        }
     }
 
     render() {
@@ -121,7 +157,6 @@ class NewRadar extends React.Component {
                                             <div/>
                                         }
                                         {
-                                            radar.rights.indexOf('owner') !== -1 ?
                                             <ul
                                                 className="radar-editors list-group-flush"
                                             >
@@ -134,65 +169,67 @@ class NewRadar extends React.Component {
                                                     Editors
                                                 </p>
                                                 {
-                                                    radar.editors.map(editor => 
+                                                    radar.permissions.map(permission => 
                                                         <li
-                                                            key={editor}
-                                                            className="radar-editor-item list-group-item border-light"
+                                                            key={permission.user_id}
+                                                            className={`radar-editor-item list-group-item border-light ${permission.rights.indexOf('owner') !== -1 ? 'font-weight-bold' : ''}`}
                                                         >
-                                                            {editor}
+                                                            {permission.user_id}&nbsp;
+                                                            <i>
+                                                                {this.props.userInfo === undefined ? '' :
+                                                                    (
+                                                                        this.props.userInfo.mail === permission.user_id ? '(you)' :
+                                                                        (
+                                                                            permission.rights.indexOf('owner') !== -1 ? '(owner)' : ''
+                                                                        )
+                                                                    )
+                                                                }
+                                                            </i>
+                                                            {
+                                                                radar.rights.indexOf('owner') !== -1 && permission.rights.indexOf('owner') === -1 ? 
+                                                                <button
+                                                                    className="btn btn-lg btn-discreet-danger"
+                                                                    type="button"
+                                                                    onClick={async function(e) {
+                                                                        await parent.removeEditor(permission.user_id, radar.id);
+                                                                    }}
+                                                                >
+                                                                    <i className="icon">remove</i>
+                                                                </button> :
+                                                                <div/>
+                                                            }
                                                         </li>
                                                     )
                                                 }
-                                            </ul> :
-                                            <div/>
+                                                <div
+                                                    className="input-group mb-3"
+                                                    style={{
+                                                        marginTop: "0.3em",
+                                                    }}
+                                                >
+                                                    <input className="form-control form-control-lg" id={`add-editor-${radar.id}`} type="text" placeholder="john.doe@socgen.com" aria-label="" />
+                                                    <button
+                                                        className="btn btn-lg btn-discreet-success"
+                                                        type="button"
+                                                        onClick={async function(e) {
+                                                            const email = document.getElementById(`add-editor-${radar.id}`).value;
+                                                            parent.addEditor(email, radar.id);
+                                                        }}
+                                                    >
+                                                        <i className="icon">add</i>
+                                                    </button>
+                                                </div>
+                                            </ul>
                                         }
                                     </li>
                                 )
                             }
                         </ul>
                     </div>
-                    {
-                        this.props.permissions.createRadar ? 
-                        <div className="new-radar-grid border-top">
-                            <form className="create-radar">
-                                <div className="form-group">
-                                    <label className="paramName">Radar name &nbsp;</label>
-                                    <input
-                                        type="text"
-                                        className="form-control form-control-alt"
-                                        id="radar-id"
-                                        onChange={function(e) {
-                                            state.radarName = e.target.value;
-                                        }}
-                                    />
-                                    <label
-                                        className="text-danger"
-                                        style={{
-                                            display: this.state.errorMessage ? 'inline-block' : 'none',
-                                            marginBottom: 0,
-                                        }}
-                                    >
-                                        {this.state.errorMessage}
-                                    </label>
-                                </div>
-                            </form>
-                            <input
-                                readOnly
-                                value="Create radar"
-                                className="submit-btn btn btn-lg btn-primary"
-                                onClick={async function(e) {
-                                    await parent.createRadar()
-                                }}
-                            />
-                        </div> :
-                        <div className="grid">
-                            <div className="new-radar border-top">You are not authorized to create a radar</div>
-                        </div>
-                    }
                 </div>
             )
         }
     }
 }
 
-export default NewRadar;
+export default MyRadars;

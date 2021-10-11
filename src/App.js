@@ -1,7 +1,8 @@
 import React from 'react';
 import './App.css';
 
-import NewRadar from './NewRadar';
+import CreateRadar from './CreateRadar';
+import MyRadars from './MyRadars';
 import Navbar from './Navbar';
 import Parameters from './Parameters';
 import Blips from './Blips';
@@ -179,9 +180,18 @@ class App extends React.Component {
             callApi={this.callApi}
             signIn={signIn}
           />
-          <NewRadar 
+          <MyRadars
             key={this.state.userInfo}
             authenticated={this.state.authenticated}
+            userInfo={this.state.userInfo}
+            permissions={this.state.permissions}
+            baseUrl={baseUrl}
+            callApi={this.callApi}
+          />
+          <CreateRadar 
+            key={this.state.authenticated}
+            authenticated={this.state.authenticated}
+            userInfo={this.state.userInfo}
             permissions={this.state.permissions}
             baseUrl={baseUrl}
             callApi={this.callApi}
