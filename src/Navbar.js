@@ -77,7 +77,10 @@ class Navbar extends React.Component {
                           <div className="justify-content-end">
                               <ul className="navbar-nav mr-xl-auto">
                                   <li className="nav-item">
-                                      <a tabIndex="3" className="nav-link" href="http://go/tsn" target="_blank"> TSN </a>
+                                      <a tabIndex="2" className="nav-link" href="http://go/tsn-draft" target="_blank">TSN (draft)</a>
+                                  </li>
+                                  <li className="nav-item">
+                                      <a tabIndex="3" className="nav-link" href="http://go/tsn" target="_blank">TSN</a>
                                   </li>
                               </ul>
                           </div>
