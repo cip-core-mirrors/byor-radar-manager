@@ -148,7 +148,7 @@ class AllRadars extends React.Component {
                                                     >
                                                         <label>
                                                             <label
-                                                                className={this.props.userInfo.mail === permission.user_id ? 'font-weight-bold' : ''}
+                                                                className={(this.props.userInfo !== undefined && this.props.userInfo.mail === permission.user_id) ? 'font-weight-bold' : ''}
                                                                 style={{
                                                                     marginBottom: 0,
                                                                 }}
