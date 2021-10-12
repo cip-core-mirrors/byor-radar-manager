@@ -58,17 +58,19 @@
 
 .radar-editor-item {
     width: 100%;
+    height: max-content;
 
     display: grid;
     grid-auto-flow: column;
     align-items: center;
-    grid-template-columns: max-content auto max-content min-content;
+    grid-template-columns: auto min-content;
 
     padding-top: 0.3em;
     padding-bottom: 0.3em;
     padding-right: 0;
 }
 
-.radar-editor-item > i {
+.radar-editor-item > label {
+    margin-bottom: 0;
     margin-right: 1em;
 }

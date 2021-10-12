@@ -150,19 +150,34 @@ class MyRadars extends React.Component {
                                                     radar.permissions.map(permission => 
                                                         <li
                                                             key={permission.user_id}
-                                                            className={`radar-editor-item list-group-item border-light ${permission.rights.indexOf('owner') !== -1 ? 'font-weight-bold' : ''}`}
+                                                            className="radar-editor-item list-group-item border-light"
                                                         >
-                                                            {permission.user_id}&nbsp;
-                                                            <i>
-                                                                {this.props.userInfo === undefined ? '' :
-                                                                    (
-                                                                        this.props.userInfo.mail === permission.user_id ? '(you)' :
+                                                            <label>
+                                                                <label
+                                                                    className={permission.rights.indexOf('owner') !== -1 ? 'font-weight-bold' : ''}
+                                                                    style={{
+                                                                        marginBottom: 0,
+                                                                    }}
+                                                                >
+                                                                    {permission.user_id}
+                                                                </label>
+                                                                <label
+                                                                    className="text-secondary"
+                                                                    style={{
+                                                                        marginBottom: 0,
+                                                                    }}
+                                                                >
+                                                                    &nbsp;
+                                                                    {this.props.userInfo === undefined ? '' :
                                                                         (
-                                                                            permission.rights.indexOf('owner') !== -1 ? '(owner)' : ''
+                                                                            this.props.userInfo.mail === permission.user_id ? '- you' :
+                                                                            (
+                                                                                permission.rights.indexOf('owner') !== -1 ? '- owner' : ''
+                                                                            )
                                                                         )
-                                                                    )
-                                                                }
-                                                            </i>
+                                                                    }
+                                                                </label>
+                                                            </label>
                                                             {
                                                                 radar.rights.indexOf('owner') !== -1 && permission.rights.indexOf('owner') === -1 ? 
                                                                 <button
@@ -174,7 +189,7 @@ class MyRadars extends React.Component {
                                                                 >
                                                                     <i className="icon">remove</i>
                                                                 </button> :
-                                                                <div/>
+                                                                null
                                                             }
                                                         </li>
                                                     )
