@@ -155,19 +155,17 @@ class AllRadars extends React.Component {
                                                             >
                                                                 {permission.user_id}
                                                             </label>
-                                                            <label
-                                                                className="text-light"
-                                                                style={{
-                                                                    marginBottom: 0,
-                                                                }}
-                                                            >
-                                                                &nbsp;
-                                                                {this.props.userInfo === undefined ? '' :
-                                                                    (
-                                                                        permission.rights.indexOf('owner') !== -1 ? '- owner' : ''
-                                                                    )
-                                                                }
-                                                            </label>
+                                                            {
+                                                                (this.props.userInfo !== undefined && permission.rights.indexOf('owner') !== -1) ? 
+                                                                <label
+                                                                    className="text-light"
+                                                                    style={{
+                                                                        marginBottom: 0,
+                                                                    }}
+                                                                >
+                                                                    &nbsp;- owner
+                                                                </label> : null
+                                                            }
                                                         </label>
                                                         {
                                                             this.props.permissions.adminUser ? 
