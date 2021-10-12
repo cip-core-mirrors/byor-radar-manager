@@ -75,6 +75,18 @@ class MyRadars extends React.Component {
         }
     }
 
+    async setRadarState(radarId, radarState) {
+        const response = await this.props.callApi('PUT', `${this.props.baseUrl}/radar/${radarId}`, {
+            state: radarState,
+        });
+        if (response.ok) {
+            await this.updateRadarsList();
+        } else if (response.state === 403) {
+            const data = await response.json();
+            this.state.errorMessage = data.message;
+        }
+    }
+
     render() {
         const parent = this;
         if (!this.props.authenticated) {
@@ -99,7 +111,7 @@ class MyRadars extends React.Component {
                                                 marginBottom: 0,
                                             }}
                                         >
-                                            {radar.id}
+                                            {radar.id} {radar.state === 0 ? '(draft)' : ''}
                                         </label>
                                         {
                                             true ?
@@ -109,8 +121,7 @@ class MyRadars extends React.Component {
                                                 target="_blank"
                                             >
                                                 View
-                                            </a> :
-                                            <div/>
+                                            </a> : null
                                         }
                                         {
                                             radar.rights.indexOf('edit') !== -1 ?
@@ -119,8 +130,18 @@ class MyRadars extends React.Component {
                                                 href={`./${radar.id}`}
                                             >
                                                 Edit
-                                            </a> :
-                                            <div/>
+                                            </a> : null
+                                        }
+                                        {
+                                            radar.rights.indexOf('owner') !== -1 ?
+                                            <a
+                                                className="radar-state"
+                                                onClick={function(e) {
+                                                    parent.setRadarState(radar.id, radar.state === 0 ? 1 : 0);
+                                                }}
+                                            >
+                                                {radar.state === 0 ? 'Publish' : 'Draft'}
+                                            </a> : null
                                         }
                                         {
                                             radar.rights.indexOf('owner') !== -1 ?
@@ -131,8 +152,7 @@ class MyRadars extends React.Component {
                                                 }}
                                             >
                                                 Delete
-                                            </a> :
-                                            <div/>
+                                            </a> : null
                                         }
                                         {
                                             <ul

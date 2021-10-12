@@ -74,6 +74,18 @@ class AllRadars extends React.Component {
         }
     }
 
+    async setRadarState(radarId, radarState) {
+        const response = await this.props.callApi('PUT', `${this.state.adminUrl}/radar/${radarId}`, {
+            state: radarState,
+        });
+        if (response.ok) {
+            await this.updateRadarsList();
+        } else if (response.state === 403) {
+            const data = await response.json();
+            this.state.errorMessage = data.message;
+        }
+    }
+
     render() {
         const parent = this;
         return (
@@ -83,6 +95,7 @@ class AllRadars extends React.Component {
                     <ul className="radar-list-group list-group-flush">
                         {
                             this.state.radarsList.map(radar =>
+                                (!this.props.permissions.adminUser && radar.state === 0) ? null :
                                 <li
                                     className="radar-item list-group-item border-light"
                                     key={radar.id}
@@ -93,7 +106,7 @@ class AllRadars extends React.Component {
                                             marginBottom: 0,
                                         }}
                                     >
-                                        {radar.id}
+                                        {radar.id} {radar.state === 0 ? '(draft)' : ''}
                                     </label>
                                     {
                                         true ?
@@ -103,8 +116,7 @@ class AllRadars extends React.Component {
                                             target="_blank"
                                         >
                                             View
-                                        </a> :
-                                        <div/>
+                                        </a> : null
                                     }
                                     {
                                         this.props.permissions.adminUser ?
@@ -113,8 +125,18 @@ class AllRadars extends React.Component {
                                             href={`./${radar.id}`}
                                         >
                                             Edit
-                                        </a> :
-                                        <div/>
+                                        </a> : null
+                                    }
+                                    {
+                                        this.props.permissions.adminUser ?
+                                        <a
+                                            className="radar-state"
+                                            onClick={function(e) {
+                                                parent.setRadarState(radar.id, radar.state === 0 ? 1 : 0);
+                                            }}
+                                        >
+                                            {radar.state === 0 ? 'Publish' : 'Draft'}
+                                        </a> : null
                                     }
                                     {
                                         this.props.permissions.adminUser ?
@@ -125,8 +147,7 @@ class AllRadars extends React.Component {
                                             }}
                                         >
                                             Delete
-                                        </a> :
-                                        <div/>
+                                        </a> : null
                                     }
                                     {
                                         <ul

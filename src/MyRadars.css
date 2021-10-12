@@ -33,7 +33,8 @@
 .radar-item {
     display: grid;
     grid-template-areas:
-        "radar-label radar-view radar-edit radar-delete";
+        "radar-label radar-view radar-edit"
+        "radar-editors radar-state radar-delete";
     grid-column-gap: 1em;
     grid-row-gap: 0.5em;
 }
@@ -51,9 +52,18 @@
     grid-area: radar-edit;
 }
 
+.radar-state {
+    grid-area: radar-state;
+    cursor: pointer;
+}
+
 .radar-delete {
     grid-area: radar-delete;
     cursor: pointer;
+}
+
+.radar-editors {
+    grid-area: radar-editors;
 }
 
 .radar-editor-item {
