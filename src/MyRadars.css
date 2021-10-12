@@ -1,6 +1,21 @@
-.new-radar {
+.radars {
     display: grid;
     grid-auto-flow: column;
+    grid-template-columns: max-content;
+    grid-column-gap: 2em;
+}
+
+.radars > * {
+    padding-left: 1em;
+    border-left-width: thin;
+    border-left-style: groove;
+}
+
+.new-radar {
+    height: fit-content;
+    display: grid;
+    grid-auto-flow: row;
+    grid-template-rows: max-content;
     justify-content: flex-start;
 }
 

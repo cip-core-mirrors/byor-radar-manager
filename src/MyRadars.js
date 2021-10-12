@@ -17,12 +17,17 @@ class MyRadars extends React.Component {
     async componentDidMount() {
         if (!this.props.authenticated) return;
 
-        await this.updateRadarsList();
+        await this.updateRadarsList(false);
     }
 
-    async updateRadarsList() {
+    async updateRadarsList(updateList = true) {
         const response = await this.props.callApi('GET', `${this.props.baseUrl}/radar`);
         this.state.radarsList = await response.json();
+
+        if (updateList) {
+            this.props.update();
+        }
+        
         this.setState(this.state);
     }
 
@@ -208,6 +213,7 @@ class MyRadars extends React.Component {
                         permissions={this.props.permissions}
                         baseUrl={this.props.baseUrl}
                         callApi={this.props.callApi}
+                        createId="radar-id"
                         updateRadarsList={async function() {
                             await parent.updateRadarsList();
                         }}

@@ -44,6 +44,7 @@ class Navbar extends React.Component {
       response = await this.props.callApi('GET', `${this.props.baseUrl}/permissions`);
       const permissions = await response.json();
       this.state.permissions.createRadar = permissions.create_radar;
+      this.state.permissions.adminUser = permissions.admin_user;
 
       this.handleUserInfo();
     }

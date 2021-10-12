@@ -26,7 +26,7 @@ class CreateRadar extends React.Component {
                 id: radarId,
             });
             if (response.ok) {
-                document.getElementById('radar-id').value = '';
+                document.getElementById(this.props.createId).value = '';
                 await this.props.updateRadarsList();
             } else if (response.status === 404) {
                 const data = await response.json();
@@ -43,14 +43,14 @@ class CreateRadar extends React.Component {
         const state = parent.state;
         if (this.props.permissions.createRadar) {
             return (
-                <div className="new-radar-grid border-left">
+                <div className="new-radar-grid border-top">
                     <form className="create-radar">
                         <div className="form-group">
                             <label className="paramName">Radar name &nbsp;</label>
                             <input
                                 type="text"
                                 className="form-control form-control-alt"
-                                id="radar-id"
+                                id={this.props.createId}
                                 onChange={function(e) {
                                     state.radarName = e.target.value;
                                 }}
@@ -78,8 +78,8 @@ class CreateRadar extends React.Component {
             )
         } else if (this.props.authenticated) {
             return (
-                <div className="new-radar-grid">
-                    <div className="new-radar border-top">You are not authorized to create a radar</div>
+                <div className="new-radar-grid border-top">
+                    <div className="new-radar">You are not authorized to create a radar</div>
                 </div>
             )
         } else {

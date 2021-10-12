@@ -2,6 +2,7 @@ import React from 'react';
 import './App.css';
 
 import MyRadars from './MyRadars';
+import AllRadars from './AllRadars';
 import Navbar from './Navbar';
 import Parameters from './Parameters';
 import Blips from './Blips';
@@ -49,7 +50,19 @@ class App extends React.Component {
       authenticated: false,
       userInfo: undefined,
       permissions: {},
+      myRadarsKey: 0,
+      allRadarsKey: 0,
     };
+  }
+
+  updateMyRadars() {
+    this.state.myRadarsKey += 1;
+    this.setState(this.state);
+  }
+
+  updateAllRadars() {
+    this.state.allRadarsKey += 1;
+    this.setState(this.state);
   }
 
   handleUserInfoChange(userInfo, permissions, authenticated) {
@@ -57,6 +70,7 @@ class App extends React.Component {
     this.state.permissions = permissions;
     this.state.userInfo = userInfo;
     this.setState(this.state);
+    this.updateMyRadars();
   }
 
   handleParamsChange(params) {
@@ -167,6 +181,7 @@ class App extends React.Component {
   }
 
   render() {
+    const parent = this;
     if (window.location.pathname === '/') {
       return (
         <div className="App">
@@ -179,14 +194,30 @@ class App extends React.Component {
             callApi={this.callApi}
             signIn={signIn}
           />
-          <MyRadars
-            key={this.state.userInfo}
-            authenticated={this.state.authenticated}
-            userInfo={this.state.userInfo}
-            permissions={this.state.permissions}
-            baseUrl={baseUrl}
-            callApi={this.callApi}
-          />
+          <div className="radars">
+            <MyRadars
+              key={`my-radars-${this.state.myRadarsKey}`}
+              authenticated={this.state.authenticated}
+              userInfo={this.state.userInfo}
+              permissions={this.state.permissions}
+              baseUrl={baseUrl}
+              callApi={this.callApi}
+              update={function() {
+                parent.updateAllRadars();
+              }}
+            />
+            <AllRadars
+              key={`all-radars-${this.state.allRadarsKey}`}
+              authenticated={this.state.authenticated}
+              userInfo={this.state.userInfo}
+              permissions={this.state.permissions}
+              baseUrl={baseUrl}
+              callApi={this.callApi}
+              update={function() {
+                parent.updateMyRadars();
+              }}
+            />
+          </div>
         </div>
       )
     }
