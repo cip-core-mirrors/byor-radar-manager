@@ -148,7 +148,7 @@ class AllRadars extends React.Component {
                                                     >
                                                         <label>
                                                             <label
-                                                                className={permission.rights.indexOf('owner') !== -1 ? 'font-weight-bold' : ''}
+                                                                className={this.props.userInfo.mail === permission.user_id ? 'font-weight-bold' : ''}
                                                                 style={{
                                                                     marginBottom: 0,
                                                                 }}
@@ -156,7 +156,7 @@ class AllRadars extends React.Component {
                                                                 {permission.user_id}
                                                             </label>
                                                             <label
-                                                                className="text-secondary"
+                                                                className="text-light"
                                                                 style={{
                                                                     marginBottom: 0,
                                                                 }}
@@ -164,10 +164,7 @@ class AllRadars extends React.Component {
                                                                 &nbsp;
                                                                 {this.props.userInfo === undefined ? '' :
                                                                     (
-                                                                        this.props.userInfo.mail === permission.user_id ? '- you' :
-                                                                        (
-                                                                            permission.rights.indexOf('owner') !== -1 ? '- owner' : ''
-                                                                        )
+                                                                        permission.rights.indexOf('owner') !== -1 ? '- owner' : ''
                                                                     )
                                                                 }
                                                             </label>
