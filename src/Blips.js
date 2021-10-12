@@ -220,17 +220,17 @@ class Blips extends React.Component {
 
             this.handleParamsChange();
 
-            const versionDelimiter = '-';
             for (const blipLink of blipLinks) {
                 const sectorIndex = this.sectors.indexOf(blipLink.sector)
                 const ringIndex = this.rings.indexOf(blipLink.ring)
                 const sector = this.lists.slice(1)[sectorIndex];
                 const ring = sector[ringIndex];
-                const delimiterIndex = blipLink.blip.lastIndexOf(versionDelimiter);
-                const blipVersion = parseInt(blipLink.blip.substring(delimiterIndex + 1));
-                const blipId = blipLink.blip.substring(0, delimiterIndex);
+                const blipVersion = blipLink.version;
+                const blipId = blipLink.id;
                 const rawBlipVersions = blips[blipId];
                 const rawBlip = rawBlipVersions.splice(blipVersion - 1, 1)[0];
+                if (!rawBlip) continue;
+
                 const toPush = {
                     id: rawBlip.id,
                     id_version: rawBlip.id_version,
