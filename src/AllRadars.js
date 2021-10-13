@@ -122,7 +122,7 @@ class AllRadars extends React.Component {
                                         this.props.permissions.adminUser ?
                                         <a
                                             className="radar-edit"
-                                            href={`./${radar.id}`}
+                                            href={`./radars/${radar.id}`}
                                         >
                                             Edit
                                         </a> : null

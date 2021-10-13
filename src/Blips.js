@@ -203,7 +203,7 @@ class Blips extends React.Component {
         this.handleChange();
 
         let blipLinks = [];
-        const radarId = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1);
+        const radarId = this.props.radarId;
         const response2 = await this.props.callApi('GET', `${this.props.baseUrl}/radar/${radarId}/blip-links`);
         if (response2.ok) {
             blipLinks = await response2.json();

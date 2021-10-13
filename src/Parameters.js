@@ -10,7 +10,7 @@ class Parameters extends React.Component {
     async componentDidMount() {
         const parameters = await (await this.props.callApi('GET', `${this.props.baseUrl}/parameters`)).json();
 
-        const radarId = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1);
+        const radarId = this.props.radarId;
         const response = await this.props.callApi('GET', `${this.props.baseUrl}/radar/${radarId}/parameters`);
         const data = await response.json();
         for (const p1 of data) {

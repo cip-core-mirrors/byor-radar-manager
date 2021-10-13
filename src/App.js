@@ -142,7 +142,7 @@ class App extends React.Component {
     })
   }
 
-  async handleSubmit() {
+  async handleSubmit(radarId) {
     const links = [];
     let sectorIndex = 0;
     for (const sector of this.state.blips.slice(1)) {
@@ -176,13 +176,55 @@ class App extends React.Component {
         }),
     };
 
-    const radarId = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1);
     return await this.callApi('PUT', `${baseUrl}/radar/${radarId}`, data);
   }
 
   render() {
     const parent = this;
-    if (window.location.pathname === '/') {
+    
+    const paths = window.location.pathname.split('/').slice(1);
+    const endPath = paths[paths.length - 1];
+    const beforeEndPath = paths[paths.length - 2];
+
+    if (beforeEndPath === 'radars') {
+      return (
+        <div className="App">
+          <Navbar
+            onUserInfoChange={this.handleUserInfoChange}
+            authenticated={this.state.authenticated}
+            permissions={this.state.permissions}
+            userInfo={this.state.userInfo}
+            baseUrl={baseUrl}
+            callApi={this.callApi}
+            signIn={signIn}
+          />
+          <Blips
+            radarId={endPath}
+            onBlipsChange={this.handleBlipsChange}
+            onSectorNameChange={this.handleSectorNameChange}
+            onRingNameChange={this.handleRingNameChange}
+            blips={this.state.blips}
+            baseUrl={baseUrl}
+            callApi={this.callApi}
+          />
+          <Parameters
+            radarId={endPath}
+            onParamsChange={this.handleParamsChange}
+            parameters={this.state.parameters}
+            baseUrl={baseUrl}
+            callApi={this.callApi}
+          />
+          <Submit
+            onSubmit={async function(e) {
+              await parent.handleSubmit(endPath);
+            }}
+          />
+          <Footer />
+        </div>
+      )
+    } else if (beforeEndPath === 'blips') {
+
+    } else if (beforeEndPath === undefined && endPath === '') {
       return (
         <div className="App">
           <Navbar
@@ -220,38 +262,9 @@ class App extends React.Component {
           </div>
         </div>
       )
+    } else {
+      return <div>Page not found</div>
     }
-    return (
-      <div className="App">
-        <Navbar
-          onUserInfoChange={this.handleUserInfoChange}
-          authenticated={this.state.authenticated}
-          permissions={this.state.permissions}
-          userInfo={this.state.userInfo}
-          baseUrl={baseUrl}
-          callApi={this.callApi}
-          signIn={signIn}
-        />
-        <Blips
-          onBlipsChange={this.handleBlipsChange}
-          onSectorNameChange={this.handleSectorNameChange}
-          onRingNameChange={this.handleRingNameChange}
-          blips={this.state.blips}
-          baseUrl={baseUrl}
-          callApi={this.callApi}
-        />
-        <Parameters
-          onParamsChange={this.handleParamsChange}
-          parameters={this.state.parameters}
-          baseUrl={baseUrl}
-          callApi={this.callApi}
-        />
-        <Submit
-          onSubmit={this.handleSubmit}
-        />
-        <Footer />
-      </div>
-    )
   }
 }
 

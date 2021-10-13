@@ -127,7 +127,7 @@ class MyRadars extends React.Component {
                                             radar.rights.indexOf('edit') !== -1 ?
                                             <a
                                                 className="radar-edit"
-                                                href={`./${radar.id}`}
+                                                href={`./radars/${radar.id}`}
                                             >
                                                 Edit
                                             </a> : null
