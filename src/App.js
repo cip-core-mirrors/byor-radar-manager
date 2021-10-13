@@ -1,11 +1,12 @@
 import React from 'react';
 import './App.css';
 
+import Blips from './Blips';
 import MyRadars from './MyRadars';
 import AllRadars from './AllRadars';
 import Navbar from './Navbar';
 import Parameters from './Parameters';
-import Blips from './Blips';
+import RadarBlips from './RadarBlips';
 import Submit from './Submit';
 import Footer from './Footer';
 
@@ -182,11 +183,12 @@ class App extends React.Component {
   render() {
     const parent = this;
     
-    const paths = window.location.pathname.split('/').slice(1);
-    const endPath = paths[paths.length - 1];
-    const beforeEndPath = paths[paths.length - 2];
+    let paths = window.location.pathname.split('/').slice(1);
+    paths = paths.slice(paths.length - 2);
+    const endPath = paths[1];
+    const beforeEndPath = paths[0];
 
-    if (beforeEndPath === 'radars') {
+    if (beforeEndPath === 'radars' && endPath) {
       return (
         <div className="App">
           <Navbar
@@ -198,7 +200,7 @@ class App extends React.Component {
             callApi={this.callApi}
             signIn={signIn}
           />
-          <Blips
+          <RadarBlips
             radarId={endPath}
             onBlipsChange={this.handleBlipsChange}
             onSectorNameChange={this.handleSectorNameChange}
@@ -222,9 +224,7 @@ class App extends React.Component {
           <Footer />
         </div>
       )
-    } else if (beforeEndPath === 'blips') {
-
-    } else if (beforeEndPath === undefined && endPath === '') {
+    } else if (beforeEndPath === 'radars' && endPath === undefined) {
       return (
         <div className="App">
           <Navbar
@@ -262,6 +262,39 @@ class App extends React.Component {
           </div>
         </div>
       )
+    } else if (beforeEndPath === 'blips' && endPath === undefined) {
+      return (
+        <div className="App">
+          <Navbar
+            onUserInfoChange={this.handleUserInfoChange}
+            authenticated={this.state.authenticated}
+            permissions={this.state.permissions}
+            userInfo={this.state.userInfo}
+            baseUrl={baseUrl}
+            callApi={this.callApi}
+            signIn={signIn}
+          />
+          <Blips
+            authenticated={this.state.authenticated}
+            permissions={this.state.permissions}
+            userInfo={this.state.userInfo}
+            baseUrl={baseUrl}
+            callApi={this.callApi}
+          />
+        </div>
+      )
+    } else if (beforeEndPath === "") {
+      return <div className="App">
+        <Navbar
+          onUserInfoChange={this.handleUserInfoChange}
+          authenticated={this.state.authenticated}
+          permissions={this.state.permissions}
+          userInfo={this.state.userInfo}
+          baseUrl={baseUrl}
+          callApi={this.callApi}
+          signIn={signIn}
+        />
+      </div>
     } else {
       return <div>Page not found</div>
     }
