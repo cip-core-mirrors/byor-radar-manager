@@ -89,7 +89,7 @@ class Blips extends React.Component {
 
     render() {
         const parent = this;
-        if (!this.props.permissions.createBlips) {
+        if (this.props.permissions.authenticated) {
             return <div className="new-blips-grid">
                 <table
                     className="new-blips-table"
@@ -186,12 +186,8 @@ class Blips extends React.Component {
                     }}
                 />
             </div>
-        } else if (this.props.authenticated) {
-            return <div className="new-blips-grid">
-                You are not authorized to create blips
-            </div>
         } else {
-            return null;
+            return <div className="new-blips-grid">Please login in order to create blips</div>;
         }
     }
 }
