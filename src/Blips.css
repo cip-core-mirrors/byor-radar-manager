@@ -1,0 +1,11 @@
+.new-blips-grid {
+    display: grid;
+    grid-auto-flow: row;
+    grid-row-gap: 1em;
+}
+
+.new-blips-table {
+}
+
+.new-blips-submit-btn {
+}

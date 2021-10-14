@@ -14,12 +14,6 @@
   justify-self: center;
 }
 
-.default-blip-label {
-}
-
-.default-blip-value {
-}
-
 .list-group {
   min-height: 70px;
   width: calc(15vw + 10px); /* grid variable in Blips.js */

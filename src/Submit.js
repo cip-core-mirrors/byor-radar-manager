@@ -20,11 +20,7 @@ class Submit extends React.Component {
         this.setState(this.state);
 
         const response = await this.props.onSubmit();
-        if (response.ok) {
-            this.state.success = true;
-        } else {
-            this.state.success = false;
-        }
+        this.state.success = response.ok;
 
         this.setState(this.state);
         const parent = this;
