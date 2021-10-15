@@ -21,9 +21,64 @@ class Blips extends React.Component {
     async componentDidMount() {
         this.addColumn('Name');
         this.addColumn('Last updated');
-        this.addColumn();
-        this.addBlip();
+        this.setState(this.state);
+        
+        const response = await this.props.callApi('GET', `${this.props.baseUrl}/blip`)
+        if (!response.ok) {
+            this.addColumn();
+            this.addBlip();
+            this.setState(this.state);
+            return;
+        }
 
+        const columns = {};
+        const data = await response.json();
+        for (const blipId in data) {
+            const blipVersions = data[blipId];
+            const lastBlip = blipVersions[blipVersions.length - 1];
+            const {
+                id,
+                id_version,
+                lastupdate,
+                name,
+                version,
+            } = lastBlip;
+            delete lastBlip.id;
+            delete lastBlip.id_version;
+            delete lastBlip.lastupdate;
+            delete lastBlip.name;
+            delete lastBlip.version;
+            for (const columnName in lastBlip) {
+                const columnExists = columns[columnName];
+                if (!columnExists) {
+                    this.addColumn(columnName);
+                    columns[columnName] = true;
+                }
+            }
+            lastBlip.name = name;
+            lastBlip.lastupdate = lastupdate;
+        }
+
+        for (const blipId in data) {
+            const blipVersions = data[blipId];
+            const lastBlip = blipVersions[blipVersions.length - 1];
+            const {
+                lastupdate,
+                name,
+            } = lastBlip;
+            delete lastBlip.lastupdate;
+            delete lastBlip.name;
+            this.addBlip();
+            const lastRow = this.state.rows[this.state.rows.length - 1];
+            lastRow[0] = name;
+            lastRow[1] = lastupdate || '';
+            let columnIndex = 2;
+            for (const columnName in lastBlip) {
+                const columnValue = lastBlip[columnName];
+                lastRow[columnIndex] = columnValue;
+                columnIndex++;
+            }
+        }
         this.setState(this.state);
     }
 
@@ -64,7 +119,7 @@ class Blips extends React.Component {
         this.state.submitting = true;
         this.setState(this.state);
 
-        const response = await this.props.callApi('PUT', `${this.props.baseUrl}`, { blips });
+        const response = await this.props.callApi('POST', `${this.props.baseUrl}/blips`, { blips });
         this.state.success = response.ok;
         const data = await response.json();
         const parent = this;
@@ -89,7 +144,7 @@ class Blips extends React.Component {
 
     render() {
         const parent = this;
-        if (this.props.permissions.authenticated) {
+        if (this.props.authenticated) {
             return <div className="new-blips-grid">
                 <table
                     className="new-blips-table"
