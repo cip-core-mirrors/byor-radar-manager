@@ -20,7 +20,7 @@ class Blips extends React.Component {
 
     async componentDidMount() {
         this.addColumn('Name');
-        this.addColumn('Last updated');
+        this.addColumn('Last update');
         this.setState(this.state);
         
         const response = await this.props.callApi('GET', `${this.props.baseUrl}/blip`)
@@ -32,6 +32,7 @@ class Blips extends React.Component {
         }
 
         const columns = {};
+        let columnIndex = 0;
         const data = await response.json();
         for (const blipId in data) {
             const blipVersions = data[blipId];
@@ -50,9 +51,10 @@ class Blips extends React.Component {
             delete lastBlip.version;
             for (const columnName in lastBlip) {
                 const columnExists = columns[columnName];
-                if (!columnExists) {
+                if (columnExists === undefined) {
                     this.addColumn(columnName);
-                    columns[columnName] = true;
+                    columns[columnName] = columnIndex;
+                    columnIndex++;
                 }
             }
             lastBlip.name = name;
@@ -71,14 +73,19 @@ class Blips extends React.Component {
             this.addBlip();
             const lastRow = this.state.rows[this.state.rows.length - 1];
             lastRow[0] = name;
-            lastRow[1] = lastupdate || '';
-            let columnIndex = 2;
+            const lastUpdateDate = lastupdate ? new Date(lastupdate) : undefined;
+            if (lastUpdateDate && typeof lastUpdateDate.getMonth === 'function' && !Number.isNaN(lastUpdateDate.getMonth())) {
+                lastRow[1] = `${lastUpdateDate.getFullYear()}-${lastUpdateDate.getMonth() + 1}-${lastUpdateDate.getDate()}`;
+            } else {
+                lastRow[1] = '';
+            }
             for (const columnName in lastBlip) {
                 const columnValue = lastBlip[columnName];
-                lastRow[columnIndex] = columnValue;
-                columnIndex++;
+                const columnIndex = columns[columnName];
+                lastRow[columnIndex + 2] = columnValue;
             }
         }
+
         this.setState(this.state);
     }
 
@@ -90,8 +97,8 @@ class Blips extends React.Component {
         this.state.rows.push(row);
     }
 
-    addColumn(columnName = 'Column name') {
-        this.state.columns.push(columnName);
+    addColumn(columnName) {
+        this.state.columns.push(columnName || '');
         for (const row of this.state.rows) {
             row.push('');
         }
@@ -151,6 +158,7 @@ class Blips extends React.Component {
                 >
                     <thead>
                         <tr>
+                            <th/>
                             {
                                 this.state.columns.map((columnName, index) =>
                                     <th
@@ -162,6 +170,7 @@ class Blips extends React.Component {
                                             <input
                                                 type="text"
                                                 className="form-control form-control-alt"
+                                                placeholder={columnName ? null : "Column name"}
                                                 value={columnName}
                                                 onChange={function(e) {
                                                     parent.state.columns[index] = e.target.value;
@@ -172,16 +181,18 @@ class Blips extends React.Component {
                                     </th>
                                 )
                             }
-                            <button
-                                className="btn btn-lg btn-flat-primary new-column-btn"
-                                onClick={function(e) {
-                                    parent.addColumn();
-                                    parent.setState(parent.state);
-                                }}
-                            >
-                                <i className="icon icon-md">add</i>
-                                <span className="new-sector-btn-label">Add column</span>
-                            </button>
+                            <th>
+                                <button
+                                    className="btn btn-lg btn-flat-primary new-column-btn"
+                                    onClick={function(e) {
+                                        parent.addColumn();
+                                        parent.setState(parent.state);
+                                    }}
+                                >
+                                    <i className="icon icon-md">add</i>
+                                    <span className="new-sector-btn-label">Add column</span>
+                                </button>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -190,6 +201,16 @@ class Blips extends React.Component {
                                 <tr
                                     key={rowIndex}
                                 >
+                                    <td>
+                                        <button
+                                            className="btn btn-lg"
+                                            onClick={async function(e) {
+                                                //await parent.deleteBlip()
+                                            }}
+                                        >
+                                            <i className="icon icon-md">delete</i>
+                                        </button>
+                                    </td>
                                     {
                                         row.map((columnValue, index) => 
                                             <td
@@ -197,6 +218,7 @@ class Blips extends React.Component {
                                             >
                                                 <input
                                                     type="text"
+                                                    readOnly={index < 2 && row[index]}
                                                     className="form-control form-control-alt"
                                                     value={columnValue}
                                                     onChange={function(e) {
