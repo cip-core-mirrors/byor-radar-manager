@@ -15,6 +15,7 @@ class Blips extends React.Component {
             returnMessage: undefined,
             rows: [],
             columns: [],
+            locked: {},
         };
     }
 
@@ -61,6 +62,7 @@ class Blips extends React.Component {
             lastBlip.lastupdate = lastupdate;
         }
 
+        let row = 0;
         for (const blipId in data) {
             const blipVersions = data[blipId];
             const lastBlip = blipVersions[blipVersions.length - 1];
@@ -73,9 +75,13 @@ class Blips extends React.Component {
             this.addBlip();
             const lastRow = this.state.rows[this.state.rows.length - 1];
             lastRow[0] = name;
+            
+            const lockedRow = {};
+            lockedRow[0] = true;
             const lastUpdateDate = lastupdate ? new Date(lastupdate) : undefined;
             if (lastUpdateDate && typeof lastUpdateDate.getMonth === 'function' && !Number.isNaN(lastUpdateDate.getMonth())) {
                 lastRow[1] = `${lastUpdateDate.getFullYear()}-${lastUpdateDate.getMonth() + 1}-${lastUpdateDate.getDate()}`;
+                lockedRow[1] = true;
             } else {
                 lastRow[1] = '';
             }
@@ -84,6 +90,13 @@ class Blips extends React.Component {
                 const columnIndex = columns[columnName];
                 lastRow[columnIndex + 2] = columnValue;
             }
+            this.state.locked[row] = lockedRow;
+            row++;
+        }
+        
+        if (this.state.rows.length === 0) {
+            this.addColumn();
+            this.addBlip();
         }
 
         this.setState(this.state);
@@ -104,6 +117,15 @@ class Blips extends React.Component {
         }
     }
 
+    async deleteBlip(blipId, rowIndex) {
+        const response = await this.props.callApi('DELETE', `${this.props.baseUrl}/blips/${blipId}`);
+        if (response.ok) {
+            this.state.rows.splice(rowIndex, 1);
+        } else {
+            this.state.returnMessage = "Erreur deleting blip";
+        }
+    }
+
     async handleSubmit() {
         if (this.state.submitting) return;
 
@@ -112,13 +134,21 @@ class Blips extends React.Component {
         const columnsIndex = {};
         columns.map((value, index) => columnsIndex[index] = value);
 
+        const toLock = {};
+        let rowIndex = 0;
         for (const row of this.state.rows) {
             const blip = {};
+            const toLockRow = {};
             for (const columnIndex in row) {
                 const columnValue = row[columnIndex];
-                blip[columnsIndex[columnIndex]] = columnValue || undefined;
+                if (columnValue) {
+                    toLockRow[columnIndex] = true;
+                    blip[columnsIndex[columnIndex]] = columnValue;
+                }
             }
             if (blip.name) blips.push(blip);
+            toLock[rowIndex] = toLockRow;
+            rowIndex++;
         }
 
         if (blips.length === 0) return;
@@ -131,6 +161,7 @@ class Blips extends React.Component {
         const data = await response.json();
         const parent = this;
         if (response.ok) {
+            this.state.locked = toLock;
             this.state.returnMessage = `Successfully added ${data.rows} blip${data.rows > 1 ? 's' : ''}`;
             setTimeout(function() {
                 parent.state.success = undefined;
@@ -205,7 +236,9 @@ class Blips extends React.Component {
                                         <button
                                             className="btn btn-lg"
                                             onClick={async function(e) {
-                                                //await parent.deleteBlip()
+                                                if (!row[0]) return;
+                                                await parent.deleteBlip(row[0], rowIndex);
+                                                parent.setState(parent.state);
                                             }}
                                         >
                                             <i className="icon icon-md">delete</i>
@@ -218,7 +251,7 @@ class Blips extends React.Component {
                                             >
                                                 <input
                                                     type="text"
-                                                    readOnly={index < 2 && row[index]}
+                                                    readOnly={index < 2 && this.state.locked[rowIndex] && this.state.locked[rowIndex][index]}
                                                     className="form-control form-control-alt"
                                                     value={columnValue}
                                                     onChange={function(e) {
