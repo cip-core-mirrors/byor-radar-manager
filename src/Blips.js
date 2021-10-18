@@ -1,778 +1,475 @@
 import React from 'react';
-import {DragDropContext, Draggable, Droppable} from 'react-beautiful-dnd';
 import './Blips.css';
 
-import * as d3 from 'd3';
+function normalizeColumnName(name) {
+    const words = name.split(' ');
+    return words[0].toLowerCase() + words.slice(1).map(n => n[0].toUpperCase() + n.slice(1))
+}
 
-const grid = 5;
-const svgWidth = 10;
-const svgValues = [
-    {
-        name: 'svg-triangle',
-        callback: function(svg) {
-            d3.select(svg)
-                .append('polygon')
-                .attr('points', trianglePoints.map(point => `${point.x * svgWidth},${point.y * svgWidth}`).join(' '))
-        },
-    },
-    {
-        name: 'svg-circle',
-        callback: function(svg) {
-            d3.select(svg)
-                .append('circle')
-                .attr('cx', svgWidth / 2)
-                .attr('cy', svgWidth / 2)
-                .attr('r', svgWidth / 2);
-        },
-    },
-    {
-        name: 'svg-square',
-        callback: function(svg) {
-            d3.select(svg)
-                .append("rect")
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("width", svgWidth)
-                .attr("height", svgWidth)
-        },
-    },
-    {
-        name: 'svg-diamond',
-        callback: function(svg) {
-            d3.select(svg)
-                .append('polygon')
-                .attr('points', diamondPoints.map(point => `${point.x * svgWidth},${point.y * svgWidth}`).join(' '))
-        },
-    },
-    {
-        name: 'svg-wye',
-        callback: function(svg) {
-            const symbol = d3.symbol().type(d3.symbolWye).size(svgWidth * svgWidth / 2);
-            d3.select(svg)
-                .append('path')
-                .attr('d', symbol)
-                .attr('transform', `translate(${svgWidth / 2}, ${svgWidth / 2})`)
-        },
-    },
-    {
-        name: 'svg-star',
-        callback: function(svg) {
-            d3.select(svg)
-                .append('polygon')
-                .attr('points', starPoints.map(point => `${point.x * svgWidth},${point.y * svgWidth}`).join(' '))
-        },
-    },
-    {
-        name: 'svg-cross',
-        callback: function(svg) {
-            const symbol = d3.symbol().type(d3.symbolCross).size(svgWidth * svgWidth / 2);
-            d3.select(svg)
-                .append('path')
-                .attr('d', symbol)
-                .attr('transform', `translate(${svgWidth / 2}, ${svgWidth / 2})`)
-        },
-    },
-];
-
-const starPoints = [
-    {x: 0.50, y: 0.00},
-    {x: 0.28, y: 0.45},
-    {x: 0.19, y: 0.95},
-    {x: 0.64, y: 0.71},
-    {x: 1.00, y: 0.36},
-    {x: 0.50, y: 0.28},
-    {x: 0.00, y: 0.36},
-    {x: 0.36, y: 0.71},
-    {x: 0.81, y: 0.95},
-    {x: 0.72, y: 0.45},
-];
-
-const trianglePoints = [
-    {x: 0.00, y: 1.00},
-    {x: 0.50, y: 0.00},
-    {x: 1.00, y: 1.00},
-];
-
-const diamondPoints = [
-    {x: 0.50, y: 0.00},
-    {x: 0.90, y: 0.50},
-    {x: 0.50, y: 1.00},
-    {x: 0.10, y: 0.50},
-];
+function parseDate(value) {
+    const date = value ? new Date(value) : undefined;
+    if (date && typeof date.getMonth === 'function' && !Number.isNaN(date.getMonth())) {
+        return date;
+    }
+}
 
 class Blips extends React.Component {
     constructor(props) {
         super(props);
-
-        this.reorder = this.reorder.bind(this);
-        this.move = this.move.bind(this);
-        this.onDragEnd = this.onDragEnd.bind(this);
-        this.getListStyle = this.getListStyle.bind(this);
-        this.getItemStyle = this.getItemStyle.bind(this);
-
-        this.newSector = this.newSector.bind(this);
-        this.moveSector = this.moveSector.bind(this);
-        this.deleteSector = this.deleteSector.bind(this);
-        this.sectorNameChange = this.sectorNameChange.bind(this);
-
-        this.newRing = this.newRing.bind(this);
-        this.moveRing = this.moveRing.bind(this);
-        this.deleteRing = this.deleteRing.bind(this);
-        this.ringNameChange = this.ringNameChange.bind(this);
-
-        this.setBlipValue = this.setBlipValue.bind(this);
-        this.setDefaultBlipValue = this.setDefaultBlipValue.bind(this);
-
-        this.getList = this.getList.bind(this);
-
-        this.lists = Array.from(this.props.blips);
-        this.sectors = [];
-        this.rings = [];
-
-        this.svgRefs = {};
-
-        this.selectedDefaultRef = 0;
-        this.defaultRef = undefined;
-        this.defaultRefs = {};
-    }
-
-    handleChange() {
-        this.props.onBlipsChange(this.lists);
-    }
-
-    handleParamsChange() {
-        this.props.onSectorNameChange(this.sectors);
-        this.props.onRingNameChange(this.rings);
-        this.handleChange();
-    }
-
-    onlyUnique(value, index, self) {
-        return self.indexOf(value) === index;
-    }
-
-    drawSvgs() {
-        this.handleParamsChange();
-
-        for (const svgRefs of Object.values(this.svgRefs)) {
-            for (const svg of Object.values(svgRefs)) {
-                if (!svg) continue;
-                if (svg.firstChild) continue;
-
-                const classList = svg.classList;
-                for (const svgObject of svgValues) {
-                    if (classList.contains(svgObject.name)) {
-                        svgObject.callback(svg);
-                        break;
-                    }
-                }
-            }
-        }
-
-        this.handleSvgChange();
-    }
-
-    handleSvgChange(blip) {
-        if (blip) {
-            const svg = d3.select(blip.ref);
-            svg.selectAll("*").remove();
-            const svgObject = svgValues[blip.value];
-            svgObject.callback(blip.ref);
-        } else {
-            for (const blip of this.lists.slice(1).flat().flat()) {
-                const svg = d3.select(blip.ref);
-                svg.selectAll("*").remove();
-                const svgObject = svgValues[blip.value];
-                svgObject.callback(blip.ref);
-            }
-        }
-
-        this.handleChange();
+        this.state = {
+            success: undefined,
+            submitting: false,
+            returnMessage: undefined,
+            rows: [],
+            columns: [],
+            locked: {},
+            allBlipsColumns: [],
+            allBlipsRows: [],
+        };
     }
 
     async componentDidMount() {
-        let blips = [];
-
-        const response1 = await this.props.callApi('GET', `${this.props.baseUrl}/blips`);
-        if (response1.ok) {
-            blips = await response1.json();
-            this.lists[0] = [Object.values(blips).flat()];
-        } else {
-            this.lists[0] = [];
-        }
-
-        this.handleChange();
-
-        let blipLinks = [];
-        const radarId = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1);
-        const response2 = await this.props.callApi('GET', `${this.props.baseUrl}/radar/${radarId}/blip-links`);
-        if (response2.ok) {
-            blipLinks = await response2.json();
-            const sectors = blipLinks.map(blipLink => blipLink.sector).filter(this.onlyUnique);
-            for (const sector of sectors) {
-                this.lists.push([]);
-                this.sectors.push(sector);
-            }
-            const rings = blipLinks.map(blipLink => blipLink.ring).filter(this.onlyUnique);
-            for (const ring of rings) {
-                this.newRing();
-                this.rings[this.rings.length - 1] = ring;
-            }
-
-            this.handleParamsChange();
-
-            for (const blipLink of blipLinks) {
-                const sectorIndex = this.sectors.indexOf(blipLink.sector)
-                const ringIndex = this.rings.indexOf(blipLink.ring)
-                const sector = this.lists.slice(1)[sectorIndex];
-                const ring = sector[ringIndex];
-                const blipVersion = blipLink.version;
-                const blipId = blipLink.id;
-                const rawBlipVersions = blips[blipId];
-                const rawBlip = rawBlipVersions.splice(blipVersion - 1, 1)[0];
-                if (!rawBlip) continue;
-
-                const toPush = {
-                    id: rawBlip.id,
-                    id_version: rawBlip.id_version,
-                    name: rawBlip.name,
-                    version: rawBlip.version,
-                    value: blipLink.value,
-                };
-                ring.push(toPush);
-
-                if (rawBlipVersions.length === 0) {
-                    delete blips[blipLink.blip];
-                }
-            }
-
-            // Remove used blips from list
-            this.lists[0] = [Object.values(blips).flat()];
-        } else {
-            this.newSector();
-            this.newRing();
-        }
-
-        svgValues[this.selectedDefaultRef].callback(this.defaultRef);
-
-        this.drawSvgs();
-    }
-
-    getList = (droppableId) => {
-        const delimiter = '-';
-        const delimiterIndex = droppableId.indexOf(delimiter);
-        const sectorIndex = parseInt(droppableId.substring(0, delimiterIndex));
-        const ringIndex = parseInt(droppableId.substring(delimiterIndex + 1));
-
-        return this.lists[sectorIndex][ringIndex];
-    }
-
-    // a little function to help us with reordering the result
-    reorder = (source, destination) => {
-        const droppableId = source.droppableId;
-        const startIndex = source.index;
-        const endIndex = destination.index;
-
-        const list = this.getList(droppableId);
-        const [removed] = list.splice(startIndex, 1);
-        list.splice(endIndex, 0, removed);
-    };
-
-  /**
-   * Moves an item from one list to another list.
-   */
-    move = (droppableSource, droppableDestination) => {
-        const source = this.getList(droppableSource.droppableId);
-        const destination = this.getList(droppableDestination.droppableId);
-
-        const [removed] = source.splice(droppableSource.index, 1);
-        const inserted = {
-            id: removed.id,
-            id_version: `${removed.id}-${removed.version}`,
-            name: removed.name,
-            version: removed.version,
-            value: removed.value || this.selectedDefaultRef,
-        };
-
-        destination.splice(droppableDestination.index, 0, inserted);
-
-        if (droppableSource.droppableId === '0-0') {
-            const parent = this;
-            setTimeout(function() {
-                parent.drawSvgs();
-            }, 400);
-        }
-    };
-
-    onDragEnd(result) {
-        const { source, destination } = result;
-
-        // dropped outside the list
-        if (!destination) {
+        this.addColumn('Name');
+        this.addColumn('Last update');
+        this.setState(this.state);
+        
+        const response = await this.props.callApi('GET', `${this.props.baseUrl}/blip`)
+        if (!response.ok) {
+            this.addColumn();
+            this.addBlip();
+            this.setState(this.state);
             return;
         }
 
-        if (source.droppableId === destination.droppableId) {
-            this.reorder(source, destination);
-        } else {
-            this.move(source, destination);
-        }
-        this.handleChange();
-    };
-
-    newSector(event) {
-        const sector = [];
-        for (let i = 0; i < this.rings.length; i++) {
-            sector.push([]);
-        }
-        this.lists.push(sector);
-        this.sectors.push(`Sector ${this.sectors.length + 1}`);
-
-        this.handleParamsChange();
-    }
-
-    newRing(event) {
-        this.lists.slice(1).map(list => list.push([]));
-        this.rings.push(`Ring ${this.rings.length + 1}`);
-
-        this.handleParamsChange();
-    }
-
-    sectorNameChange(event) {
-        const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
-        const index = parseInt(targetId.substring('sector-name-'.length));
-
-        this.sectors[index] = event.target.value;
-
-        this.handleParamsChange();
-    }
-
-    ringNameChange(event) {
-        const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
-        const index = parseInt(targetId.substring('ring-name-'.length));
-
-        this.rings[index] = event.target.value;
-
-        this.handleParamsChange();
-    }
-
-    moveRing(event) {
-        const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
-        let srcIndex = 0;
-        let destIndex = 0;
-        if (targetId.indexOf('ring-left') !== -1) {
-            srcIndex = parseInt(targetId.substring('ring-left-'.length));
-            destIndex = srcIndex - 1;
-        } else if (targetId.indexOf('ring-right') !== -1) {
-            srcIndex = parseInt(targetId.substring('ring-right-'.length));
-            destIndex = srcIndex + 1;
-        }
-
-        const srcRingName = this.rings[srcIndex];
-        this.rings[srcIndex] = this.rings[destIndex];
-        this.rings[destIndex] = srcRingName;
-
-        for (const sector of this.lists.slice(1)) {
-            const srcRing = sector[srcIndex];
-            sector[srcIndex] = sector[destIndex];
-            sector[destIndex] = srcRing;
-        }
-
-        this.handleParamsChange();
-    }
-
-    deleteRing(event) {
-        const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
-        const index = parseInt(targetId.substring('delete-ring-'.length));
-
-        this.rings.splice(index, 1);
-        const blips = [];
-        for (const sector of this.lists.slice(1)) {
-            const ring = sector.splice(index, 1)[0];
-            blips.push(...ring);
-        }
-        this.lists[0][0].push(...blips);
-
-        this.handleParamsChange();
-    }
-
-    moveSector(event) {
-        const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
-        let srcIndex = 0;
-        let destIndex = 0;
-        if (targetId.indexOf('sector-left') !== -1) {
-            srcIndex = parseInt(targetId.substring('sector-left-'.length));
-            destIndex = srcIndex - 1;
-        } else if (targetId.indexOf('sector-right') !== -1) {
-            srcIndex = parseInt(targetId.substring('sector-right-'.length));
-            destIndex = srcIndex + 1;
-        }
-
-        const srcSectorName = this.sectors[srcIndex];
-        this.sectors[srcIndex] = this.sectors[destIndex];
-        this.sectors[destIndex] = srcSectorName;
-
-        const srcSector = this.lists[srcIndex + 1];
-        this.lists[srcIndex + 1] = this.lists[destIndex + 1];
-        this.lists[destIndex + 1] = srcSector;
-
-        this.handleParamsChange();
-    }
-
-    deleteSector(event) {
-        const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
-        const index = parseInt(targetId.substring('delete-sector-'.length));
-
-        this.sectors.splice(index, 1);
-        const sector = this.lists.splice(index + 1, 1)[0];
-        this.lists[0][0].push(...sector.flat());
-
-        this.handleParamsChange();
-    }
-
-    getListStyle(isDraggingOver) {
-        return {
-            padding: grid,
-            borderStyle: 'outset',
-            borderColor: 'var(--gray)',
-            borderWidth: 1,
-            //width: isDraggingOver ? 'min-content' : 'auto',
-        }
-    }
-
-    getItemStyle(isDragging, draggableStyle) {
-        return {
-            // some basic styles to make the items look a bit nicer
-            margin: `0 0 ${grid}px 0`,
-            opacity: isDragging ? 0.3 : 1,
-            width: '15vw',
-            listStyleType: 'none',
-            color: '-internal-light-dark(black, white)',
-            display: 'grid',
-            textAlign: 'center',
-            alignItems: 'center',
-            padding: '1px 6px',
-            borderWidth: 2,
-            borderStyle: 'outset',
-            borderColor: 'var(--gray)',
-            backgroundColor: 'var(--bg-lvl3)',
-
-            // styles we need to apply on draggables
-            ...draggableStyle
-        }
-    }
-
-    setBlipValue(event) {
-        let dataValue = event.target;
-        while (!dataValue.getAttribute('data-value')) {
-            dataValue = dataValue.parentElement;
-        }
-        let element = dataValue;
-        while (!element.id) {
-            element = element.parentElement;
-        }
-
-        for (const blip of this.lists.slice(1).flat().flat()) {
-            if (blip.id_version === element.id) {
-                blip.value = parseInt(dataValue.getAttribute('data-value'));
-                this.handleSvgChange(blip);
-                break;
+        const columns = {};
+        let columnIndex = 0;
+        const data = await response.json();
+        for (const blipId in data) {
+            const blipVersions = data[blipId];
+            const lastBlip = blipVersions[blipVersions.length - 1];
+            const {
+                id,
+                id_version,
+                lastupdate,
+                name,
+                version,
+            } = lastBlip;
+            delete lastBlip.id;
+            delete lastBlip.id_version;
+            delete lastBlip.lastupdate;
+            delete lastBlip.name;
+            delete lastBlip.version;
+            for (const columnName in lastBlip) {
+                const columnExists = columns[columnName];
+                if (columnExists === undefined) {
+                    this.addColumn(columnName);
+                    columns[columnName] = columnIndex;
+                    columnIndex++;
+                }
             }
+            lastBlip.name = name;
+            lastBlip.lastupdate = lastupdate;
+        }
+
+        let row = 0;
+        for (const blipId in data) {
+            const blipVersions = data[blipId];
+            const lastBlip = blipVersions[blipVersions.length - 1];
+            const {
+                lastupdate,
+                name,
+            } = lastBlip;
+            delete lastBlip.lastupdate;
+            delete lastBlip.name;
+            this.addBlip();
+            const lastRow = this.state.rows[this.state.rows.length - 1];
+            lastRow[0] = name;
+            
+            const lockedRow = {};
+            lockedRow[0] = true;
+            const lastUpdateDate = parseDate(lastupdate);
+            if (lastUpdateDate) {
+                lastRow[1] = `${lastUpdateDate.getFullYear()}-${lastUpdateDate.getMonth() + 1}-${lastUpdateDate.getDate()}`;
+                lockedRow[1] = true;
+            } else {
+                lastRow[1] = '';
+            }
+            for (const columnName in lastBlip) {
+                const columnValue = lastBlip[columnName];
+                const columnIndex = columns[columnName];
+                lastRow[columnIndex + 2] = columnValue;
+            }
+            this.state.locked[row] = lockedRow;
+            row++;
+        }
+        
+        if (this.state.rows.length === 0) {
+            this.addColumn();
+            this.addBlip();
+        }
+
+        this.setState(this.state);
+
+        await this.refreshAllBlips();
+    }
+
+    async refreshAllBlips() {
+        const allBlipsResponse = await this.props.callApi('GET', `${this.props.baseUrl}/blips`);
+        if (allBlipsResponse.ok) {
+            const allBlips = await allBlipsResponse.json();
+            const columnsIndex = {};
+            for (const blipVersions of Object.values(allBlips)) {
+                const blipVersion = blipVersions[blipVersions.length - 1];
+                const { id, id_version, lastupdate, name, version, permissions } = blipVersion;
+                delete blipVersion.id;
+                delete blipVersion.id_version;
+                delete blipVersion.lastupdate;
+                delete blipVersion.name;
+                delete blipVersion.version;
+                delete blipVersion.permissions;
+                for (const columnName of Object.keys(blipVersion)) {
+                    const columnIndex = columnsIndex[columnName];
+                    if (columnIndex === undefined) {
+                        columnsIndex[columnName] = Object.keys(columnsIndex).length;
+                    }
+                }
+                blipVersion.id = id;
+                blipVersion.id_version = id_version;
+                blipVersion.lastupdate = lastupdate;
+                blipVersion.name = name;
+                blipVersion.version = version;
+                blipVersion.permissions = permissions;
+            }
+
+            this.state.allBlipsRows = [];
+            this.state.allBlipsColumns = [];
+
+            this.addAllBlipColumn('Author');
+            this.addAllBlipColumn('Name');
+            this.addAllBlipColumn('Last update');
+            for (const columnName of Object.keys(columnsIndex)) {
+                this.addAllBlipColumn(columnName);
+            }
+            for (const blipVersions of Object.values(allBlips)) {
+                // list all blips
+                const blipVersion = blipVersions[blipVersions.length - 1];
+                const row = [];
+
+                if (blipVersion.permissions) {
+                    const ownerPermission = blipVersion.permissions.filter(permission => permission.rights.indexOf('owner') !== -1)[0];
+                    row.push(ownerPermission ? ownerPermission.userId : '');
+                } else {
+                    row.push('');
+                }
+
+                row.push(blipVersion.name);
+
+                const lastUpdateDate = parseDate(blipVersion.lastupdate);
+                if (lastUpdateDate) {
+                    row.push(`${lastUpdateDate.getFullYear()}-${lastUpdateDate.getMonth() + 1}-${lastUpdateDate.getDate()}`);
+                } else {
+                    row.push('');
+                }
+
+                const rowInitialLength = row.length;
+
+                for (const entry of Object.entries(columnsIndex)) {
+                    const columnName = entry[0];
+                    const columnIndex = entry[1];
+                    const columnValue = blipVersion[columnName];
+                    while (row.length - rowInitialLength < columnIndex) {
+                        row.push('');
+                    }
+                    row[columnIndex + rowInitialLength] = columnValue !== undefined ? columnValue : '';
+                }
+                this.addAllBlip(row);
+            }
+
+            this.setState(this.state);
         }
     }
 
-    setDefaultBlipValue(event) {
-        let dataValue = event.target;
-        while (!dataValue.getAttribute('data-value')) {
-            dataValue = dataValue.parentElement;
+    addAllBlipColumn(columnName) {
+        this.state.allBlipsColumns.push(columnName || '');
+        for (const row of this.state.allBlipsRows) {
+            row.push('');
         }
-        let element = dataValue;
-        while (!element.id) {
-            element = element.parentElement;
+    }
+
+    addAllBlip(row = []) {
+        while (row.length < this.state.allBlipsColumns.length) {
+            row.push('');
+        }
+        this.state.allBlipsRows.push(row);
+    }
+
+    addBlip() {
+        const row = [];
+        while (row.length < this.state.columns.length) {
+            row.push('');
+        }
+        this.state.rows.push(row);
+    }
+
+    addColumn(columnName) {
+        this.state.columns.push(columnName || '');
+        for (const row of this.state.rows) {
+            row.push('');
+        }
+    }
+
+    async deleteBlip(blipId, rowIndex) {
+        if (blipId) {
+            const response = await this.props.callApi('DELETE', `${this.props.baseUrl}/blips/${blipId}`);
+            if (response.ok) {
+                this.state.rows.splice(rowIndex, 1);
+            } else {
+                this.state.returnMessage = "Erreur deleting blip";
+            }
+        } else {
+            this.state.rows.splice(rowIndex, 1);
+        }
+    }
+
+    async handleSubmit() {
+        if (this.state.submitting) return;
+
+        const blips = [];
+        const columns = this.state.columns.slice(0, 2).map(normalizeColumnName).concat(this.state.columns.slice(2));
+        const columnsIndex = {};
+        columns.map((value, index) => columnsIndex[index] = value);
+
+        const toLock = {};
+        let rowIndex = 0;
+        for (const row of this.state.rows) {
+            const blip = {};
+            const toLockRow = {};
+            for (const columnIndex in row) {
+                const columnValue = row[columnIndex];
+                if (columnValue) {
+                    toLockRow[columnIndex] = true;
+                    blip[columnsIndex[columnIndex]] = columnValue;
+                }
+            }
+            if (blip.name) blips.push(blip);
+            toLock[rowIndex] = toLockRow;
+            rowIndex++;
         }
 
-        this.selectedDefaultRef = parseInt(dataValue.getAttribute('data-value'));
+        if (blips.length === 0) return;
+
+        this.state.submitting = true;
+        this.setState(this.state);
+
+        const response = await this.props.callApi('POST', `${this.props.baseUrl}/blips`, { blips });
+        this.state.success = response.ok;
+        const data = await response.json();
         const parent = this;
-        setTimeout(function() {
-            const svg = d3.select(parent.defaultRef);
-            svg.selectAll("*").remove();
-            svgValues[parent.selectedDefaultRef].callback(parent.defaultRef);
-        }, 400);
+        if (response.ok) {
+            this.state.locked = toLock;
+            this.state.returnMessage = `Successfully added ${data.rows} blip${data.rows > 1 ? 's' : ''}`;
+            this.refreshAllBlips();
+            setTimeout(function() {
+                parent.state.success = undefined;
+                parent.state.submitting = false;
+                parent.state.returnMessage = undefined;
+                parent.setState(parent.state);
+            }, 5000);
+        } else {
+            this.state.returnMessage = data.routine;
+            setTimeout(function() {
+                parent.state.submitting = false;
+                parent.setState(parent.state);
+            }, 2000);
+        }
+
+        this.setState(this.state);
     }
 
     render() {
         const parent = this;
 
-        return (
-            <div className="blips border-bottom">
-                <DragDropContext onDragEnd={this.onDragEnd}>
-                    {
-                        this.lists.slice(0, 1).map(function(sector, indexSector) {
-                            return <div className="list-grid list-grid-blips" key={indexSector}>
-                                <span className="blips-list-label">All items</span>
-                                <div className="default-blip">
-                                    <span className="default-blip-label">Default :</span>
-                                    <div
-                                        className="dropdown default-blip-value"
+        if (this.props.authenticated) {
+            return <div className="new-blips-grid">
+                <h3>My blips</h3>
+                <table
+                    className="new-blips-table"
+                    id="new-blips-table"
+                >
+                    <thead>
+                        <tr>
+                            <th className="fit-width"/>
+                            {
+                                this.state.columns.map((columnName, index) =>
+                                    <th
+                                        key={index}
+                                        scope="col"
+                                        className={`${index < 2 ? "sticky-col" : ""} ${index === 1 ? "fit-width" : "new-blips-table-column"}`}
+                                        style={{
+                                            paddingRight: index === 1 ? '1.5em': undefined,
+                                        }}
                                     >
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary dropdownMenuButton"
-                                        >
-                                            <svg
-                                                className={svgValues[parent.selectedDefaultRef].name}
-                                                ref={node => parent.defaultRef = node}
+                                        {
+                                            index < 2 ? columnName :
+                                            <input
+                                                type="text"
+                                                className="form-control form-control-alt"
+                                                placeholder={columnName ? null : "Column name"}
+                                                value={columnName}
+                                                onChange={function(e) {
+                                                    parent.state.columns[index] = e.target.value;
+                                                    parent.setState(parent.state);
+                                                }}
                                             />
-                                        </button>
-                                        <div className="dropdown-content">
-                                            {svgValues.map(function(svgObject, indexSvg) {
-                                                return <button
-                                                    className="btn btn-lg btn-link dropdown-item"
-                                                    data-value={indexSvg}
-                                                    onClick={parent.setDefaultBlipValue}
-                                                    key={indexSvg}
-                                                >
-                                                    <svg
-                                                        className={svgObject.name}
-                                                        ref={function(node) {
-                                                            let svgRefs = parent.defaultRefs[indexSvg];
-                                                            if (!svgRefs) {
-                                                                svgRefs = {};
-                                                                parent.svgRefs[indexSvg] = svgRefs;
-                                                            }
-                                                            svgRefs[indexSvg] = node;
-                                                        }}
-                                                    />
-                                                </button>
-                                            })}
-                                        </div>
-                                    </div>
-
-                                </div>
-                                {
-                                    sector.map(function(ring, indexRing) {
-                                        return <Droppable droppableId={`${indexSector}-${indexRing}`} key={indexRing}>
-                                            {(provided, snapshot) => (
-                                                <ul
-                                                    ref={provided.innerRef}
-                                                    style={parent.getListStyle(snapshot.isDraggingOver)}
-                                                    className="list-group blip-list">
-                                                    {ring.map(function(item, index) {
-                                                        return <Draggable
-                                                            key={item.id_version}
-                                                            draggableId={item.id_version}
-                                                            index={index}
-                                                            className="list-group-item list-group-item-action border-light">
-                                                            {(provided, snapshot) => (
-                                                                <li
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.draggableProps}
-                                                                    {...provided.dragHandleProps}
-                                                                    style={parent.getItemStyle(
-                                                                        snapshot.isDragging,
-                                                                        provided.draggableProps.style
-                                                                    )}
-                                                                >
-                                                                    <span className="font-weight-medium">{item.name}</span>
-                                                                    <span
-                                                                        className="font-weight-normal"
-                                                                        style={{
-                                                                            borderWidth: 'thin',
-                                                                            borderTopStyle: 'groove',
-                                                                        }}
-                                                                    >
-                                                                        {item.id.substring(0, item.id.lastIndexOf('-'))}
-                                                                    </span>
-                                                                    <span className="text-light">Row {item.id.substring(item.id.lastIndexOf('-') + 1)} (v{item.version})</span>
-                                                                </li>
-                                                            )}
-                                                        </Draggable>
-                                                    })}
-                                                    {provided.placeholder}
-                                                </ul>
-                                            )}
-                                        </Droppable>
-                                    })
-                                }
-                            </div>
-                        })
-                    }
-                    <div className="rings-list border-bottom">
+                                        }
+                                    </th>
+                                )
+                            }
+                            <th>
+                                <button
+                                    className="btn btn-lg btn-flat-primary new-column-btn fit-width"
+                                    onClick={function(e) {
+                                        parent.addColumn();
+                                        parent.setState(parent.state);
+                                        setTimeout(function() {
+                                            const table = document.getElementById("new-blips-table");
+                                            const thead = table.firstChild;
+                                            table.scrollLeft = thead.offsetWidth;
+                                        }, 50)
+                                    }}
+                                >
+                                    <i className="icon icon-md">add</i>
+                                    <span className="new-sector-btn-label">Add column</span>
+                                </button>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
                         {
-                            this.rings.map(function(ring, indexRing) {
-                                return <div className="ring-name-grid" key={indexRing}>
-                                    <button
-                                        className="btn btn-lg delete-ring-btn"
-                                        id={`delete-ring-${indexRing}`}
-                                        onClick={parent.deleteRing}
-                                    >
-                                        <i className="icon icon-md">delete</i>
-                                    </button>
-                                    <button
-                                        className="btn btn-lg ring-left-btn"
-                                        id={`ring-left-${indexRing}`}
-                                        onClick={parent.moveRing}
-                                    >
-                                        <i className="icon icon-md">arrow_back</i>
-                                    </button>
-                                    <button
-                                        className="btn btn-lg ring-right-btn"
-                                        id={`ring-right-${indexRing}`}
-                                        onClick={parent.moveRing}
-                                    >
-                                        <i className="icon icon-md">arrow_forward</i>
-                                    </button>
-                                    <input
-                                        className={`ring-name theme-${indexRing}`}
-                                        id={`ring-name-${indexRing}`}
-                                        value={ring}
-                                        onChange={parent.ringNameChange}
-                                        key={indexRing}
-                                    />
-                                </div>
-                            })
-                        }
-                    </div>
-                    <div className="sectors-list" id="sectors-list">
-                        {
-                            this.lists.slice(1).map(function (sector, indexSector) {
-                                return <div className="list-grid" key={indexSector + 1}>
-                                    <div className="list-buttons">
+                            this.state.rows.map((row, rowIndex) =>
+                                <tr
+                                    key={rowIndex}
+                                >
+                                    <td>
                                         <button
-                                            className="btn btn-lg delete-sector-btn"
-                                            id={`delete-sector-${indexSector}`}
-                                            onClick={parent.deleteSector}
+                                            className="btn btn-lg"
+                                            onClick={async function(e) {
+                                                await parent.deleteBlip(row[0], rowIndex);
+                                                parent.setState(parent.state);
+                                            }}
                                         >
                                             <i className="icon icon-md">delete</i>
                                         </button>
-                                        <button
-                                            className="btn btn-lg sector-left-btn"
-                                            id={`sector-left-${indexSector}`}
-                                            onClick={parent.moveSector}
-                                        >
-                                            <i className="icon icon-md">arrow_back</i>
-                                        </button>
-                                        <button
-                                            className="btn btn-lg sector-right-btn"
-                                            id={`sector-right-${indexSector}`}
-                                            onClick={parent.moveSector}
-                                        >
-                                            <i className="icon icon-md">arrow_forward</i>
-                                        </button>
-                                        <input
-                                            className="form-control form-control-alt sector-name"
-                                            id={`sector-name-${indexSector}`}
-                                            value={parent.sectors[indexSector]}
-                                            onChange={parent.sectorNameChange}
-                                        />
-                                    </div>
+                                    </td>
                                     {
-                                        sector.map(function (ring, indexRing) {
-                                            return <Droppable droppableId={`${indexSector + 1}-${indexRing}`}
-                                                              key={indexRing}>
-                                                {(provided, snapshot) => (
-                                                    <ul
-                                                        ref={provided.innerRef}
-                                                        style={parent.getListStyle(snapshot.isDraggingOver)}
-                                                        className={`list-group theme-${indexRing}`}>
-                                                        {ring.map(function (item, index) {
-                                                            return <Draggable
-                                                                key={item.id_version}
-                                                                draggableId={item.id_version}
-                                                                index={index}
-                                                                className="list-group-item list-group-item-action border-light">
-                                                                {(provided, snapshot) => (
-                                                                    <li
-                                                                        ref={provided.innerRef}
-                                                                        {...provided.draggableProps}
-                                                                        {...provided.dragHandleProps}
-                                                                        style={parent.getItemStyle(
-                                                                            snapshot.isDragging,
-                                                                            provided.draggableProps.style
-                                                                        )}
-                                                                    >
-                                                                        <span className="font-weight-medium blip-name">{item.name}</span>
-                                                                        <span
-                                                                            className="font-weight-normal blip-sheet"
-                                                                            style={{
-                                                                                borderWidth: 'thin',
-                                                                                borderTopStyle: 'groove',
-                                                                            }}
-                                                                        >
-                                                                            {item.id.substring(0, item.id.lastIndexOf('-'))}
-                                                                        </span>
-                                                                        <span className="text-light blip-version">Row {item.id.substring(item.id.lastIndexOf('-') + 1)} (v{item.version})</span>
-                                                                        <div
-                                                                            className="dropdown blip-value"
-                                                                            id={item.id_version}
-                                                                        >
-                                                                            <button
-                                                                                className="btn btn-sm btn-outline-secondary dropdownMenuButton"
-                                                                            >
-                                                                                <svg
-                                                                                    className={svgValues[item.value].name}
-                                                                                    ref={node => item.ref = node}
-                                                                                />
-                                                                            </button>
-                                                                            <div className="dropdown-content">
-                                                                                {svgValues.map(function(svgObject, indexSvg) {
-                                                                                    return <button
-                                                                                        className="btn btn-lg btn-link dropdown-item"
-                                                                                        data-value={indexSvg}
-                                                                                        onClick={parent.setBlipValue}
-                                                                                        key={indexSvg}
-                                                                                    >
-                                                                                        <svg
-                                                                                            className={svgObject.name}
-                                                                                            ref={function(node) {
-                                                                                                let svgRefs = parent.svgRefs[item.id_version];
-                                                                                                if (!svgRefs) {
-                                                                                                    svgRefs = {};
-                                                                                                    parent.svgRefs[item.id_version] = svgRefs;
-                                                                                                }
-                                                                                                svgRefs[indexSvg] = node;
-                                                                                            }}
-                                                                                        />
-                                                                                    </button>
-                                                                                })}
-                                                                            </div>
-                                                                        </div>
-                                                                    </li>
-                                                                )}
-                                                            </Draggable>
-                                                        })}
-                                                        {provided.placeholder}
-                                                    </ul>
-                                                )}
-                                            </Droppable>
-                                        })
+                                        row.map((columnValue, index) => 
+                                            <td
+                                                key={index}
+                                                className="table-cell"
+                                            >
+                                                {
+                                                    index < 2 && this.state.locked[rowIndex] && this.state.locked[rowIndex][index] ? columnValue :
+                                                    <input
+                                                        type="text"
+                                                        className="form-control form-control-alt"
+                                                        value={columnValue}
+                                                        placeholder={index === 1 ? 'YYYY-MM-DD (optional)' : ''}
+                                                        style={{
+                                                            width: index === 1 ? '175px' : undefined,
+                                                        }}
+                                                        onChange={function(e) {
+                                                            row[index] = e.target.value;
+                                                            parent.setState(parent.state);
+                                                        }}
+                                                    />
+                                                }
+                                            </td>
+                                        )
                                     }
-                                </div>
-                            })
+                                </tr>
+                            )
                         }
-                    </div>
-                    <div className="new-buttons-grid border-bottom">
-                        <button
-                            className="btn btn-lg btn-flat-primary new-sector-btn"
-                            id="new-sector-btn"
-                            onClick={parent.newSector}
-                        >
-                            <i className="icon icon-md">add</i>
-                            <span className="new-sector-btn-label">New sector</span>
-                        </button>
-                        <button
-                            className="btn btn-lg btn-flat-primary new-ring-btn"
-                            id="new-ring-btn"
-                            style={{
-                                display: this.rings.length < 5 ? 'block' : 'none'
-                            }}
-                            onClick={parent.newRing}
-                        >
-                            <i className="icon icon-md">add</i>
-                            <span className="new-ring-btn-label">New ring</span>
-                        </button>
-                    </div>
-                </DragDropContext>
+                    </tbody>
+                </table>
+                <button
+                    className="btn btn-lg btn-flat-primary new-blip-btn"
+                    onClick={function(e) {
+                        parent.addBlip();
+                        parent.setState(parent.state);
+                    }}
+                >
+                    <i className="icon icon-md">add</i>
+                    <span className="new-sector-btn-label">Add blip</span>
+                </button>
+                <label
+                    className={this.state.success ? "text-success" : "text-danger"}
+                    style={{
+                        display: this.state.returnMessage ? 'inline-block' : 'none',
+                        marginBottom: 0,
+                    }}
+                >
+                    {this.state.returnMessage}
+                </label>
+                <input
+                    //type="submit"
+                    readOnly
+                    value="Submit"
+                    className={`new-blips-submit-btn btn btn-lg ${this.state.success === undefined ? 'btn-primary' : (this.state.success ? 'btn-success' : 'btn-danger')}`}
+                    onClick={async function(e) {
+                        await parent.handleSubmit();
+                    }}
+                />
+                <h3>All blips</h3>
+                <table
+                    className="all-blips-table"
+                >
+                    <thead>
+                        <tr>
+                            {
+                                this.state.allBlipsColumns.map((columnName, index) =>
+                                    <th
+                                        key={index}
+                                        scope="col"
+                                        className={index === 1 ? "fit-width" : "new-blips-table-column"}
+                                        style={{
+                                            paddingRight: index === 1 ? '1.5em': undefined,
+                                        }}
+                                    >
+                                        {columnName}
+                                    </th>
+                                )
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {
+                            this.state.allBlipsRows.map((row, rowIndex) =>
+                                <tr
+                                    key={rowIndex}
+                                >
+                                    {
+                                        row.map((columnValue, index) => 
+                                            <td
+                                                key={index}
+                                                className="table-cell"
+                                            >
+                                                <div
+                                                    className="view-table-cell"
+                                                >
+                                                    {columnValue}
+                                                </div>
+                                            </td>
+                                        )
+                                    }
+                                </tr>
+                            )
+                        }
+                    </tbody>
+                </table>
             </div>
-        );
+        } else {
+            return <div className="new-blips-grid">Please login in order to create blips</div>;
+        }
     }
 }
 

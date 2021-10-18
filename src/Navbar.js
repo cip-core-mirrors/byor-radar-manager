@@ -55,9 +55,15 @@ class Navbar extends React.Component {
 
     render() {
         return <div className="border">
+            <iframe
+              name="signInFrame"
+              style={{
+                display: 'none',
+              }}
+            />
             <header className="navbar navbar-expand-xl">
                 <div className="d-flex">
-                    <a tabIndex="1" href="#" className="navbar-brand d-flex align-items-center">
+                    <a tabIndex="1" href="/" className="navbar-brand d-flex align-items-center">
                         <svg height="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
                             <g>
                                 <rect fill="#e60028" width="32" height="16"/>
@@ -134,8 +140,17 @@ class Navbar extends React.Component {
                 <div className="navbar-collapse justify-content-end" id="navbar-default">
                     <ul className="navbar-nav mr-xl-auto">
                         <li className="nav-item">
-                            <a tabIndex="3" className="nav-link" href="/">Manager</a>
+                            <a tabIndex="3" className="nav-link" href="/radars">Radars</a>
                         </li>
+                        <li className="nav-item">
+                            <a tabIndex="4" className="nav-link" href="/blips">Blips</a>
+                        </li>
+                        {
+                          process.env.REACT_APP_DOCS_URL ?
+                          <li className="nav-item">
+                            <a tabIndex="5" className="nav-link" href={process.env.REACT_APP_DOCS_URL} target="_blank">Docs</a>
+                          </li> : null
+                        }
                     </ul>
                 </div>
             </header>

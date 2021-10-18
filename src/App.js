@@ -1,11 +1,12 @@
 import React from 'react';
 import './App.css';
 
+import Blips from './Blips';
 import MyRadars from './MyRadars';
 import AllRadars from './AllRadars';
 import Navbar from './Navbar';
 import Parameters from './Parameters';
-import Blips from './Blips';
+import RadarBlips from './RadarBlips';
 import Submit from './Submit';
 import Footer from './Footer';
 
@@ -117,7 +118,7 @@ class App extends React.Component {
       if (response.status === 401 || response.status === 403) {
         window.localStorage.removeItem('access_token');
         if (!signInWindow) {
-          signInWindow = window.open(signIn, '_blank', 'location=yes,height=570,width=520,scrollbars=yes,status=yes');
+          signInWindow = window.open(signIn, 'signInFrame');
         }
         const intervalId = setInterval(async function() {
           const accessToken = window.localStorage.getItem('access_token');
@@ -142,7 +143,7 @@ class App extends React.Component {
     })
   }
 
-  async handleSubmit() {
+  async handleSubmit(radarId) {
     const links = [];
     let sectorIndex = 0;
     for (const sector of this.state.blips.slice(1)) {
@@ -176,13 +177,54 @@ class App extends React.Component {
         }),
     };
 
-    const radarId = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1);
     return await this.callApi('PUT', `${baseUrl}/radar/${radarId}`, data);
   }
 
   render() {
     const parent = this;
-    if (window.location.pathname === '/') {
+    
+    let paths = window.location.pathname.split('/').slice(1);
+    paths = paths.slice(paths.length - 2);
+    const endPath = paths[1];
+    const beforeEndPath = paths[0];
+
+    if (beforeEndPath === 'radars' && endPath) {
+      return (
+        <div className="App">
+          <Navbar
+            onUserInfoChange={this.handleUserInfoChange}
+            authenticated={this.state.authenticated}
+            permissions={this.state.permissions}
+            userInfo={this.state.userInfo}
+            baseUrl={baseUrl}
+            callApi={this.callApi}
+            signIn={signIn}
+          />
+          <RadarBlips
+            radarId={endPath}
+            onBlipsChange={this.handleBlipsChange}
+            onSectorNameChange={this.handleSectorNameChange}
+            onRingNameChange={this.handleRingNameChange}
+            blips={this.state.blips}
+            baseUrl={baseUrl}
+            callApi={this.callApi}
+          />
+          <Parameters
+            radarId={endPath}
+            onParamsChange={this.handleParamsChange}
+            parameters={this.state.parameters}
+            baseUrl={baseUrl}
+            callApi={this.callApi}
+          />
+          <Submit
+            onSubmit={async function(e) {
+              return await parent.handleSubmit(endPath);
+            }}
+          />
+          <Footer />
+        </div>
+      )
+    } else if (beforeEndPath === 'radars' && endPath === undefined) {
       return (
         <div className="App">
           <Navbar
@@ -220,9 +262,29 @@ class App extends React.Component {
           </div>
         </div>
       )
-    }
-    return (
-      <div className="App">
+    } else if (beforeEndPath === 'blips' && endPath === undefined) {
+      return (
+        <div className="App">
+          <Navbar
+            onUserInfoChange={this.handleUserInfoChange}
+            authenticated={this.state.authenticated}
+            permissions={this.state.permissions}
+            userInfo={this.state.userInfo}
+            baseUrl={baseUrl}
+            callApi={this.callApi}
+            signIn={signIn}
+          />
+          <Blips
+            authenticated={this.state.authenticated}
+            permissions={this.state.permissions}
+            userInfo={this.state.userInfo}
+            baseUrl={baseUrl}
+            callApi={this.callApi}
+          />
+        </div>
+      )
+    } else if (beforeEndPath === "") {
+      return <div className="App">
         <Navbar
           onUserInfoChange={this.handleUserInfoChange}
           authenticated={this.state.authenticated}
@@ -232,26 +294,10 @@ class App extends React.Component {
           callApi={this.callApi}
           signIn={signIn}
         />
-        <Blips
-          onBlipsChange={this.handleBlipsChange}
-          onSectorNameChange={this.handleSectorNameChange}
-          onRingNameChange={this.handleRingNameChange}
-          blips={this.state.blips}
-          baseUrl={baseUrl}
-          callApi={this.callApi}
-        />
-        <Parameters
-          onParamsChange={this.handleParamsChange}
-          parameters={this.state.parameters}
-          baseUrl={baseUrl}
-          callApi={this.callApi}
-        />
-        <Submit
-          onSubmit={this.handleSubmit}
-        />
-        <Footer />
       </div>
-    )
+    } else {
+      return <div>Page not found</div>
+    }
   }
 }
 
