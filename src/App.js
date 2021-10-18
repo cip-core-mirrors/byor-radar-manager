@@ -218,7 +218,7 @@ class App extends React.Component {
           />
           <Submit
             onSubmit={async function(e) {
-              await parent.handleSubmit(endPath);
+              return await parent.handleSubmit(endPath);
             }}
           />
           <Footer />
