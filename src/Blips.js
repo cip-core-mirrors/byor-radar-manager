@@ -282,6 +282,7 @@ class Blips extends React.Component {
                 <h3>My blips</h3>
                 <table
                     className="new-blips-table"
+                    id="new-blips-table"
                 >
                     <thead>
                         <tr>
@@ -318,6 +319,13 @@ class Blips extends React.Component {
                                     onClick={function(e) {
                                         parent.addColumn();
                                         parent.setState(parent.state);
+                                        setTimeout(function() {
+                                            const table = document.getElementById("new-blips-table");
+                                            const thead = table.firstChild;
+                                            console.log(thead)
+                                            console.log(thead.offsetWidth)
+                                            table.scrollLeft = thead.offsetWidth;
+                                        }, 50)
                                     }}
                                 >
                                     <i className="icon icon-md">add</i>
@@ -356,6 +364,9 @@ class Blips extends React.Component {
                                                         className="form-control form-control-alt"
                                                         value={columnValue}
                                                         placeholder={index === 1 ? 'YYYY-MM-DD (optional)' : ''}
+                                                        style={{
+                                                            width: index === 1 ? '175px' : undefined,
+                                                        }}
                                                         onChange={function(e) {
                                                             row[index] = e.target.value;
                                                             parent.setState(parent.state);
