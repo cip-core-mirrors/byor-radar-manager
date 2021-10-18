@@ -206,11 +206,16 @@ class Blips extends React.Component {
     }
 
     async deleteBlip(blipId, rowIndex) {
-        const response = await this.props.callApi('DELETE', `${this.props.baseUrl}/blips/${blipId}`);
-        if (response.ok) {
-            this.state.rows.splice(rowIndex, 1);
+        console.log(blipId)
+        if (blipId) {
+            const response = await this.props.callApi('DELETE', `${this.props.baseUrl}/blips/${blipId}`);
+            if (response.ok) {
+                this.state.rows.splice(rowIndex, 1);
+            } else {
+                this.state.returnMessage = "Erreur deleting blip";
+            }
         } else {
-            this.state.returnMessage = "Erreur deleting blip";
+            this.state.rows.splice(rowIndex, 1);
         }
     }
 
@@ -280,12 +285,16 @@ class Blips extends React.Component {
                 >
                     <thead>
                         <tr>
-                            <th/>
+                            <th className="fit-width"/>
                             {
                                 this.state.columns.map((columnName, index) =>
                                     <th
                                         key={index}
                                         scope="col"
+                                        className={index === 1 ? "fit-width" : "new-blips-table-column"}
+                                        style={{
+                                            paddingRight: index === 1 ? '1.5em': undefined,
+                                        }}
                                     >
                                         {
                                             index < 2 ? columnName :
@@ -305,7 +314,7 @@ class Blips extends React.Component {
                             }
                             <th>
                                 <button
-                                    className="btn btn-lg btn-flat-primary new-column-btn"
+                                    className="btn btn-lg btn-flat-primary new-column-btn fit-width"
                                     onClick={function(e) {
                                         parent.addColumn();
                                         parent.setState(parent.state);
@@ -327,7 +336,6 @@ class Blips extends React.Component {
                                         <button
                                             className="btn btn-lg"
                                             onClick={async function(e) {
-                                                if (!row[0]) return;
                                                 await parent.deleteBlip(row[0], rowIndex);
                                                 parent.setState(parent.state);
                                             }}
@@ -339,17 +347,21 @@ class Blips extends React.Component {
                                         row.map((columnValue, index) => 
                                             <td
                                                 key={index}
+                                                className="table-cell"
                                             >
-                                                <input
-                                                    type="text"
-                                                    readOnly={index < 2 && this.state.locked[rowIndex] && this.state.locked[rowIndex][index]}
-                                                    className="form-control form-control-alt"
-                                                    value={columnValue}
-                                                    onChange={function(e) {
-                                                        row[index] = e.target.value;
-                                                        parent.setState(parent.state);
-                                                    }}
-                                                />
+                                                {
+                                                    index < 2 && this.state.locked[rowIndex] && this.state.locked[rowIndex][index] ? columnValue :
+                                                    <input
+                                                        type="text"
+                                                        className="form-control form-control-alt"
+                                                        value={columnValue}
+                                                        placeholder={index === 1 ? 'YYYY-MM-DD (optional)' : ''}
+                                                        onChange={function(e) {
+                                                            row[index] = e.target.value;
+                                                            parent.setState(parent.state);
+                                                        }}
+                                                    />
+                                                }
                                             </td>
                                         )
                                     }
@@ -397,6 +409,10 @@ class Blips extends React.Component {
                                     <th
                                         key={index}
                                         scope="col"
+                                        className={index === 1 ? "fit-width" : "new-blips-table-column"}
+                                        style={{
+                                            paddingRight: index === 1 ? '1.5em': undefined,
+                                        }}
                                     >
                                         {columnName}
                                     </th>
@@ -414,8 +430,13 @@ class Blips extends React.Component {
                                         row.map((columnValue, index) => 
                                             <td
                                                 key={index}
+                                                className="table-cell"
                                             >
-                                                {columnValue}
+                                                <div
+                                                    className="view-table-cell"
+                                                >
+                                                    {columnValue}
+                                                </div>
                                             </td>
                                         )
                                     }

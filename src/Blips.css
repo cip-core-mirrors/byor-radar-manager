@@ -2,9 +2,46 @@
     display: grid;
     grid-auto-flow: row;
     grid-row-gap: 1em;
+    overflow: auto;
 }
 
 .new-blips-table {
+    display: block;
+    overflow-x: auto;
+}
+
+th {
+    padding: 0 1em;
+}
+
+.table-cell {
+    border: inset;
+    border-width: thin;
+    padding: 0.25em 1em;
+}
+
+.view-table-cell {
+    max-height: 10em;    
+    overflow: auto;
+}
+
+table input.form-control {
+    box-shadow: none;
+    padding: 0 0.5em;
+}
+
+.all-blips-table {
+    display: block;
+    overflow-x: auto;
+}
+
+.fit-width {
+    width: fit-content;
+    white-space: nowrap;
+}
+
+.new-blips-table-column {
+    min-width: 150px;
 }
 
 .new-blips-submit-btn {
