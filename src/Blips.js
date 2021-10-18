@@ -6,6 +6,13 @@ function normalizeColumnName(name) {
     return words[0].toLowerCase() + words.slice(1).map(n => n[0].toUpperCase() + n.slice(1))
 }
 
+function parseDate(value) {
+    const date = value ? new Date(value) : undefined;
+    if (date && typeof date.getMonth === 'function' && !Number.isNaN(date.getMonth())) {
+        return date;
+    }
+}
+
 class Blips extends React.Component {
     constructor(props) {
         super(props);
@@ -16,6 +23,8 @@ class Blips extends React.Component {
             rows: [],
             columns: [],
             locked: {},
+            allBlipsColumns: [],
+            allBlipsRows: [],
         };
     }
 
@@ -78,8 +87,8 @@ class Blips extends React.Component {
             
             const lockedRow = {};
             lockedRow[0] = true;
-            const lastUpdateDate = lastupdate ? new Date(lastupdate) : undefined;
-            if (lastUpdateDate && typeof lastUpdateDate.getMonth === 'function' && !Number.isNaN(lastUpdateDate.getMonth())) {
+            const lastUpdateDate = parseDate(lastupdate);
+            if (lastUpdateDate) {
                 lastRow[1] = `${lastUpdateDate.getFullYear()}-${lastUpdateDate.getMonth() + 1}-${lastUpdateDate.getDate()}`;
                 lockedRow[1] = true;
             } else {
@@ -100,6 +109,85 @@ class Blips extends React.Component {
         }
 
         this.setState(this.state);
+
+        await this.refreshAllBlips();
+    }
+
+    async refreshAllBlips() {
+        const allBlipsResponse = await this.props.callApi('GET', `${this.props.baseUrl}/blips`);
+        if (allBlipsResponse.ok) {
+            const allBlips = await allBlipsResponse.json();
+            const columnsIndex = {};
+            for (const blipVersions of Object.values(allBlips)) {
+                const blipVersion = blipVersions[blipVersions.length - 1];
+                const { id, id_version, lastupdate, name, version } = blipVersion;
+                delete blipVersion.id;
+                delete blipVersion.id_version;
+                delete blipVersion.lastupdate;
+                delete blipVersion.name;
+                delete blipVersion.version;
+                for (const columnName of Object.keys(blipVersion)) {
+                    const columnIndex = columnsIndex[columnName];
+                    if (columnIndex === undefined) {
+                        columnsIndex[columnName] = Object.keys(columnsIndex).length;
+                    }
+                }
+                blipVersion.id = id;
+                blipVersion.id_version = id_version;
+                blipVersion.lastupdate = lastupdate;
+                blipVersion.name = name;
+                blipVersion.version = version;
+            }
+
+            this.state.allBlipsRows = [];
+            this.state.allBlipsColumns = [];
+
+            this.addAllBlipColumn('Name');
+            this.addAllBlipColumn('Last update');
+            for (const columnName of Object.keys(columnsIndex)) {
+                this.addAllBlipColumn(columnName);
+            }
+            for (const blipVersions of Object.values(allBlips)) {
+                // list all blips
+                const blipVersion = blipVersions[blipVersions.length - 1];
+                const row = [
+                    blipVersion.name,
+                ];
+                const lastUpdateDate = parseDate(blipVersion.lastupdate);
+                if (lastUpdateDate) {
+                    row.push(`${lastUpdateDate.getFullYear()}-${lastUpdateDate.getMonth() + 1}-${lastUpdateDate.getDate()}`);
+                } else {
+                    row.push('');
+                }
+
+                for (const entry of Object.entries(columnsIndex)) {
+                    const columnName = entry[0];
+                    const columnIndex = entry[1];
+                    const columnValue = blipVersion[columnName];
+                    while (row.length - 2 < columnIndex) {
+                        row.push('');
+                    }
+                    row[columnIndex + 2] = columnValue !== undefined ? columnValue : '';
+                }
+                this.addAllBlip(row);
+            }
+
+            this.setState(this.state);
+        }
+    }
+
+    addAllBlipColumn(columnName) {
+        this.state.allBlipsColumns.push(columnName || '');
+        for (const row of this.state.allBlipsRows) {
+            row.push('');
+        }
+    }
+
+    addAllBlip(row = []) {
+        while (row.length < this.state.allBlipsColumns.length) {
+            row.push('');
+        }
+        this.state.allBlipsRows.push(row);
     }
 
     addBlip() {
@@ -163,6 +251,7 @@ class Blips extends React.Component {
         if (response.ok) {
             this.state.locked = toLock;
             this.state.returnMessage = `Successfully added ${data.rows} blip${data.rows > 1 ? 's' : ''}`;
+            this.refreshAllBlips();
             setTimeout(function() {
                 parent.state.success = undefined;
                 parent.state.submitting = false;
@@ -182,8 +271,10 @@ class Blips extends React.Component {
 
     render() {
         const parent = this;
+
         if (this.props.authenticated) {
             return <div className="new-blips-grid">
+                <h3>My blips</h3>
                 <table
                     className="new-blips-table"
                 >
@@ -295,6 +386,44 @@ class Blips extends React.Component {
                         await parent.handleSubmit();
                     }}
                 />
+                <h3>All blips</h3>
+                <table
+                    className="all-blips-table"
+                >
+                    <thead>
+                        <tr>
+                            {
+                                this.state.allBlipsColumns.map((columnName, index) =>
+                                    <th
+                                        key={index}
+                                        scope="col"
+                                    >
+                                        {columnName}
+                                    </th>
+                                )
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {
+                            this.state.allBlipsRows.map((row, rowIndex) =>
+                                <tr
+                                    key={rowIndex}
+                                >
+                                    {
+                                        row.map((columnValue, index) => 
+                                            <td
+                                                key={index}
+                                            >
+                                                {columnValue}
+                                            </td>
+                                        )
+                                    }
+                                </tr>
+                            )
+                        }
+                    </tbody>
+                </table>
             </div>
         } else {
             return <div className="new-blips-grid">Please login in order to create blips</div>;
