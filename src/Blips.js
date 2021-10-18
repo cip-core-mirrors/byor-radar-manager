@@ -206,7 +206,6 @@ class Blips extends React.Component {
     }
 
     async deleteBlip(blipId, rowIndex) {
-        console.log(blipId)
         if (blipId) {
             const response = await this.props.callApi('DELETE', `${this.props.baseUrl}/blips/${blipId}`);
             if (response.ok) {
@@ -292,7 +291,7 @@ class Blips extends React.Component {
                                     <th
                                         key={index}
                                         scope="col"
-                                        className={index === 1 ? "fit-width" : "new-blips-table-column"}
+                                        className={`${index < 2 ? "sticky-col" : ""} ${index === 1 ? "fit-width" : "new-blips-table-column"}`}
                                         style={{
                                             paddingRight: index === 1 ? '1.5em': undefined,
                                         }}
@@ -322,8 +321,6 @@ class Blips extends React.Component {
                                         setTimeout(function() {
                                             const table = document.getElementById("new-blips-table");
                                             const thead = table.firstChild;
-                                            console.log(thead)
-                                            console.log(thead.offsetWidth)
                                             table.scrollLeft = thead.offsetWidth;
                                         }, 50)
                                     }}
