@@ -55,6 +55,12 @@ class Navbar extends React.Component {
 
     render() {
         return <div className="border">
+            <iframe
+              name="signInFrame"
+              style={{
+                display: 'none',
+              }}
+            />
             <header className="navbar navbar-expand-xl">
                 <div className="d-flex">
                     <a tabIndex="1" href="/" className="navbar-brand d-flex align-items-center">

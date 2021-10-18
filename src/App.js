@@ -118,7 +118,7 @@ class App extends React.Component {
       if (response.status === 401 || response.status === 403) {
         window.localStorage.removeItem('access_token');
         if (!signInWindow) {
-          signInWindow = window.open(signIn, '_blank', 'location=yes,height=570,width=520,scrollbars=yes,status=yes');
+          signInWindow = window.open(signIn, 'signInFrame');
         }
         const intervalId = setInterval(async function() {
           const accessToken = window.localStorage.getItem('access_token');
