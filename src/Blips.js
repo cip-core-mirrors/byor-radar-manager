@@ -120,12 +120,13 @@ class Blips extends React.Component {
             const columnsIndex = {};
             for (const blipVersions of Object.values(allBlips)) {
                 const blipVersion = blipVersions[blipVersions.length - 1];
-                const { id, id_version, lastupdate, name, version } = blipVersion;
+                const { id, id_version, lastupdate, name, version, permissions } = blipVersion;
                 delete blipVersion.id;
                 delete blipVersion.id_version;
                 delete blipVersion.lastupdate;
                 delete blipVersion.name;
                 delete blipVersion.version;
+                delete blipVersion.permissions;
                 for (const columnName of Object.keys(blipVersion)) {
                     const columnIndex = columnsIndex[columnName];
                     if (columnIndex === undefined) {
@@ -137,11 +138,13 @@ class Blips extends React.Component {
                 blipVersion.lastupdate = lastupdate;
                 blipVersion.name = name;
                 blipVersion.version = version;
+                blipVersion.permissions = permissions;
             }
 
             this.state.allBlipsRows = [];
             this.state.allBlipsColumns = [];
 
+            this.addAllBlipColumn('Author');
             this.addAllBlipColumn('Name');
             this.addAllBlipColumn('Last update');
             for (const columnName of Object.keys(columnsIndex)) {
@@ -150,9 +153,17 @@ class Blips extends React.Component {
             for (const blipVersions of Object.values(allBlips)) {
                 // list all blips
                 const blipVersion = blipVersions[blipVersions.length - 1];
-                const row = [
-                    blipVersion.name,
-                ];
+                const row = [];
+
+                if (blipVersion.permissions) {
+                    const ownerPermission = blipVersion.permissions.filter(permission => permission.rights.indexOf('owner') !== -1)[0];
+                    row.push(ownerPermission ? ownerPermission.userId : '');
+                } else {
+                    row.push('');
+                }
+
+                row.push(blipVersion.name);
+
                 const lastUpdateDate = parseDate(blipVersion.lastupdate);
                 if (lastUpdateDate) {
                     row.push(`${lastUpdateDate.getFullYear()}-${lastUpdateDate.getMonth() + 1}-${lastUpdateDate.getDate()}`);
@@ -160,14 +171,16 @@ class Blips extends React.Component {
                     row.push('');
                 }
 
+                const rowInitialLength = row.length;
+
                 for (const entry of Object.entries(columnsIndex)) {
                     const columnName = entry[0];
                     const columnIndex = entry[1];
                     const columnValue = blipVersion[columnName];
-                    while (row.length - 2 < columnIndex) {
+                    while (row.length - rowInitialLength < columnIndex) {
                         row.push('');
                     }
-                    row[columnIndex + 2] = columnValue !== undefined ? columnValue : '';
+                    row[columnIndex + rowInitialLength] = columnValue !== undefined ? columnValue : '';
                 }
                 this.addAllBlip(row);
             }
