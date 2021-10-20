@@ -145,10 +145,13 @@ class Navbar extends React.Component {
                         <li className="nav-item">
                             <a tabIndex="4" className="nav-link" href="/blips">Blips</a>
                         </li>
+                        <li className="nav-item">
+                            <a tabIndex="5" className="nav-link" href="/themes">Themes</a>
+                        </li>
                         {
                           process.env.REACT_APP_DOCS_URL ?
                           <li className="nav-item">
-                            <a tabIndex="5" className="nav-link" href={process.env.REACT_APP_DOCS_URL} target="_blank">Docs</a>
+                            <a tabIndex="6" className="nav-link" href={process.env.REACT_APP_DOCS_URL} target="_blank">Docs</a>
                           </li> : null
                         }
                     </ul>

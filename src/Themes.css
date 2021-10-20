@@ -1,0 +1,12 @@
+.form-group-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-column-gap: 1em;
+    grid-template-columns: max-content auto;
+}
+
+.selected-theme {
+    display: grid;
+    grid-auto-flow: row;
+    grid-row-gap: 0.5em;
+}

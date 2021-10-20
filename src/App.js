@@ -1,6 +1,7 @@
 import React from 'react';
 import './App.css';
 
+import Themes from './Themes';
 import Blips from './Blips';
 import MyRadars from './MyRadars';
 import AllRadars from './AllRadars';
@@ -188,18 +189,20 @@ class App extends React.Component {
     const endPath = paths[1];
     const beforeEndPath = paths[0];
 
+    const navbar = <Navbar
+      onUserInfoChange={this.handleUserInfoChange}
+      authenticated={this.state.authenticated}
+      permissions={this.state.permissions}
+      userInfo={this.state.userInfo}
+      baseUrl={baseUrl}
+      callApi={this.callApi}
+      signIn={signIn}
+    />;
+
     if (beforeEndPath === 'radars' && endPath) {
       return (
         <div className="App">
-          <Navbar
-            onUserInfoChange={this.handleUserInfoChange}
-            authenticated={this.state.authenticated}
-            permissions={this.state.permissions}
-            userInfo={this.state.userInfo}
-            baseUrl={baseUrl}
-            callApi={this.callApi}
-            signIn={signIn}
-          />
+          {navbar}
           <RadarBlips
             radarId={endPath}
             onBlipsChange={this.handleBlipsChange}
@@ -227,15 +230,7 @@ class App extends React.Component {
     } else if (beforeEndPath === 'radars' && endPath === undefined) {
       return (
         <div className="App">
-          <Navbar
-            onUserInfoChange={this.handleUserInfoChange}
-            authenticated={this.state.authenticated}
-            permissions={this.state.permissions}
-            userInfo={this.state.userInfo}
-            baseUrl={baseUrl}
-            callApi={this.callApi}
-            signIn={signIn}
-          />
+          {navbar}
           <div className="radars">
             <MyRadars
               key={`my-radars-${this.state.myRadarsKey}`}
@@ -265,16 +260,21 @@ class App extends React.Component {
     } else if (beforeEndPath === 'blips' && endPath === undefined) {
       return (
         <div className="App">
-          <Navbar
-            onUserInfoChange={this.handleUserInfoChange}
+          {navbar}
+          <Blips
             authenticated={this.state.authenticated}
             permissions={this.state.permissions}
             userInfo={this.state.userInfo}
             baseUrl={baseUrl}
             callApi={this.callApi}
-            signIn={signIn}
           />
-          <Blips
+        </div>
+      )
+    } else if (beforeEndPath === 'themes' && endPath === undefined) {
+      return (
+        <div className="App">
+          {navbar}
+          <Themes
             authenticated={this.state.authenticated}
             permissions={this.state.permissions}
             userInfo={this.state.userInfo}
@@ -285,15 +285,7 @@ class App extends React.Component {
       )
     } else if (beforeEndPath === "") {
       return <div className="App">
-        <Navbar
-          onUserInfoChange={this.handleUserInfoChange}
-          authenticated={this.state.authenticated}
-          permissions={this.state.permissions}
-          userInfo={this.state.userInfo}
-          baseUrl={baseUrl}
-          callApi={this.callApi}
-          signIn={signIn}
-        />
+        {navbar}
       </div>
     } else {
       return <div>Page not found</div>

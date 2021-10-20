@@ -151,6 +151,16 @@ class Parameters extends React.Component {
                                     return (
                                         <div className="form-group" key={fParam.name}>
                                             <label className="paramName">{fParam.name}</label>
+                                            {
+                                                fParam.tooltip ?
+                                                    <span className="help-tooltip">
+                                                        <i className="icon icon-md">help_outline</i>
+                                                        <div className="tooltip bs-tooltip-top" role="tooltip">
+                                                            <div className="tooltip-inner">{fParam.tooltip}</div>
+                                                        </div>
+                                                    </span>
+                                                : <span className="help-tooltip"/>
+                                            }
                                             <input
                                                 type="text"
                                                 className="form-control form-control-alt"
