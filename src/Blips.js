@@ -25,6 +25,7 @@ class Blips extends React.Component {
             rows: [],
             columns: [],
             locked: {},
+            blipIds: [],
             allBlips: [],
             allBlipsColumns: [],
             allBlipsRows: [],
@@ -86,6 +87,7 @@ class Blips extends React.Component {
             delete lastBlip.lastupdate;
             delete lastBlip.name;
             this.addBlip();
+            this.state.blipIds.push(blipId);
             const lastRow = this.state.rows[this.state.rows.length - 1];
             lastRow[0] = name;
             
@@ -223,16 +225,16 @@ class Blips extends React.Component {
         }
     }
 
-    async deleteBlip(blipId, rowIndex) {
+    async deleteBlip(rowIndex) {
+        const blipId = this.state.blipIds[rowIndex];
         if (blipId) {
             const response = await this.props.callApi('DELETE', `${this.props.baseUrl}/blips/${blipId}`);
             if (response.ok) {
                 this.state.rows.splice(rowIndex, 1);
+                this.state.blipIds.splice(rowIndex, 1);
             } else {
-                this.state.returnMessage1 = "Erreur deleting blip";
+                this.state.returnMessage1 = "Error deleting blip";
             }
-        } else {
-            this.state.rows.splice(rowIndex, 1);
         }
     }
 
@@ -402,7 +404,7 @@ class Blips extends React.Component {
                                         <button
                                             className="btn btn-lg"
                                             onClick={async function(e) {
-                                                await parent.deleteBlip(row[0], rowIndex);
+                                                await parent.deleteBlip(rowIndex);
                                                 parent.setState(parent.state);
                                             }}
                                         >
