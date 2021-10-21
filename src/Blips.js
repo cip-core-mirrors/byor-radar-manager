@@ -17,14 +17,19 @@ class Blips extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            success: undefined,
             submitting: false,
-            returnMessage: undefined,
+            success1: undefined,
+            returnMessage1: undefined,
+            success2: undefined,
+            returnMessage2: undefined,
             rows: [],
             columns: [],
             locked: {},
+            blipIds: [],
+            allBlips: [],
             allBlipsColumns: [],
             allBlipsRows: [],
+            changedAllBlipsRows: {},
         };
     }
 
@@ -82,6 +87,7 @@ class Blips extends React.Component {
             delete lastBlip.lastupdate;
             delete lastBlip.name;
             this.addBlip();
+            this.state.blipIds.push(blipId);
             const lastRow = this.state.rows[this.state.rows.length - 1];
             lastRow[0] = name;
             
@@ -141,6 +147,7 @@ class Blips extends React.Component {
                 blipVersion.permissions = permissions;
             }
 
+            this.state.allBlips = allBlips;
             this.state.allBlipsRows = [];
             this.state.allBlipsColumns = [];
 
@@ -218,16 +225,16 @@ class Blips extends React.Component {
         }
     }
 
-    async deleteBlip(blipId, rowIndex) {
+    async deleteBlip(rowIndex) {
+        const blipId = this.state.blipIds[rowIndex];
         if (blipId) {
             const response = await this.props.callApi('DELETE', `${this.props.baseUrl}/blips/${blipId}`);
             if (response.ok) {
                 this.state.rows.splice(rowIndex, 1);
+                this.state.blipIds.splice(rowIndex, 1);
             } else {
-                this.state.returnMessage = "Erreur deleting blip";
+                this.state.returnMessage1 = "Error deleting blip";
             }
-        } else {
-            this.state.rows.splice(rowIndex, 1);
         }
     }
 
@@ -262,21 +269,21 @@ class Blips extends React.Component {
         this.setState(this.state);
 
         const response = await this.props.callApi('POST', `${this.props.baseUrl}/blips`, { blips });
-        this.state.success = response.ok;
+        this.state.success1 = response.ok;
         const data = await response.json();
         const parent = this;
         if (response.ok) {
             this.state.locked = toLock;
-            this.state.returnMessage = `Successfully added ${data.rows} blip${data.rows > 1 ? 's' : ''}`;
+            this.state.returnMessage1 = `Successfully added ${data.rows} blip${data.rows > 1 ? 's' : ''}`;
             this.refreshAllBlips();
             setTimeout(function() {
-                parent.state.success = undefined;
+                parent.state.success1 = undefined;
                 parent.state.submitting = false;
-                parent.state.returnMessage = undefined;
+                parent.state.returnMessage1 = undefined;
                 parent.setState(parent.state);
             }, 5000);
         } else {
-            this.state.returnMessage = data.routine;
+            this.state.returnMessage1 = data.routine;
             setTimeout(function() {
                 parent.state.submitting = false;
                 parent.setState(parent.state);
@@ -284,6 +291,49 @@ class Blips extends React.Component {
         }
 
         this.setState(this.state);
+    }
+
+    async handleChangeAuthors() {
+        if (this.state.submitting) return;
+
+        const allBlipsKey = Object.keys(this.state.allBlips);
+        const blipsRights = [];
+        for (const entry of Object.entries(this.state.changedAllBlipsRows)) {
+            const index = entry[0];
+            const newAuthor = entry[1];
+            const blipRights = {};
+            blipRights.blip = allBlipsKey[index];
+            blipRights.userId = newAuthor;
+            blipRights.rights = ['owner', 'edit'];
+            blipsRights.push(blipRights);
+        }
+
+        if (blipsRights.length === 0) return;
+
+        this.state.submitting = true;
+        this.setState(this.state);
+
+        const response = await this.props.callApi('PUT', `${this.props.baseUrl}/admin/blips/permissions`, blipsRights);
+        this.state.success2 = response.ok;
+
+        const parent = this;
+        if (response.ok) {
+            this.state.returnMessage2 = "Successfully changed authors (please refresh the page to see your blips changes)";
+            setTimeout(function() {
+                parent.state.success2 = undefined;
+                parent.state.submitting = false;
+                parent.state.returnMessage2 = undefined;
+                parent.setState(parent.state);
+            }, 5000);
+            await this.refreshAllBlips();
+        } else {
+            const data = await response.json();
+            this.state.returnMessage2 = data.routine;
+            setTimeout(function() {
+                parent.state.submitting = false;
+                parent.setState(parent.state);
+            }, 2000);
+        }
     }
 
     render() {
@@ -354,7 +404,7 @@ class Blips extends React.Component {
                                         <button
                                             className="btn btn-lg"
                                             onClick={async function(e) {
-                                                await parent.deleteBlip(row[0], rowIndex);
+                                                await parent.deleteBlip(rowIndex);
                                                 parent.setState(parent.state);
                                             }}
                                         >
@@ -367,22 +417,29 @@ class Blips extends React.Component {
                                                 key={index}
                                                 className="table-cell"
                                             >
-                                                {
-                                                    index < 2 && this.state.locked[rowIndex] && this.state.locked[rowIndex][index] ? columnValue :
-                                                    <input
-                                                        type="text"
-                                                        className="form-control form-control-alt"
-                                                        value={columnValue}
-                                                        placeholder={index === 1 ? 'YYYY-MM-DD (optional)' : ''}
-                                                        style={{
-                                                            width: index === 1 ? '175px' : undefined,
-                                                        }}
-                                                        onChange={function(e) {
-                                                            row[index] = e.target.value;
-                                                            parent.setState(parent.state);
-                                                        }}
-                                                    />
-                                                }
+                                                <div
+                                                    className="view-table-cell"
+                                                >
+                                                    {
+                                                        index < 2 && this.state.locked[rowIndex] && this.state.locked[rowIndex][index] ? columnValue :
+                                                        <textarea
+                                                            type="text"
+                                                            className="form-control form-control-alt"
+                                                            value={columnValue}
+                                                            placeholder={index === 1 ? 'YYYY-MM-DD (optional)' : ''}
+                                                            style={{
+                                                                width: index === 1 ? '175px' : undefined,
+                                                                minWidth: '175px',
+                                                                resize: 'both',
+                                                                maxHeight: '10em',
+                                                            }}
+                                                            onChange={function(e) {
+                                                                row[index] = e.target.value;
+                                                                parent.setState(parent.state);
+                                                            }}
+                                                        />
+                                                    }
+                                                </div>
                                             </td>
                                         )
                                     }
@@ -402,19 +459,19 @@ class Blips extends React.Component {
                     <span className="new-sector-btn-label">Add blip</span>
                 </button>
                 <label
-                    className={this.state.success ? "text-success" : "text-danger"}
+                    className={this.state.success1 ? "text-success" : "text-danger"}
                     style={{
-                        display: this.state.returnMessage ? 'inline-block' : 'none',
+                        display: this.state.returnMessage1 ? 'inline-block' : 'none',
                         marginBottom: 0,
                     }}
                 >
-                    {this.state.returnMessage}
+                    {this.state.returnMessage1}
                 </label>
                 <input
                     //type="submit"
                     readOnly
                     value="Submit"
-                    className={`new-blips-submit-btn btn btn-lg ${this.state.success === undefined ? 'btn-primary' : (this.state.success ? 'btn-success' : 'btn-danger')}`}
+                    className={`new-blips-submit-btn btn btn-lg ${this.state.success1 === undefined ? 'btn-primary' : (this.state.success1 ? 'btn-success' : 'btn-danger')}`}
                     onClick={async function(e) {
                         await parent.handleSubmit();
                     }}
@@ -456,7 +513,21 @@ class Blips extends React.Component {
                                                 <div
                                                     className="view-table-cell"
                                                 >
-                                                    {columnValue}
+                                                    {
+                                                        this.props.permissions.adminUser && index === 0 ?
+                                                        <input
+                                                            type="text"
+                                                            className="form-control form-control-alt"
+                                                            value={columnValue}
+                                                            onChange={function(e) {
+                                                                const value = e.target.value;
+                                                                parent.state.changedAllBlipsRows[rowIndex] = value;
+                                                                row[0] = value;
+                                                                parent.setState(parent.state);
+                                                            }}
+                                                        />
+                                                        : columnValue
+                                                    }
                                                 </div>
                                             </td>
                                         )
@@ -466,6 +537,24 @@ class Blips extends React.Component {
                         }
                     </tbody>
                 </table>
+                <label
+                    className={this.state.success2 ? "text-success" : "text-danger"}
+                    style={{
+                        display: this.state.returnMessage2 ? 'inline-block' : 'none',
+                        marginBottom: 0,
+                    }}
+                >
+                    {this.state.returnMessage2}
+                </label>
+                <input
+                    //type="submit"
+                    readOnly
+                    value="Change authors"
+                    className={`new-blips-submit-btn btn btn-lg ${this.state.success2 === undefined ? 'btn-primary' : (this.state.success2 ? 'btn-success' : 'btn-danger')}`}
+                    onClick={async function(e) {
+                        await parent.handleChangeAuthors();
+                    }}
+                />
             </div>
         } else {
             return <div className="new-blips-grid">Please login in order to create blips</div>;

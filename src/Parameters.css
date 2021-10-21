@@ -19,6 +19,10 @@
 }
 
 fieldset {
+    display: flex;
+    flex-wrap: wrap;
+    grid-column-gap: 1em;
+
     margin-top: 2em;
     margin-bottom: 2em;
     padding: 1em;
@@ -33,12 +37,14 @@ fieldset {
 
 .help-tooltip {
     display: flex;
+    position: relative;
     height: 24px;
     width: fit-content;
 }
 
 .help-tooltip:hover > .tooltip {
     display: unset;
+    position: absolute;
 }
 
 .help-tooltip > .tooltip {
