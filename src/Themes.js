@@ -17,7 +17,7 @@ class Themes extends React.Component {
             selectedTheme: undefined,
             defaultParameters: [],
             parameters: [],
-            themesList: [],
+            themesPermissions: [],
         };
     }
 
@@ -57,8 +57,7 @@ class Themes extends React.Component {
     async reloadThemesList() {
         const response = await this.props.callApi('GET', `${this.props.baseUrl}/themes`);
         if (response.ok) {
-            const allThemes = await response.json();
-            this.state.themesList = allThemes.filter(theme => theme.user_id === this.props.userInfo.mail).map(theme => theme.id);
+            this.state.themesPermissions = await response.json();
             this.setState(this.state);
         }
     }
@@ -125,7 +124,6 @@ class Themes extends React.Component {
             }, 5000);
         } else {
             const data = await response.json();
-            console.log(data)
             this.state.returnMessage2 = data.routine;
             setTimeout(function() {
                 parent.state.submitting = false;
@@ -160,6 +158,12 @@ class Themes extends React.Component {
         const parent = this;
 
         if (this.props.authenticated) {
+            const themePermissions = this.state.themesPermissions.filter(theme => theme.id === this.state.selectedTheme && theme.user_id === this.props.userInfo.mail)[0];
+            const permissions = themePermissions ? themePermissions.rights.split(',') : [];
+            const isOwner = permissions.indexOf('owner') !== -1;
+            const isEditor = permissions.indexOf('edit') !== -1;
+            const isViewer = !isOwner && !isEditor;
+
             const form = <form className="parameters">
                 {params.map(function(param) {
                     if (param.paramType === 'param') {
@@ -168,6 +172,7 @@ class Themes extends React.Component {
                                 <div className="form-group" key={param.name}>
                                     <div className="custom-control custom-checkbox">
                                         <input
+                                            readOnly={isViewer}
                                             type="checkbox"
                                             className="custom-control-input"
                                             name={param.name}
@@ -206,6 +211,7 @@ class Themes extends React.Component {
                                         : <span className="help-tooltip"/>
                                     }
                                     <textarea
+                                        readOnly={isViewer}
                                         className="form-control form-control-lg"
                                         id={param.name}
                                         rows="5"
@@ -237,6 +243,7 @@ class Themes extends React.Component {
                                     : <span className="help-tooltip"/>
                                 }
                                 <input
+                                    readOnly={isViewer}
                                     type="text"
                                     className="form-control form-control-alt"
                                     id={param.name}
@@ -267,6 +274,7 @@ class Themes extends React.Component {
                                                 : <span className="help-tooltip"/>
                                             }
                                             <input
+                                                readOnly={isViewer}
                                                 type="text"
                                                 className="form-control form-control-alt"
                                                 id={fParam.name}
@@ -284,7 +292,7 @@ class Themes extends React.Component {
                 })}
             </form>;
 
-            const submit = <input
+            const submit = (isOwner || isEditor) ? <input
                 //type="submit"
                 readOnly
                 value="Submit"
@@ -292,8 +300,8 @@ class Themes extends React.Component {
                 onClick={async function(e) {
                     await parent.handleSubmit();
                 }}
-            />;
-            const deleteButton = <input
+            /> : null;
+            const deleteButton = isOwner ? <input
                 //type="submit"
                 readOnly
                 value="Delete"
@@ -301,7 +309,7 @@ class Themes extends React.Component {
                 onClick={async function(e) {
                     await parent.handleDelete();
                 }}
-            />;
+            /> : null;
 
             const createForm = <form className="create-radar">
                 <div className="form-group">
@@ -371,16 +379,17 @@ class Themes extends React.Component {
                         parent.state.selectedTheme = target.value;
                         await parent.reloadParameters(parent.state.selectedTheme);
                         parent.setState(parent.state);
-                        // TODO : reload currentTheme
                     }}
                 >
                 {
-                    this.state.themesList.map(themeId => 
+                    this.state.themesPermissions.map(theme => 
                         <option
-                            value={themeId}
-                            key={themeId}
+                            value={theme.id}
+                            key={theme.id}
                         >
-                            {themeId}
+                            {theme.id} {theme.user_id === this.props.userInfo.mail ? (
+                                theme.rights.split(',').indexOf('owner') !== -1 ? '(owner)' : '(edit)'
+                            ) : ''}
                         </option>
                     )
                 }
