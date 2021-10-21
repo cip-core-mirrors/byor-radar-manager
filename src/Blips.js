@@ -295,29 +295,23 @@ class Blips extends React.Component {
         if (this.state.submitting) return;
 
         const allBlipsKey = Object.keys(this.state.allBlips);
-        const blips = [];
+        const blipsRights = [];
         for (const entry of Object.entries(this.state.changedAllBlipsRows)) {
             const index = entry[0];
             const newAuthor = entry[1];
-            const newBlip = {};
-            newBlip.id = allBlipsKey[index];
-            const permissions = [];
-            permissions.push({
-                userId: newAuthor,
-                rights: ['owner', 'edit'],
-            });
-            newBlip.permissions = permissions;
-            blips.push(newBlip);
+            const blipRights = {};
+            blipRights.blip = allBlipsKey[index];
+            blipRights.userId = newAuthor;
+            blipRights.rights = ['owner', 'edit'];
+            blipsRights.push(blipRights);
         }
 
-        if (blips.length === 0) return;
+        if (blipsRights.length === 0) return;
 
         this.state.submitting = true;
         this.setState(this.state);
 
-        const response = await this.props.callApi('PUT', `${this.props.baseUrl}/admin/blips/permissions`, {
-            blips,
-        });
+        const response = await this.props.callApi('PUT', `${this.props.baseUrl}/admin/blips/permissions`, blipsRights);
         this.state.success2 = response.ok;
 
         const parent = this;
