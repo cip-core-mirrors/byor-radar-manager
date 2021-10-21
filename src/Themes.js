@@ -11,6 +11,7 @@ class Themes extends React.Component {
             success1: undefined,
             returnMessage1: undefined,
             success2: undefined,
+            deleteSuccess: undefined,
             returnMessage2: undefined,
             newTheme: undefined,
             selectedTheme: undefined,
@@ -49,6 +50,7 @@ class Themes extends React.Component {
         this.state.success1 = undefined;
         this.state.returnMessage1 = undefined;
         this.state.success2 = undefined;
+        this.state.deleteSuccess = undefined;
         this.state.returnMessage2 = undefined;
     }
 
@@ -56,7 +58,7 @@ class Themes extends React.Component {
         const response = await this.props.callApi('GET', `${this.props.baseUrl}/themes`);
         if (response.ok) {
             const allThemes = await response.json();
-            this.state.themesList = allThemes.map(theme => theme.id);
+            this.state.themesList = allThemes.filter(theme => theme.user_id === this.props.userInfo.mail).map(theme => theme.id);
             this.setState(this.state);
         }
     }
@@ -91,6 +93,39 @@ class Themes extends React.Component {
             }, 5000);
         } else {
             const data = await response.json();
+            this.state.returnMessage2 = data.routine;
+            setTimeout(function() {
+                parent.state.submitting = false;
+                parent.setState(parent.state);
+            }, 2000);
+        }
+        this.setState(this.state);
+    }
+
+    async handleDelete() {
+        if (this.state.submitting) return;
+        this.state.submitting = true;
+        this.setState(this.state);
+        
+        const themeId = this.state.selectedTheme;
+
+        const url = `${this.props.baseUrl}/themes/${themeId}`;
+        const response = await this.props.callApi('DELETE', url);
+        this.state.deleteSuccess = response.ok;
+        const parent = this;
+        if (response.ok) {
+            this.state.returnMessage2 = "Successfully deleted theme";
+            this.state.selectedTheme = undefined;
+            await this.reloadThemesList();
+            setTimeout(function() {
+                parent.state.deleteSuccess = undefined;
+                parent.state.submitting = false;
+                parent.state.returnMessage2 = undefined;
+                parent.setState(parent.state);
+            }, 5000);
+        } else {
+            const data = await response.json();
+            console.log(data)
             this.state.returnMessage2 = data.routine;
             setTimeout(function() {
                 parent.state.submitting = false;
@@ -258,6 +293,15 @@ class Themes extends React.Component {
                     await parent.handleSubmit();
                 }}
             />;
+            const deleteButton = <input
+                //type="submit"
+                readOnly
+                value="Delete"
+                className={`new-blips-submit-btn btn btn-lg ${this.state.deleteSuccess === undefined ? 'btn-primary' : (this.state.deleteSuccess ? 'btn-success' : 'btn-danger')}`}
+                onClick={async function(e) {
+                    await parent.handleDelete();
+                }}
+            />;
 
             const createForm = <form className="create-radar">
                 <div className="form-group">
@@ -353,7 +397,10 @@ class Themes extends React.Component {
                         >
                             {this.state.returnMessage2}
                         </label>
-                        {submit}
+                        <div className="buttons-grid">
+                            {submit}
+                            {deleteButton}
+                        </div>
                     </div> :
                     <div className="create-theme">
                         {createForm}
