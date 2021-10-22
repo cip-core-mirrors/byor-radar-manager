@@ -1,4 +1,6 @@
 import React from 'react';
+
+import Spinner from './Spinner';
 import './Blips.css';
 
 function normalizeColumnName(name) {
@@ -17,6 +19,7 @@ class Blips extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            isLoading: true,
             submitting: false,
             success1: undefined,
             returnMessage1: undefined,
@@ -114,9 +117,10 @@ class Blips extends React.Component {
             this.addBlip();
         }
 
-        this.setState(this.state);
-
         await this.refreshAllBlips();
+
+        this.state.isLoading = false;
+        this.setState(this.state);
     }
 
     async refreshAllBlips() {
@@ -250,6 +254,7 @@ class Blips extends React.Component {
         let rowIndex = 0;
         for (const row of this.state.rows) {
             const blip = {};
+            blip.id = this.state.blipIds[rowIndex];
             const toLockRow = {};
             for (const columnIndex in row) {
                 const columnValue = row[columnIndex];
@@ -258,7 +263,7 @@ class Blips extends React.Component {
                     blip[columnsIndex[columnIndex]] = columnValue;
                 }
             }
-            if (blip.name) blips.push(blip);
+            if (blip.id) blips.push(blip);
             toLock[rowIndex] = toLockRow;
             rowIndex++;
         }
@@ -337,6 +342,8 @@ class Blips extends React.Component {
     }
 
     render() {
+        if (this.props.isLoggingIn || this.state.isLoading) return <Spinner/>;
+
         const parent = this;
 
         if (this.props.authenticated) {

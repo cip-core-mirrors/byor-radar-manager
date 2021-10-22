@@ -1,12 +1,14 @@
 import React from 'react';
 import './MyRadars.css';
 
+import Spinner from './Spinner';
 import CreateRadar from './CreateRadar';
 
 class AllRadars extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
+            isLoading: true,
             radarName: undefined,
             errorMessage: undefined,
             radarsList: [],
@@ -17,6 +19,8 @@ class AllRadars extends React.Component {
 
     async componentDidMount() {
         await this.updateRadarsList(false);
+        this.state.isLoading = false;
+        this.setState(this.state);
     }
 
     async updateRadarsList(updateList = true) {
@@ -87,6 +91,8 @@ class AllRadars extends React.Component {
     }
 
     render() {
+        if (this.props.isLoggingIn || this.state.isLoading) return <Spinner/>;
+
         const parent = this;
         return (
             <div className="new-radar">

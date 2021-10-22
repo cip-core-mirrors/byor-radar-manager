@@ -1,7 +1,16 @@
 import React from 'react';
+
+import Spinner from './Spinner';
 import './Parameters.css';
 
 class Parameters extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            isLoading: true,
+        };
+    }
 
     handleChange = (parameters) => {
         this.props.onParamsChange(parameters)
@@ -25,9 +34,14 @@ class Parameters extends React.Component {
         }
 
         this.handleChange(parameters);
+
+        this.state.isLoading = false;
+        this.setState(this.state);
     }
 
     render() {
+        if (this.props.isLoggingIn || this.state.isLoading) return <Spinner/>;
+
         const params = [];
         const fieldSets = {};
         const parameters = this.props.parameters;

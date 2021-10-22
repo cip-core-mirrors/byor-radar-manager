@@ -43,6 +43,7 @@ class App extends React.Component {
     this.handleRingNameChange = this.handleRingNameChange.bind(this);
 
     this.state = {
+      isLoggingIn: true,
       parameters: [],
       blips: [
           [],
@@ -71,6 +72,7 @@ class App extends React.Component {
     this.state.authenticated = authenticated;
     this.state.permissions = permissions;
     this.state.userInfo = userInfo;
+    this.state.isLoggingIn = false;
     this.setState(this.state);
     this.updateMyRadars();
   }
@@ -211,6 +213,7 @@ class App extends React.Component {
             blips={this.state.blips}
             baseUrl={baseUrl}
             callApi={this.callApi}
+            isLoggingIn={this.state.isLoggingIn}
           />
           <Parameters
             radarId={endPath}
@@ -218,6 +221,7 @@ class App extends React.Component {
             parameters={this.state.parameters}
             baseUrl={baseUrl}
             callApi={this.callApi}
+            isLoggingIn={this.state.isLoggingIn}
           />
           <Submit
             onSubmit={async function(e) {
@@ -242,6 +246,7 @@ class App extends React.Component {
               update={function() {
                 parent.updateAllRadars();
               }}
+              isLoggingIn={this.state.isLoggingIn}
             />
             <AllRadars
               key={`all-radars-${this.state.allRadarsKey}`}
@@ -253,6 +258,7 @@ class App extends React.Component {
               update={function() {
                 parent.updateMyRadars();
               }}
+              isLoggingIn={this.state.isLoggingIn}
             />
           </div>
         </div>
@@ -267,6 +273,7 @@ class App extends React.Component {
             userInfo={this.state.userInfo}
             baseUrl={baseUrl}
             callApi={this.callApi}
+            isLoggingIn={this.state.isLoggingIn}
           />
         </div>
       )
@@ -280,6 +287,7 @@ class App extends React.Component {
             userInfo={this.state.userInfo}
             baseUrl={baseUrl}
             callApi={this.callApi}
+            isLoggingIn={this.state.isLoggingIn}
           />
         </div>
       )
