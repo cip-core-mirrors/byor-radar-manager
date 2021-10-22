@@ -10,6 +10,37 @@
     overflow-x: auto;
 }
 
+.my-blips-grid {
+    display: grid;
+    grid-auto-flow: row;
+    grid-row-gap: 1em;
+}
+
+.select-blip-list {
+}
+
+.blip-edit-grid {
+
+}
+
+.blip-edit-meta {
+    display: grid;
+    grid-auto-flow: column;
+    grid-column-gap: 1em;
+}
+
+.blip-edit-column {
+
+}
+
+.add-column-grid {
+    display: grid;
+    align-items: center;
+    grid-auto-flow: column;
+    grid-column-gap: 1em;
+    grid-template-columns: auto min-content;
+}
+
 th {
     padding: 0 1em;
 }
