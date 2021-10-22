@@ -1,4 +1,6 @@
 import React from 'react';
+
+import Spinner from './Spinner';
 import './Themes.css';
 
 const createId = 'create-theme-input';
@@ -7,6 +9,7 @@ class Themes extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            isLoading: true,
             submitting: false,
             success1: undefined,
             returnMessage1: undefined,
@@ -27,6 +30,9 @@ class Themes extends React.Component {
             this.state.defaultParameters = await response.json();
         }
         await this.reloadThemesList();
+
+        this.state.isLoading = false;
+        this.setState(this.state);
     }
 
     async reloadParameters(themeId) {
@@ -134,6 +140,8 @@ class Themes extends React.Component {
     }
 
     render() {
+        if (this.props.isLoggingIn || this.state.isLoading) return <Spinner/>;
+
         const params = [];
         const fieldSets = {};
         const parameters = this.state.parameters;

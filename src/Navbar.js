@@ -1,10 +1,13 @@
 import React from 'react';
+
+import Spinner from './Spinner';
 import './Navbar.css';
 
 class Navbar extends React.Component {
     constructor(props) {
       super(props);
       this.state = {
+        isLoading: true,
         authenticated: this.props.authenticated,
         userInfo: this.props.userInfo,
         permissions: this.props.permissions,
@@ -39,7 +42,6 @@ class Navbar extends React.Component {
       const userInfo = await response.json();
       this.state.userInfo = userInfo;
       this.state.authenticated = true;
-      this.handleUserInfo();
 
       response = await this.props.callApi('GET', `${this.props.baseUrl}/permissions`);
       const permissions = await response.json();
@@ -51,6 +53,9 @@ class Navbar extends React.Component {
 
     async componentDidMount() {
       await this.getUserInfo();
+
+      this.state.isLoading = false;
+      this.setState(this.state);
     }
 
     render() {
@@ -112,16 +117,18 @@ class Navbar extends React.Component {
                               </div> : <div/>
                             }
                             {
-                              this.state.authenticated ? <div />
-                              :
-                              <a
-                                tabIndex="-1"
-                                className="text-secondary"
-                                style={{cursor: 'pointer'}}
-                                href={this.props.signIn}
-                              >
-                                Sign in
-                              </a>
+                              this.state.isLoading ? <Spinner/> : (
+                                this.state.authenticated ? <div />
+                                :
+                                <a
+                                  tabIndex="-1"
+                                  className="text-secondary"
+                                  style={{cursor: 'pointer'}}
+                                  href={this.props.signIn}
+                                >
+                                  Sign in
+                                </a>
+                              )
                             }
                           </div>
                         </div>

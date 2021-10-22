@@ -1,8 +1,9 @@
 import React from 'react';
 import {DragDropContext, Draggable, Droppable} from 'react-beautiful-dnd';
-import './RadarBlips.css';
-
 import * as d3 from 'd3';
+
+import Spinner from './Spinner';
+import './RadarBlips.css';
 
 const grid = 5;
 const svgWidth = 10;
@@ -134,6 +135,10 @@ class RadarBlips extends React.Component {
         this.selectedDefaultRef = 0;
         this.defaultRef = undefined;
         this.defaultRefs = {};
+
+        this.state = {
+            isLoading: true,
+        }
     }
 
     handleChange() {
@@ -252,8 +257,10 @@ class RadarBlips extends React.Component {
             this.newRing();
         }
 
-        svgValues[this.selectedDefaultRef].callback(this.defaultRef);
+        this.state.isLoading = false;
+        this.setState(this.state);
 
+        svgValues[this.selectedDefaultRef].callback(this.defaultRef);
         this.drawSvgs();
     }
 
@@ -500,6 +507,8 @@ class RadarBlips extends React.Component {
     }
 
     render() {
+        if (this.props.isLoggingIn || this.state.isLoading) return <Spinner/>;
+
         const parent = this;
 
         return (

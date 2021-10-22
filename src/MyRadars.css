@@ -1,7 +1,7 @@
 .radars {
     display: grid;
     grid-auto-flow: column;
-    grid-template-columns: max-content;
+    grid-template-columns: repeat(2, 1fr);
     grid-column-gap: 2em;
 }
 
