@@ -254,6 +254,7 @@ class Blips extends React.Component {
         let rowIndex = 0;
         for (const row of this.state.rows) {
             const blip = {};
+            blip.id = this.state.blipIds[rowIndex];
             const toLockRow = {};
             for (const columnIndex in row) {
                 const columnValue = row[columnIndex];
@@ -262,7 +263,7 @@ class Blips extends React.Component {
                     blip[columnsIndex[columnIndex]] = columnValue;
                 }
             }
-            if (blip.name) blips.push(blip);
+            if (blip.id) blips.push(blip);
             toLock[rowIndex] = toLockRow;
             rowIndex++;
         }
