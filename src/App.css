@@ -1,6 +1,8 @@
 .App {
+    height: calc(100vh - 3em);
     display: grid;
     grid-auto-flow: row;
+    grid-template-rows: min-content auto min-content;
     margin: 1.5em;
     grid-row-gap: 1em;
 }

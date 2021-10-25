@@ -22,6 +22,7 @@ class Blips extends React.Component {
         super(props);
         this.state = {
             isLoading: true,
+            isLoadingAllBlips: false,
             submitting: false,
             success1: undefined,
             returnMessage1: undefined,
@@ -49,13 +50,17 @@ class Blips extends React.Component {
             this.state.myBlips[blipId] = blipVersions[blipVersions.length - 1];
         }
 
-        await this.refreshAllBlips();
-
         this.state.isLoading = false;
         this.setState(this.state);
+
+
+        this.refreshAllBlips();
     }
 
     async refreshAllBlips() {
+        this.state.isLoadingAllBlips = true;
+        this.setState(this.state);
+
         const allBlipsResponse = await this.props.callApi('GET', `${this.props.baseUrl}/blips`);
         if (allBlipsResponse.ok) {
             const allBlips = await allBlipsResponse.json();
@@ -128,6 +133,7 @@ class Blips extends React.Component {
                 this.addAllBlip(row);
             }
 
+            this.state.isLoadingAllBlips = false;
             this.setState(this.state);
         }
     }
@@ -301,7 +307,7 @@ class Blips extends React.Component {
                         }
                     </select>
                     {
-                        !this.state.selectedBlip ? <div className="blip-edit-grid"/> :
+                        !this.state.selectedBlip ? null :
                         <div className="blip-edit-grid">
                             <div className="blip-edit-meta">
                                 <div className="form-group" key={`${this.state.selectedBlip.id}-name`}>
@@ -401,84 +407,89 @@ class Blips extends React.Component {
                     }
                 </div>
                 <h3>All blips</h3>
-                <table
-                    className="all-blips-table"
-                >
-                    <thead>
-                        <tr>
-                            {
-                                this.state.allBlipsColumns.map((columnName, index) =>
-                                    <th
-                                        key={index}
-                                        scope="col"
-                                        className={index === 1 ? "fit-width" : "new-blips-table-column"}
-                                        style={{
-                                            paddingRight: index === 1 ? '1.5em': undefined,
-                                        }}
-                                    >
-                                        {columnName}
-                                    </th>
-                                )
-                            }
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {
-                            this.state.allBlipsRows.map((row, rowIndex) =>
-                                <tr
-                                    key={rowIndex}
-                                >
+                {
+                    this.state.isLoadingAllBlips ? <Spinner/> :
+                    <div className="all-blips-grid">
+                        <table
+                            className="all-blips-table"
+                        >
+                            <thead>
+                                <tr>
                                     {
-                                        row.map((columnValue, index) => 
-                                            <td
+                                        this.state.allBlipsColumns.map((columnName, index) =>
+                                            <th
                                                 key={index}
-                                                className="table-cell"
+                                                scope="col"
+                                                className={index === 1 ? "fit-width" : "new-blips-table-column"}
+                                                style={{
+                                                    paddingRight: index === 1 ? '1.5em': undefined,
+                                                }}
                                             >
-                                                <div
-                                                    className="view-table-cell"
-                                                >
-                                                    {
-                                                        this.props.permissions.adminUser && index === 0 ?
-                                                        <input
-                                                            type="text"
-                                                            className="form-control form-control-alt"
-                                                            value={columnValue}
-                                                            onChange={function(e) {
-                                                                const value = e.target.value;
-                                                                parent.state.changedAllBlipsRows[rowIndex] = value;
-                                                                row[0] = value;
-                                                                parent.setState(parent.state);
-                                                            }}
-                                                        />
-                                                        : columnValue
-                                                    }
-                                                </div>
-                                            </td>
+                                                {columnName}
+                                            </th>
                                         )
                                     }
                                 </tr>
-                            )
-                        }
-                    </tbody>
-                </table>
-                <label
-                    className={this.state.success2 ? "text-success" : "text-danger"}
-                    style={{
-                        display: this.state.returnMessage2 ? 'inline-block' : 'none',
-                        marginBottom: 0,
-                    }}
-                >
-                    {this.state.returnMessage2}
-                </label>
-                <input
-                    //type="submit"
-                    readOnly
-                    value="Change authors"
-                    className={`new-blips-submit-btn btn btn-lg ${this.state.success2 === undefined ? 'btn-primary' : (this.state.success2 ? 'btn-success' : 'btn-danger')}`}
-                    onClick={async function(e) {
-                        await parent.handleChangeAuthors();
-                    }}
-                />
+                            </thead>
+                            <tbody>
+                                {
+                                    this.state.allBlipsRows.map((row, rowIndex) =>
+                                        <tr
+                                            key={rowIndex}
+                                        >
+                                            {
+                                                row.map((columnValue, index) => 
+                                                    <td
+                                                        key={index}
+                                                        className="table-cell"
+                                                    >
+                                                        <div
+                                                            className="view-table-cell"
+                                                        >
+                                                            {
+                                                                this.props.permissions.adminUser && index === 0 ?
+                                                                <input
+                                                                    type="text"
+                                                                    className="form-control form-control-alt"
+                                                                    value={columnValue}
+                                                                    onChange={function(e) {
+                                                                        const value = e.target.value;
+                                                                        parent.state.changedAllBlipsRows[rowIndex] = value;
+                                                                        row[0] = value;
+                                                                        parent.setState(parent.state);
+                                                                    }}
+                                                                />
+                                                                : columnValue
+                                                            }
+                                                        </div>
+                                                    </td>
+                                                )
+                                            }
+                                        </tr>
+                                    )
+                                }
+                            </tbody>
+                        </table>
+                        <label
+                            className={this.state.success2 ? "text-success" : "text-danger"}
+                            style={{
+                                display: this.state.returnMessage2 ? 'inline-block' : 'none',
+                                marginBottom: 0,
+                            }}
+                        >
+                            {this.state.returnMessage2}
+                        </label>
+                        <input
+                            //type="submit"
+                            readOnly
+                            value="Change authors"
+                            className={`new-blips-submit-btn btn btn-lg ${this.state.success2 === undefined ? 'btn-primary' : (this.state.success2 ? 'btn-success' : 'btn-danger')}`}
+                            onClick={async function(e) {
+                                await parent.handleChangeAuthors();
+                            }}
+                        />
+                    </div>
+                }
             </div>
         } else {
             return <div className="new-blips-grid">Please login in order to create blips</div>;
