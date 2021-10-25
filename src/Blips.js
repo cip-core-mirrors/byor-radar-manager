@@ -15,19 +15,21 @@ function parseDate(value) {
     }
 }
 
+const addColumnId = 'add-column-blip'
+
 class Blips extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             isLoading: true,
+            isLoadingAllBlips: false,
             submitting: false,
             success1: undefined,
             returnMessage1: undefined,
             success2: undefined,
             returnMessage2: undefined,
-            rows: [],
-            columns: [],
-            locked: {},
+            myBlips: [],
+            selectedBlip: undefined,
             blipIds: [],
             allBlips: [],
             allBlipsColumns: [],
@@ -37,93 +39,28 @@ class Blips extends React.Component {
     }
 
     async componentDidMount() {
-        this.addColumn('Name');
-        this.addColumn('Last update');
-        this.setState(this.state);
-        
         const response = await this.props.callApi('GET', `${this.props.baseUrl}/blip`)
         if (!response.ok) {
-            this.addColumn();
-            this.addBlip();
-            this.setState(this.state);
             return;
         }
 
-        const columns = {};
-        let columnIndex = 0;
         const data = await response.json();
         for (const blipId in data) {
             const blipVersions = data[blipId];
-            const lastBlip = blipVersions[blipVersions.length - 1];
-            const {
-                id,
-                id_version,
-                lastupdate,
-                name,
-                version,
-            } = lastBlip;
-            delete lastBlip.id;
-            delete lastBlip.id_version;
-            delete lastBlip.lastupdate;
-            delete lastBlip.name;
-            delete lastBlip.version;
-            for (const columnName in lastBlip) {
-                const columnExists = columns[columnName];
-                if (columnExists === undefined) {
-                    this.addColumn(columnName);
-                    columns[columnName] = columnIndex;
-                    columnIndex++;
-                }
-            }
-            lastBlip.name = name;
-            lastBlip.lastupdate = lastupdate;
+            this.state.myBlips[blipId] = blipVersions[blipVersions.length - 1];
         }
-
-        let row = 0;
-        for (const blipId in data) {
-            const blipVersions = data[blipId];
-            const lastBlip = blipVersions[blipVersions.length - 1];
-            const {
-                lastupdate,
-                name,
-            } = lastBlip;
-            delete lastBlip.lastupdate;
-            delete lastBlip.name;
-            this.addBlip();
-            this.state.blipIds.push(blipId);
-            const lastRow = this.state.rows[this.state.rows.length - 1];
-            lastRow[0] = name;
-            
-            const lockedRow = {};
-            lockedRow[0] = true;
-            const lastUpdateDate = parseDate(lastupdate);
-            if (lastUpdateDate) {
-                lastRow[1] = `${lastUpdateDate.getFullYear()}-${lastUpdateDate.getMonth() + 1}-${lastUpdateDate.getDate()}`;
-                lockedRow[1] = true;
-            } else {
-                lastRow[1] = '';
-            }
-            for (const columnName in lastBlip) {
-                const columnValue = lastBlip[columnName];
-                const columnIndex = columns[columnName];
-                lastRow[columnIndex + 2] = columnValue;
-            }
-            this.state.locked[row] = lockedRow;
-            row++;
-        }
-        
-        if (this.state.rows.length === 0) {
-            this.addColumn();
-            this.addBlip();
-        }
-
-        await this.refreshAllBlips();
 
         this.state.isLoading = false;
         this.setState(this.state);
+
+
+        this.refreshAllBlips();
     }
 
     async refreshAllBlips() {
+        this.state.isLoadingAllBlips = true;
+        this.setState(this.state);
+
         const allBlipsResponse = await this.props.callApi('GET', `${this.props.baseUrl}/blips`);
         if (allBlipsResponse.ok) {
             const allBlips = await allBlipsResponse.json();
@@ -196,6 +133,7 @@ class Blips extends React.Component {
                 this.addAllBlip(row);
             }
 
+            this.state.isLoadingAllBlips = false;
             this.setState(this.state);
         }
     }
@@ -242,43 +180,19 @@ class Blips extends React.Component {
         }
     }
 
-    async handleSubmit() {
+    async handleSubmit(blip) {
         if (this.state.submitting) return;
-
-        const blips = [];
-        const columns = this.state.columns.slice(0, 2).map(normalizeColumnName).concat(this.state.columns.slice(2));
-        const columnsIndex = {};
-        columns.map((value, index) => columnsIndex[index] = value);
-
-        const toLock = {};
-        let rowIndex = 0;
-        for (const row of this.state.rows) {
-            const blip = {};
-            blip.id = this.state.blipIds[rowIndex];
-            const toLockRow = {};
-            for (const columnIndex in row) {
-                const columnValue = row[columnIndex];
-                if (columnValue) {
-                    toLockRow[columnIndex] = true;
-                    blip[columnsIndex[columnIndex]] = columnValue;
-                }
-            }
-            if (blip.id) blips.push(blip);
-            toLock[rowIndex] = toLockRow;
-            rowIndex++;
-        }
-
-        if (blips.length === 0) return;
 
         this.state.submitting = true;
         this.setState(this.state);
 
-        const response = await this.props.callApi('POST', `${this.props.baseUrl}/blips`, { blips });
+        const response = await this.props.callApi('POST', `${this.props.baseUrl}/blips`, {
+            blips: [ blip ],
+        });
         this.state.success1 = response.ok;
         const data = await response.json();
         const parent = this;
         if (response.ok) {
-            this.state.locked = toLock;
             this.state.returnMessage1 = `Successfully added ${data.rows} blip${data.rows > 1 ? 's' : ''}`;
             this.refreshAllBlips();
             setTimeout(function() {
@@ -347,221 +261,235 @@ class Blips extends React.Component {
         const parent = this;
 
         if (this.props.authenticated) {
+            const blipParams = [];
+            if (this.state.selectedBlip) {
+                const metaParamsKeys = [ 'id', 'id_version', 'lastupdate', 'name', 'version' ];
+                const metaParams = {};
+                for (const metaParamsKey of metaParamsKeys) {
+                    metaParams[metaParamsKey] = this.state.selectedBlip[metaParamsKey];
+                    delete this.state.selectedBlip[metaParamsKey];
+                }
+                for (const entry of Object.entries(this.state.selectedBlip)) {
+                    const param = {};
+                    param.name = entry[0];
+                    param.value = entry[1];
+                    blipParams.push(param);
+                }
+                for (const entry of Object.entries(metaParams)) {
+                    this.state.selectedBlip[entry[0]] = entry[1];
+                }
+            }
+
             return <div className="new-blips-grid">
                 <h3>My blips</h3>
-                <table
-                    className="new-blips-table"
-                    id="new-blips-table"
-                >
-                    <thead>
-                        <tr>
-                            <th className="fit-width"/>
-                            {
-                                this.state.columns.map((columnName, index) =>
-                                    <th
-                                        key={index}
-                                        scope="col"
-                                        className={`${index < 2 ? "sticky-col" : ""} ${index === 1 ? "fit-width" : "new-blips-table-column"}`}
-                                        style={{
-                                            paddingRight: index === 1 ? '1.5em': undefined,
+                <div className="my-blips-grid">
+                    <select
+                        className="custom-select select-blip-list"
+                        onClick={function(e) {
+                            const blipId = e.target.value;
+                            if (!blipId) return;
+                            if (parent.state.selectedBlip && blipId === parent.state.selectedBlip.id) return;
+
+                            parent.state.selectedBlip = Object.assign({}, parent.state.myBlips[blipId]);
+                            parent.setState(parent.state);
+                        }}
+                    >
+                        <option selected disabled value="">Select a blip to edit</option>
+                        {
+                            Object.values(this.state.myBlips).map(blip =>
+                                <option
+                                    value={blip.id}
+                                    key={blip.id}
+                                >
+                                    {blip.name}
+                                </option>
+                            )
+                        }
+                    </select>
+                    {
+                        !this.state.selectedBlip ? null :
+                        <div className="blip-edit-grid">
+                            <div className="blip-edit-meta">
+                                <div className="form-group" key={`${this.state.selectedBlip.id}-name`}>
+                                    <label className="paramName">Name &nbsp;</label>
+                                    <input
+                                        type="text"
+                                        className="form-control form-control-alt"
+                                        defaultValue={this.state.selectedBlip.name || ""}
+                                        onChange={function(e) {
+                                            parent.state.selectedBlip.name = e.target.value;
                                         }}
-                                    >
-                                        {
-                                            index < 2 ? columnName :
-                                            <input
-                                                type="text"
-                                                className="form-control form-control-alt"
-                                                placeholder={columnName ? null : "Column name"}
-                                                value={columnName}
-                                                onChange={function(e) {
-                                                    parent.state.columns[index] = e.target.value;
+                                    />
+                                </div>
+                                <div className="form-group" key={`${this.state.selectedBlip.id}-lastupdate`}>
+                                    <label className="paramName">Last update &nbsp;</label>
+                                    <input
+                                        type="text"
+                                        className="form-control form-control-alt"
+                                        defaultValue={this.state.selectedBlip.lastupdate || ""}
+                                        onChange={function(e) {
+                                            parent.state.selectedBlip.lastupdate = e.target.value;
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                            {
+                                blipParams.map(param => 
+                                    <div className="form-group" key={`${this.state.selectedBlip.id}-${param.name}`}>
+                                        <label className="paramName">{param.name} &nbsp;</label>
+                                        <span className="help-tooltip">
+                                            <i
+                                                className="icon icon-md"
+                                                style={{
+                                                    cursor: 'pointer',
+                                                }}
+                                                onClick={function(e) {
+                                                    delete parent.state.selectedBlip[param.name];
                                                     parent.setState(parent.state);
                                                 }}
-                                            />
-                                        }
-                                    </th>
-                                )
-                            }
-                            <th>
-                                <button
-                                    className="btn btn-lg btn-flat-primary new-column-btn fit-width"
-                                    onClick={function(e) {
-                                        parent.addColumn();
-                                        parent.setState(parent.state);
-                                        setTimeout(function() {
-                                            const table = document.getElementById("new-blips-table");
-                                            const thead = table.firstChild;
-                                            table.scrollLeft = thead.offsetWidth;
-                                        }, 50)
-                                    }}
-                                >
-                                    <i className="icon icon-md">add</i>
-                                    <span className="new-sector-btn-label">Add column</span>
-                                </button>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {
-                            this.state.rows.map((row, rowIndex) =>
-                                <tr
-                                    key={rowIndex}
-                                >
-                                    <td>
-                                        <button
-                                            className="btn btn-lg"
-                                            onClick={async function(e) {
-                                                await parent.deleteBlip(rowIndex);
-                                                parent.setState(parent.state);
+                                            >
+                                                delete
+                                            </i>
+                                        </span>
+                                        <textarea
+                                            type="text"
+                                            className="form-control form-control-alt"
+                                            defaultValue={param.value || ""}
+                                            style={{
+                                                minWidth: '175px',
+                                                resize: 'vertical',
+                                                maxHeight: '10em',
                                             }}
-                                        >
-                                            <i className="icon icon-md">delete</i>
-                                        </button>
-                                    </td>
-                                    {
-                                        row.map((columnValue, index) => 
-                                            <td
-                                                key={index}
-                                                className="table-cell"
-                                            >
-                                                <div
-                                                    className="view-table-cell"
-                                                >
-                                                    {
-                                                        index < 2 && this.state.locked[rowIndex] && this.state.locked[rowIndex][index] ? columnValue :
-                                                        <textarea
-                                                            type="text"
-                                                            className="form-control form-control-alt"
-                                                            value={columnValue}
-                                                            placeholder={index === 1 ? 'YYYY-MM-DD (optional)' : ''}
-                                                            style={{
-                                                                width: index === 1 ? '175px' : undefined,
-                                                                minWidth: '175px',
-                                                                resize: 'both',
-                                                                maxHeight: '10em',
-                                                            }}
-                                                            onChange={function(e) {
-                                                                row[index] = e.target.value;
-                                                                parent.setState(parent.state);
-                                                            }}
-                                                        />
-                                                    }
-                                                </div>
-                                            </td>
-                                        )
-                                    }
-                                </tr>
-                            )
-                        }
-                    </tbody>
-                </table>
-                <button
-                    className="btn btn-lg btn-flat-primary new-blip-btn"
-                    onClick={function(e) {
-                        parent.addBlip();
-                        parent.setState(parent.state);
-                    }}
-                >
-                    <i className="icon icon-md">add</i>
-                    <span className="new-sector-btn-label">Add blip</span>
-                </button>
-                <label
-                    className={this.state.success1 ? "text-success" : "text-danger"}
-                    style={{
-                        display: this.state.returnMessage1 ? 'inline-block' : 'none',
-                        marginBottom: 0,
-                    }}
-                >
-                    {this.state.returnMessage1}
-                </label>
-                <input
-                    //type="submit"
-                    readOnly
-                    value="Submit"
-                    className={`new-blips-submit-btn btn btn-lg ${this.state.success1 === undefined ? 'btn-primary' : (this.state.success1 ? 'btn-success' : 'btn-danger')}`}
-                    onClick={async function(e) {
-                        await parent.handleSubmit();
-                    }}
-                />
-                <h3>All blips</h3>
-                <table
-                    className="all-blips-table"
-                >
-                    <thead>
-                        <tr>
-                            {
-                                this.state.allBlipsColumns.map((columnName, index) =>
-                                    <th
-                                        key={index}
-                                        scope="col"
-                                        className={index === 1 ? "fit-width" : "new-blips-table-column"}
-                                        style={{
-                                            paddingRight: index === 1 ? '1.5em': undefined,
-                                        }}
-                                    >
-                                        {columnName}
-                                    </th>
+                                            onChange={function(e) {
+                                                parent.state.selectedBlip[param.name] = e.target.value;
+                                            }}
+                                        />
+                                    </div>
                                 )
                             }
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {
-                            this.state.allBlipsRows.map((row, rowIndex) =>
-                                <tr
-                                    key={rowIndex}
-                                >
+                            <div className="add-column-grid">
+                                <input
+                                    type="text"
+                                    className="form-control form-control-alt"
+                                    placeholder="Column name"
+                                    id={addColumnId}
+                                />
+                                <input
+                                    readOnly
+                                    value="Add column"
+                                    className="submit-btn btn btn-lg btn-primary"
+                                    onClick={async function(e) {
+                                        const input = document.getElementById(addColumnId);
+                                        const columnName = input.value;
+                                        if (!columnName) return;
+                                        input.value = "";
+                                        parent.state.selectedBlip[columnName] = "";
+                                        parent.setState(parent.state);
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    }
+                    {
+                        !this.state.selectedBlip ? null :
+                        <input
+                            //type="submit"
+                            readOnly
+                            value="Save blip"
+                            style={{
+                                width: '100%',
+                            }}
+                            className={`new-blips-submit-btn btn btn-lg ${this.state.success1 === undefined ? 'btn-primary' : (this.state.success1 ? 'btn-success' : 'btn-danger')}`}
+                            onClick={async function(e) {
+                                await parent.handleSubmit(parent.state.selectedBlip);
+                            }}
+                        />
+                    }
+                </div>
+                <h3>All blips</h3>
+                {
+                    this.state.isLoadingAllBlips ? <Spinner/> :
+                    <div className="all-blips-grid">
+                        <table
+                            className="all-blips-table"
+                        >
+                            <thead>
+                                <tr>
                                     {
-                                        row.map((columnValue, index) => 
-                                            <td
+                                        this.state.allBlipsColumns.map((columnName, index) =>
+                                            <th
                                                 key={index}
-                                                className="table-cell"
+                                                scope="col"
+                                                className={index === 1 ? "fit-width" : "new-blips-table-column"}
+                                                style={{
+                                                    paddingRight: index === 1 ? '1.5em': undefined,
+                                                }}
                                             >
-                                                <div
-                                                    className="view-table-cell"
-                                                >
-                                                    {
-                                                        this.props.permissions.adminUser && index === 0 ?
-                                                        <input
-                                                            type="text"
-                                                            className="form-control form-control-alt"
-                                                            value={columnValue}
-                                                            onChange={function(e) {
-                                                                const value = e.target.value;
-                                                                parent.state.changedAllBlipsRows[rowIndex] = value;
-                                                                row[0] = value;
-                                                                parent.setState(parent.state);
-                                                            }}
-                                                        />
-                                                        : columnValue
-                                                    }
-                                                </div>
-                                            </td>
+                                                {columnName}
+                                            </th>
                                         )
                                     }
                                 </tr>
-                            )
-                        }
-                    </tbody>
-                </table>
-                <label
-                    className={this.state.success2 ? "text-success" : "text-danger"}
-                    style={{
-                        display: this.state.returnMessage2 ? 'inline-block' : 'none',
-                        marginBottom: 0,
-                    }}
-                >
-                    {this.state.returnMessage2}
-                </label>
-                <input
-                    //type="submit"
-                    readOnly
-                    value="Change authors"
-                    className={`new-blips-submit-btn btn btn-lg ${this.state.success2 === undefined ? 'btn-primary' : (this.state.success2 ? 'btn-success' : 'btn-danger')}`}
-                    onClick={async function(e) {
-                        await parent.handleChangeAuthors();
-                    }}
-                />
+                            </thead>
+                            <tbody>
+                                {
+                                    this.state.allBlipsRows.map((row, rowIndex) =>
+                                        <tr
+                                            key={rowIndex}
+                                        >
+                                            {
+                                                row.map((columnValue, index) => 
+                                                    <td
+                                                        key={index}
+                                                        className="table-cell"
+                                                    >
+                                                        <div
+                                                            className="view-table-cell"
+                                                        >
+                                                            {
+                                                                this.props.permissions.adminUser && index === 0 ?
+                                                                <input
+                                                                    type="text"
+                                                                    className="form-control form-control-alt"
+                                                                    value={columnValue}
+                                                                    onChange={function(e) {
+                                                                        const value = e.target.value;
+                                                                        parent.state.changedAllBlipsRows[rowIndex] = value;
+                                                                        row[0] = value;
+                                                                        parent.setState(parent.state);
+                                                                    }}
+                                                                />
+                                                                : columnValue
+                                                            }
+                                                        </div>
+                                                    </td>
+                                                )
+                                            }
+                                        </tr>
+                                    )
+                                }
+                            </tbody>
+                        </table>
+                        <label
+                            className={this.state.success2 ? "text-success" : "text-danger"}
+                            style={{
+                                display: this.state.returnMessage2 ? 'inline-block' : 'none',
+                                marginBottom: 0,
+                            }}
+                        >
+                            {this.state.returnMessage2}
+                        </label>
+                        <input
+                            //type="submit"
+                            readOnly
+                            value="Change authors"
+                            className={`new-blips-submit-btn btn btn-lg ${this.state.success2 === undefined ? 'btn-primary' : (this.state.success2 ? 'btn-success' : 'btn-danger')}`}
+                            onClick={async function(e) {
+                                await parent.handleChangeAuthors();
+                            }}
+                        />
+                    </div>
+                }
             </div>
         } else {
             return <div className="new-blips-grid">Please login in order to create blips</div>;

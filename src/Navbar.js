@@ -1,4 +1,11 @@
 import React from 'react';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link,
+  Redirect,
+} from "react-router-dom";
 
 import Spinner from './Spinner';
 import './Navbar.css';
@@ -147,13 +154,13 @@ class Navbar extends React.Component {
                 <div className="navbar-collapse justify-content-end" id="navbar-default">
                     <ul className="navbar-nav mr-xl-auto">
                         <li className="nav-item">
-                            <a tabIndex="3" className="nav-link" href="/radars">Radars</a>
+                            <Link to="/radars" className="nav-link">Radars</Link>
                         </li>
                         <li className="nav-item">
-                            <a tabIndex="4" className="nav-link" href="/blips">Blips</a>
+                            <Link to="/blips" className="nav-link">Blips</Link>
                         </li>
                         <li className="nav-item">
-                            <a tabIndex="5" className="nav-link" href="/themes">Themes</a>
+                            <Link to="/themes" className="nav-link">Themes</Link>
                         </li>
                         {
                           process.env.REACT_APP_DOCS_URL ?

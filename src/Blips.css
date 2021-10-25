@@ -1,6 +1,8 @@
 .new-blips-grid {
+    height: fit-content;
     display: grid;
     grid-auto-flow: row;
+    grid-template-rows: min-content min-content min-content min-content;
     grid-row-gap: 1em;
     overflow: auto;
 }
@@ -8,6 +10,37 @@
 .new-blips-table {
     display: block;
     overflow-x: auto;
+}
+
+.my-blips-grid {
+    display: grid;
+    grid-auto-flow: row;
+    grid-row-gap: 1em;
+}
+
+.select-blip-list {
+}
+
+.blip-edit-grid {
+
+}
+
+.blip-edit-meta {
+    display: grid;
+    grid-auto-flow: column;
+    grid-column-gap: 1em;
+}
+
+.blip-edit-column {
+
+}
+
+.add-column-grid {
+    display: grid;
+    align-items: center;
+    grid-auto-flow: column;
+    grid-column-gap: 1em;
+    grid-template-columns: auto min-content;
 }
 
 th {
@@ -28,6 +61,12 @@ th {
 table input.form-control {
     box-shadow: none;
     padding: 0 0.5em;
+}
+
+.all-blips-grid {
+    display: grid;
+    grid-auto-flow: row;
+    grid-row-gap: 1em;
 }
 
 .all-blips-table {

@@ -1,4 +1,12 @@
 import React from 'react';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link,
+  Redirect,
+} from "react-router-dom";
+
 import './App.css';
 
 import Themes from './Themes';
@@ -201,103 +209,93 @@ class App extends React.Component {
       signIn={signIn}
     />;
 
-    if (beforeEndPath === 'radars' && endPath) {
-      return (
-        <div className="App">
-          {navbar}
-          <RadarBlips
-            radarId={endPath}
-            onBlipsChange={this.handleBlipsChange}
-            onSectorNameChange={this.handleSectorNameChange}
-            onRingNameChange={this.handleRingNameChange}
-            blips={this.state.blips}
-            baseUrl={baseUrl}
-            callApi={this.callApi}
-            isLoggingIn={this.state.isLoggingIn}
-          />
-          <Parameters
-            radarId={endPath}
-            onParamsChange={this.handleParamsChange}
-            parameters={this.state.parameters}
-            baseUrl={baseUrl}
-            callApi={this.callApi}
-            isLoggingIn={this.state.isLoggingIn}
-          />
-          <Submit
-            onSubmit={async function(e) {
-              return await parent.handleSubmit(endPath);
-            }}
-          />
-          <Footer />
-        </div>
-      )
-    } else if (beforeEndPath === 'radars' && endPath === undefined) {
-      return (
-        <div className="App">
-          {navbar}
-          <div className="radars">
-            <MyRadars
-              key={`my-radars-${this.state.myRadarsKey}`}
-              authenticated={this.state.authenticated}
-              userInfo={this.state.userInfo}
-              permissions={this.state.permissions}
-              baseUrl={baseUrl}
-              callApi={this.callApi}
-              update={function() {
-                parent.updateAllRadars();
-              }}
-              isLoggingIn={this.state.isLoggingIn}
-            />
-            <AllRadars
-              key={`all-radars-${this.state.allRadarsKey}`}
-              authenticated={this.state.authenticated}
-              userInfo={this.state.userInfo}
-              permissions={this.state.permissions}
-              baseUrl={baseUrl}
-              callApi={this.callApi}
-              update={function() {
-                parent.updateMyRadars();
-              }}
-              isLoggingIn={this.state.isLoggingIn}
-            />
-          </div>
-        </div>
-      )
-    } else if (beforeEndPath === 'blips' && endPath === undefined) {
-      return (
-        <div className="App">
-          {navbar}
-          <Blips
-            authenticated={this.state.authenticated}
-            permissions={this.state.permissions}
-            userInfo={this.state.userInfo}
-            baseUrl={baseUrl}
-            callApi={this.callApi}
-            isLoggingIn={this.state.isLoggingIn}
-          />
-        </div>
-      )
-    } else if (beforeEndPath === 'themes' && endPath === undefined) {
-      return (
-        <div className="App">
-          {navbar}
-          <Themes
-            authenticated={this.state.authenticated}
-            permissions={this.state.permissions}
-            userInfo={this.state.userInfo}
-            baseUrl={baseUrl}
-            callApi={this.callApi}
-            isLoggingIn={this.state.isLoggingIn}
-          />
-        </div>
-      )
-    } else if (beforeEndPath === "") {
-      return <div className="App">
+    return <Router>
+      <div className="App">
         {navbar}
+        <Switch>
+          <Route path="/radars">
+            <div className="radars">
+              <MyRadars
+                key={`my-radars-${this.state.myRadarsKey}`}
+                authenticated={this.state.authenticated}
+                userInfo={this.state.userInfo}
+                permissions={this.state.permissions}
+                baseUrl={baseUrl}
+                callApi={this.callApi}
+                update={function() {
+                  parent.updateAllRadars();
+                }}
+                isLoggingIn={this.state.isLoggingIn}
+              />
+              <AllRadars
+                key={`all-radars-${this.state.allRadarsKey}`}
+                authenticated={this.state.authenticated}
+                userInfo={this.state.userInfo}
+                permissions={this.state.permissions}
+                baseUrl={baseUrl}
+                callApi={this.callApi}
+                update={function() {
+                  parent.updateMyRadars();
+                }}
+                isLoggingIn={this.state.isLoggingIn}
+              />
+            </div>
+          </Route>
+          <Route path="/radars">
+            <RadarBlips
+              radarId={endPath}
+              onBlipsChange={this.handleBlipsChange}
+              onSectorNameChange={this.handleSectorNameChange}
+              onRingNameChange={this.handleRingNameChange}
+              blips={this.state.blips}
+              baseUrl={baseUrl}
+              callApi={this.callApi}
+              isLoggingIn={this.state.isLoggingIn}
+            />
+            <Parameters
+              radarId={endPath}
+              onParamsChange={this.handleParamsChange}
+              parameters={this.state.parameters}
+              baseUrl={baseUrl}
+              callApi={this.callApi}
+              isLoggingIn={this.state.isLoggingIn}
+            />
+            <Submit
+              onSubmit={async function(e) {
+                return await parent.handleSubmit(endPath);
+              }}
+            />
+          </Route>
+          <Route path="/blips">
+            <Blips
+              authenticated={this.state.authenticated}
+              permissions={this.state.permissions}
+              userInfo={this.state.userInfo}
+              baseUrl={baseUrl}
+              callApi={this.callApi}
+              isLoggingIn={this.state.isLoggingIn}
+            />
+          </Route>
+          <Route path="/themes">
+            <Themes
+              authenticated={this.state.authenticated}
+              permissions={this.state.permissions}
+              userInfo={this.state.userInfo}
+              baseUrl={baseUrl}
+              callApi={this.callApi}
+              isLoggingIn={this.state.isLoggingIn}
+            />
+          </Route>
+          <Route path="/renew">
+            <div/>
+          </Route>
+          <Route path="/">
+            <Redirect to='/radars'/>
+          </Route>
+        </Switch>
+        <Footer />
       </div>
-    } else {
-      return <div>Page not found</div>
-    }
+    </Router>;
   }
 }
 
