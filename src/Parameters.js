@@ -1,4 +1,7 @@
 import React from 'react';
+import {
+    withRouter,
+} from "react-router-dom";
 
 import Spinner from './Spinner';
 import './Parameters.css';
@@ -19,7 +22,7 @@ class Parameters extends React.Component {
     async componentDidMount() {
         const parameters = await (await this.props.callApi('GET', `${this.props.baseUrl}/parameters`)).json();
 
-        const radarId = this.props.radarId;
+        const radarId = this.props.match.params.radarId;
         const response = await this.props.callApi('GET', `${this.props.baseUrl}/radar/${radarId}/parameters`);
         const data = await response.json();
         for (const p1 of data) {
@@ -197,4 +200,4 @@ class Parameters extends React.Component {
     }
 }
 
-export default Parameters;
+export default withRouter(Parameters);

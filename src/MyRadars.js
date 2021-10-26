@@ -1,4 +1,12 @@
 import React from 'react';
+import {
+    BrowserRouter as Router,
+    Switch,
+    Route,
+    Link,
+    Redirect,
+    withRouter,
+  } from "react-router-dom";
 import './MyRadars.css';
 
 import Spinner from './Spinner';
@@ -6,14 +14,17 @@ import CreateRadar from './CreateRadar';
 
 class MyRadars extends React.Component {
     constructor(props) {
-        super(props)
+        super(props);
+        const { path, url } = this.props.match;
         this.state = {
             isLoading: true,
             radarName: undefined,
             errorMessage: undefined,
             radarsList: [],
             deletingRadar: undefined,
-        }
+            path,
+            url,
+        };
     }
 
     async componentDidMount() {
@@ -128,12 +139,12 @@ class MyRadars extends React.Component {
                             }
                             {
                                 radar.rights.indexOf('edit') !== -1 ?
-                                <a
+                                <Link
                                     className="radar-edit"
-                                    href={`./radars/${radar.id}`}
+                                    to={`${this.state.url}/${radar.id}`}
                                 >
                                     Edit
-                                </a> : null
+                                </Link> : null
                             }
                             {
                                 radar.rights.indexOf('owner') !== -1 ?
@@ -268,4 +279,4 @@ class MyRadars extends React.Component {
     }
 }
 
-export default MyRadars;
+export default withRouter(MyRadars);
