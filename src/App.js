@@ -213,6 +213,31 @@ class App extends React.Component {
       <div className="App">
         {navbar}
         <Switch>
+          <Route path="/radars/:radarId">
+            <div className="edit-radar">
+              <RadarBlips
+                onBlipsChange={this.handleBlipsChange}
+                onSectorNameChange={this.handleSectorNameChange}
+                onRingNameChange={this.handleRingNameChange}
+                blips={this.state.blips}
+                baseUrl={baseUrl}
+                callApi={this.callApi}
+                isLoggingIn={this.state.isLoggingIn}
+              />
+              <Parameters
+                onParamsChange={this.handleParamsChange}
+                parameters={this.state.parameters}
+                baseUrl={baseUrl}
+                callApi={this.callApi}
+                isLoggingIn={this.state.isLoggingIn}
+              />
+              <Submit
+                onSubmit={async function(e) {
+                  return await parent.handleSubmit(endPath);
+                }}
+              />
+            </div>
+          </Route>
           <Route path="/radars">
             <div className="radars">
               <MyRadars
@@ -240,31 +265,6 @@ class App extends React.Component {
                 isLoggingIn={this.state.isLoggingIn}
               />
             </div>
-          </Route>
-          <Route path="/radars">
-            <RadarBlips
-              radarId={endPath}
-              onBlipsChange={this.handleBlipsChange}
-              onSectorNameChange={this.handleSectorNameChange}
-              onRingNameChange={this.handleRingNameChange}
-              blips={this.state.blips}
-              baseUrl={baseUrl}
-              callApi={this.callApi}
-              isLoggingIn={this.state.isLoggingIn}
-            />
-            <Parameters
-              radarId={endPath}
-              onParamsChange={this.handleParamsChange}
-              parameters={this.state.parameters}
-              baseUrl={baseUrl}
-              callApi={this.callApi}
-              isLoggingIn={this.state.isLoggingIn}
-            />
-            <Submit
-              onSubmit={async function(e) {
-                return await parent.handleSubmit(endPath);
-              }}
-            />
           </Route>
           <Route path="/blips">
             <Blips

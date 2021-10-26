@@ -1,4 +1,7 @@
 import React from 'react';
+import {
+    withRouter,
+} from "react-router-dom";
 import {DragDropContext, Draggable, Droppable} from 'react-beautiful-dnd';
 import * as d3 from 'd3';
 
@@ -208,7 +211,7 @@ class RadarBlips extends React.Component {
         this.handleChange();
 
         let blipLinks = [];
-        const radarId = this.props.radarId;
+        const radarId = this.props.match.params.radarId;
         const response2 = await this.props.callApi('GET', `${this.props.baseUrl}/radar/${radarId}/blip-links`);
         if (response2.ok) {
             blipLinks = await response2.json();
@@ -554,7 +557,6 @@ class RadarBlips extends React.Component {
                                             })}
                                         </div>
                                     </div>
-
                                 </div>
                                 {
                                     sector.map(function(ring, indexRing) {
@@ -566,8 +568,8 @@ class RadarBlips extends React.Component {
                                                     className="list-group blip-list">
                                                     {ring.map(function(item, index) {
                                                         return <Draggable
-                                                            key={item.id_version}
-                                                            draggableId={item.id_version}
+                                                            key={`${item.id}-${item.version}`}
+                                                            draggableId={`${item.id}-${item.version}`}
                                                             index={index}
                                                             className="list-group-item list-group-item-action border-light">
                                                             {(provided, snapshot) => (
@@ -785,4 +787,4 @@ class RadarBlips extends React.Component {
     }
 }
 
-export default RadarBlips;
+export default withRouter(RadarBlips);

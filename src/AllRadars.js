@@ -1,4 +1,8 @@
 import React from 'react';
+import {
+    Link,
+    withRouter,
+  } from "react-router-dom";
 import './MyRadars.css';
 
 import Spinner from './Spinner';
@@ -6,7 +10,8 @@ import CreateRadar from './CreateRadar';
 
 class AllRadars extends React.Component {
     constructor(props) {
-        super(props)
+        super(props);
+        const { path, url } = this.props.match;
         this.state = {
             isLoading: true,
             radarName: undefined,
@@ -14,7 +19,9 @@ class AllRadars extends React.Component {
             radarsList: [],
             deletingRadar: undefined,
             adminUrl: this.props.baseUrl + '/admin',
-        }
+            path,
+            url,
+        };
     }
 
     async componentDidMount() {
@@ -126,12 +133,12 @@ class AllRadars extends React.Component {
                                     }
                                     {
                                         this.props.permissions.adminUser ?
-                                        <a
+                                        <Link
                                             className="radar-edit"
-                                            href={`./radars/${radar.id}`}
+                                            to={`${this.state.url}/${radar.id}`}
                                         >
                                             Edit
-                                        </a> : null
+                                        </Link> : null
                                     }
                                     {
                                         this.props.permissions.adminUser ?
@@ -255,4 +262,4 @@ class AllRadars extends React.Component {
     }
 }
 
-export default AllRadars;
+export default withRouter(AllRadars);
