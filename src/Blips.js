@@ -22,14 +22,18 @@ class Blips extends React.Component {
         super(props);
         this.state = {
             isLoading: true,
+            isLoadingMyBlips: false,
             isLoadingAllBlips: false,
             submitting: false,
             success1: undefined,
             returnMessage1: undefined,
             success2: undefined,
             returnMessage2: undefined,
+            success3: undefined,
+            returnMessage3: undefined,
             myBlips: [],
             selectedBlip: undefined,
+            createBlip: {},
             blipIds: [],
             allBlips: [],
             allBlipsColumns: [],
@@ -39,6 +43,17 @@ class Blips extends React.Component {
     }
 
     async componentDidMount() {
+        this.state.isLoading = false;
+        this.setState(this.state);
+
+        this.refreshMyBlips();
+        this.refreshAllBlips();
+    }
+
+    async refreshMyBlips() {
+        this.state.isLoadingMyBlips = true;
+        this.setState(this.state);
+
         const response = await this.props.callApi('GET', `${this.props.baseUrl}/blip`)
         if (!response.ok) {
             return;
@@ -50,11 +65,8 @@ class Blips extends React.Component {
             this.state.myBlips[blipId] = blipVersions[blipVersions.length - 1];
         }
 
-        this.state.isLoading = false;
+        this.state.isLoadingMyBlips = false;
         this.setState(this.state);
-
-
-        this.refreshAllBlips();
     }
 
     async refreshAllBlips() {
@@ -180,20 +192,55 @@ class Blips extends React.Component {
         }
     }
 
-    async handleSubmit(blip) {
+    async handleCreate(blip) {
         if (this.state.submitting) return;
-
+        
         this.state.submitting = true;
         this.setState(this.state);
 
         const response = await this.props.callApi('POST', `${this.props.baseUrl}/blips`, {
             blips: [ blip ],
         });
+        this.state.success3 = response.ok;
+        const data = await response.json();
+        const parent = this;
+        if (response.ok) {
+            this.state.createBlip = {};
+            this.state.returnMessage3 = "Successfully created blip";
+            this.refreshMyBlips();
+            this.refreshAllBlips();
+            setTimeout(function() {
+                parent.state.success3 = undefined;
+                parent.state.submitting = false;
+                parent.state.returnMessage3 = undefined;
+                parent.setState(parent.state);
+            }, 5000);
+        } else {
+            this.state.returnMessage3 = data.routine;
+            setTimeout(function() {
+                parent.state.submitting = false;
+                parent.setState(parent.state);
+            }, 2000);
+        }
+
+        this.setState(this.state);
+    }
+
+    async handleSubmit(blip) {
+        if (this.state.submitting) return;
+
+        this.state.submitting = true;
+        this.setState(this.state);
+
+        const response = await this.props.callApi('PUT', `${this.props.baseUrl}/blips/${this.state.selectedBlip.id}`, {
+            blip,
+        });
         this.state.success1 = response.ok;
         const data = await response.json();
         const parent = this;
         if (response.ok) {
             this.state.returnMessage1 = `Successfully added ${data.rows} blip${data.rows > 1 ? 's' : ''}`;
+            this.refreshMyBlips();
             this.refreshAllBlips();
             setTimeout(function() {
                 parent.state.success1 = undefined;
@@ -237,14 +284,15 @@ class Blips extends React.Component {
 
         const parent = this;
         if (response.ok) {
-            this.state.returnMessage2 = "Successfully changed authors (please refresh the page to see your blips changes)";
+            this.state.returnMessage2 = "Successfully changed authors";
             setTimeout(function() {
                 parent.state.success2 = undefined;
                 parent.state.submitting = false;
                 parent.state.returnMessage2 = undefined;
                 parent.setState(parent.state);
             }, 5000);
-            await this.refreshAllBlips();
+            this.refreshMyBlips();
+            this.refreshAllBlips();
         } else {
             const data = await response.json();
             this.state.returnMessage2 = data.routine;
@@ -261,9 +309,10 @@ class Blips extends React.Component {
         const parent = this;
 
         if (this.props.authenticated) {
+            const metaParamsKeys = [ 'id', 'id_version', 'lastupdate', 'name', 'version' ];
+
             const blipParams = [];
             if (this.state.selectedBlip) {
-                const metaParamsKeys = [ 'id', 'id_version', 'lastupdate', 'name', 'version' ];
                 const metaParams = {};
                 for (const metaParamsKey of metaParamsKeys) {
                     metaParams[metaParamsKey] = this.state.selectedBlip[metaParamsKey];
@@ -280,32 +329,156 @@ class Blips extends React.Component {
                 }
             }
 
-            return <div className="new-blips-grid">
-                <h3>My blips</h3>
-                <div className="my-blips-grid">
-                    <select
-                        className="custom-select select-blip-list"
-                        onClick={function(e) {
-                            const blipId = e.target.value;
-                            if (!blipId) return;
-                            if (parent.state.selectedBlip && blipId === parent.state.selectedBlip.id) return;
+            const createBlipParams = [];
+            const createMetaParams = {};
+            for (const metaParamsKey of metaParamsKeys) {
+                createMetaParams[metaParamsKey] = this.state.createBlip[metaParamsKey];
+                delete this.state.createBlip[metaParamsKey];
+            }
+            for (const entry of Object.entries(this.state.createBlip)) {
+                const param = {};
+                param.name = entry[0];
+                param.value = entry[1];
+                createBlipParams.push(param);
+            }
+            for (const entry of Object.entries(createMetaParams)) {
+                this.state.createBlip[entry[0]] = entry[1];
+            }
 
-                            parent.state.selectedBlip = Object.assign({}, parent.state.myBlips[blipId]);
-                            parent.setState(parent.state);
-                        }}
-                    >
-                        <option selected disabled value="">Select a blip to edit</option>
+            return <div className="new-blips-grid">
+                <h3>New blip</h3>
+                <div className="new-blip-grid">
+                    <div className="blip-edit-grid">
+                        <div className="blip-edit-meta" key={this.state.createBlip.name || ""}>
+                            <div className="form-group">
+                                <label className="paramName">Name &nbsp;</label>
+                                <input
+                                    type="text"
+                                    className="form-control form-control-alt"
+                                    defaultValue={this.state.createBlip.name || ""}
+                                    onChange={function(e) {
+                                        parent.state.createBlip.name = e.target.value;
+                                    }}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="paramName">Last update &nbsp;</label>
+                                <input
+                                    type="text"
+                                    className="form-control form-control-alt"
+                                    defaultValue={this.state.createBlip.lastupdate || ""}
+                                    onChange={function(e) {
+                                        parent.state.createBlip.lastupdate = e.target.value;
+                                    }}
+                                />
+                            </div>
+                        </div>
                         {
-                            Object.values(this.state.myBlips).map(blip =>
-                                <option
-                                    value={blip.id}
-                                    key={blip.id}
-                                >
-                                    {blip.name}
-                                </option>
+                            createBlipParams.map(param => 
+                                <div className="form-group" key={param.name}>
+                                    <label className="paramName">{param.name} &nbsp;</label>
+                                    <span className="help-tooltip">
+                                        <i
+                                            className="icon icon-md"
+                                            style={{
+                                                cursor: 'pointer',
+                                            }}
+                                            onClick={function(e) {
+                                                delete parent.state.createBlip[param.name];
+                                                parent.setState(parent.state);
+                                            }}
+                                        >
+                                            delete
+                                        </i>
+                                    </span>
+                                    <textarea
+                                        type="text"
+                                        className="form-control form-control-alt"
+                                        defaultValue={param.value || ""}
+                                        style={{
+                                            minWidth: '175px',
+                                            resize: 'vertical',
+                                            maxHeight: '10em',
+                                        }}
+                                        onChange={function(e) {
+                                            parent.state.createBlip[param.name] = e.target.value;
+                                        }}
+                                    />
+                                </div>
                             )
                         }
-                    </select>
+                        <div className="add-column-grid">
+                            <input
+                                type="text"
+                                className="form-control form-control-alt"
+                                placeholder="Column name"
+                                id={`${addColumnId}-create`}
+                            />
+                            <input
+                                readOnly
+                                value="Add column"
+                                className="submit-btn btn btn-lg btn-primary"
+                                onClick={async function(e) {
+                                    const input = document.getElementById(`${addColumnId}-create`);
+                                    const columnName = input.value;
+                                    if (!columnName) return;
+                                    input.value = "";
+                                    parent.state.createBlip[columnName] = "";
+                                    parent.setState(parent.state);
+                                }}
+                            />
+                        </div>
+                    </div>
+                    <label
+                        className={this.state.success3 ? "text-success" : "text-danger"}
+                        style={{
+                            display: this.state.returnMessage3 ? 'inline-block' : 'none',
+                            marginBottom: 0,
+                        }}
+                    >
+                        {this.state.returnMessage3}
+                    </label>
+                    <input
+                        //type="submit"
+                        readOnly
+                        value="Create blip"
+                        style={{
+                            width: '100%',
+                        }}
+                        className={`new-blips-submit-btn btn btn-lg ${this.state.success3 === undefined ? 'btn-primary' : (this.state.success3 ? 'btn-success' : 'btn-danger')}`}
+                        onClick={async function(e) {
+                            await parent.handleCreate(parent.state.createBlip);
+                        }}
+                    />
+                </div>
+                <h3>My blips</h3>
+                <div className="my-blips-grid">
+                    {
+                        this.state.isLoadingMyBlips ? <Spinner/> :
+                        <select
+                            className="custom-select select-blip-list"
+                            onClick={function(e) {
+                                const blipId = e.target.value;
+                                if (!blipId) return;
+                                if (parent.state.selectedBlip && blipId === parent.state.selectedBlip.id) return;
+
+                                parent.state.selectedBlip = Object.assign({}, parent.state.myBlips[blipId]);
+                                parent.setState(parent.state);
+                            }}
+                        >
+                            <option selected disabled value="">Select a blip to edit</option>
+                            {
+                                Object.values(this.state.myBlips).map(blip =>
+                                    <option
+                                        value={blip.id}
+                                        key={blip.id}
+                                    >
+                                        {blip.name}
+                                    </option>
+                                )
+                            }
+                        </select>
+                    }
                     {
                         !this.state.selectedBlip ? null :
                         <div className="blip-edit-grid">
@@ -390,6 +563,15 @@ class Blips extends React.Component {
                             </div>
                         </div>
                     }
+                    <label
+                        className={this.state.success1 ? "text-success" : "text-danger"}
+                        style={{
+                            display: this.state.returnMessage1 ? 'inline-block' : 'none',
+                            marginBottom: 0,
+                        }}
+                    >
+                        {this.state.returnMessage1}
+                    </label>
                     {
                         !this.state.selectedBlip ? null :
                         <input
