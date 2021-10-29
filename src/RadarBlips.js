@@ -199,6 +199,11 @@ class RadarBlips extends React.Component {
     }
 
     async componentDidMount() {
+        if (this.state.isFirstRefresh) {
+            if (!this.props.isLoggingIn) {
+                this.firstRefresh();
+            }
+        }
     }
 
     getList = (droppableId) => {
