@@ -629,33 +629,32 @@ class Blips extends React.Component {
                     </label>
                     {
                         !this.state.selectedBlip ? null :
-                        <input
-                            //type="submit"
-                            readOnly
-                            value="Delete"
-                            style={{
-                                width: '100%',
-                            }}
-                            className={`new-blips-submit-btn btn btn-lg ${this.state.success4 === undefined ? 'btn-primary' : (this.state.success4 ? 'btn-success' : 'btn-danger')}`}
-                            onClick={async function(e) {
-                                await parent.handleDelete(parent.state.selectedBlip);
-                            }}
-                        />
-                    }
-                    {
-                        !this.state.selectedBlip ? null :
-                        <input
-                            //type="submit"
-                            readOnly
-                            value="Save"
-                            style={{
-                                width: '100%',
-                            }}
-                            className={`new-blips-submit-btn btn btn-lg ${this.state.success1 === undefined ? 'btn-primary' : (this.state.success1 ? 'btn-success' : 'btn-danger')}`}
-                            onClick={async function(e) {
-                                await parent.handleSubmit(parent.state.selectedBlip);
-                            }}
-                        />
+                        <div className="blip-buttons-grid">
+                            <input
+                                //type="submit"
+                                readOnly
+                                value="Delete blip"
+                                style={{
+                                    width: '100%',
+                                }}
+                                className={`new-blips-submit-btn btn btn-lg ${this.state.success4 === undefined ? 'btn-primary' : (this.state.success4 ? 'btn-success' : 'btn-danger')}`}
+                                onClick={async function(e) {
+                                    await parent.handleDelete(parent.state.selectedBlip);
+                                }}
+                            />
+                            <input
+                                //type="submit"
+                                readOnly
+                                value="Save blip"
+                                style={{
+                                    width: '100%',
+                                }}
+                                className={`new-blips-submit-btn btn btn-lg ${this.state.success1 === undefined ? 'btn-primary' : (this.state.success1 ? 'btn-success' : 'btn-danger')}`}
+                                onClick={async function(e) {
+                                    await parent.handleSubmit(parent.state.selectedBlip);
+                                }}
+                            />
+                        </div>
                     }
                 </div>
                 <h3>All blips</h3>
