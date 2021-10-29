@@ -32,6 +32,11 @@ class MyRadars extends React.Component {
     async updateRadarsList(updateList = true) {
         const response = await this.props.callApi('GET', `${this.props.baseUrl}/radar`);
         this.state.radarsList = await response.json();
+        this.state.radarsList.sort(function(a, b) {
+            if (a.id < b.id) return -1;
+            else if (a.id > b.id) return 1;
+            return 0;
+        })
 
         if (updateList) {
             this.props.update();

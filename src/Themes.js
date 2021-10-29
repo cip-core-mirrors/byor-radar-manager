@@ -62,6 +62,11 @@ class Themes extends React.Component {
         const response = await this.props.callApi('GET', `${this.props.baseUrl}/themes`);
         if (response.ok) {
             this.state.themesPermissions = await response.json();
+            this.state.themesPermissions.sort(function(a, b) {
+                if (a.id < b.id) return -1;
+                else if (a.id > b.id) return 1;
+                return 0;
+            });
             this.setState(this.state);
         }
     }

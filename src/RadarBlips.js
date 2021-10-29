@@ -514,6 +514,12 @@ class RadarBlips extends React.Component {
             this.newRing();
         }
         
+        this.lists[0].sort(function(a, b) {
+            if (a.name < b.name) return -1;
+            else if (a.name > b.name) return 1;
+            return 0;
+        });
+        
         this.state.isLoading = false;
         this.setState(this.state);
 

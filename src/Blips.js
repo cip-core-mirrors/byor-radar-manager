@@ -73,9 +73,17 @@ class Blips extends React.Component {
 
         const allBlipsResponse = await this.props.callApi('GET', `${this.props.baseUrl}/blips`);
         if (allBlipsResponse.ok) {
-            const allBlips = await allBlipsResponse.json();
+            let allBlips = await allBlipsResponse.json();
+            allBlips = Object.values(allBlips);
+            allBlips.sort(function(a, b) {
+                const nameA = a[a.length - 1].name.trim().toLowerCase();
+                const nameB = b[b.length - 1].name.trim().toLowerCase();
+                if (nameA < nameB) return -1;
+                else if (nameA > nameB) return 1;
+                return 0;
+            });
             const columnsIndex = {};
-            for (const blipVersions of Object.values(allBlips)) {
+            for (const blipVersions of allBlips) {
                 const blipVersion = blipVersions[blipVersions.length - 1];
                 const { id, id_version, lastupdate, name, version, permissions } = blipVersion;
                 delete blipVersion.id;
@@ -108,7 +116,7 @@ class Blips extends React.Component {
             for (const columnName of Object.keys(columnsIndex)) {
                 this.addAllBlipColumn(columnName);
             }
-            for (const blipVersions of Object.values(allBlips)) {
+            for (const blipVersions of allBlips) {
                 // list all blips
                 const blipVersion = blipVersions[blipVersions.length - 1];
                 const row = [];
@@ -292,7 +300,7 @@ class Blips extends React.Component {
     async handleChangeAuthors() {
         if (this.state.submitting) return;
 
-        const allBlipsKey = Object.keys(this.state.allBlips);
+        const allBlipsKey = this.state.allBlips.map(blipVersions => blipVersions[blipVersions.length - 1].id);
         const blipsRights = [];
         for (const entry of Object.entries(this.state.changedAllBlipsRows)) {
             const index = entry[0];
@@ -702,12 +710,12 @@ class Blips extends React.Component {
                                                                 <input
                                                                     type="text"
                                                                     className="form-control form-control-alt"
-                                                                    value={columnValue}
+                                                                    defaultValue={columnValue}
                                                                     onChange={function(e) {
                                                                         const value = e.target.value;
                                                                         parent.state.changedAllBlipsRows[rowIndex] = value;
                                                                         row[0] = value;
-                                                                        parent.setState(parent.state);
+                                                                        //parent.setState(parent.state);
                                                                     }}
                                                                 />
                                                                 : columnValue
