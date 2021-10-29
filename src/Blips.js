@@ -40,6 +40,8 @@ class Blips extends React.Component {
             allBlipsColumns: [],
             allBlipsRows: [],
             changedAllBlipsRows: {},
+            blipRowStyles: {},
+            filterSearch: '',
         };
     }
 
@@ -669,6 +671,26 @@ class Blips extends React.Component {
                 {
                     this.state.isLoadingAllBlips ? <Spinner/> :
                     <div className="all-blips-grid">
+                        <input
+                            type="text"
+                            placeholder="Search"
+                            defaultValue={this.state.filterSearch}
+                            onChange={function(e) {
+                                const value = e.target.value.trim().toLowerCase();
+                                parent.state.filterSearch = value;
+                                let rowIndex = 0;
+                                for (const row of parent.state.allBlipsRows) {
+                                    const name = row[1].trim().toLowerCase();
+                                    if (name.includes(value)) {
+                                        parent.state.blipRowStyles[rowIndex] = '';
+                                    } else {
+                                        parent.state.blipRowStyles[rowIndex] = 'none';
+                                    }
+                                    rowIndex++;
+                                }
+                                parent.setState(parent.state);
+                            }}
+                        />
                         <table
                             className="all-blips-table"
                         >
@@ -690,11 +712,14 @@ class Blips extends React.Component {
                                     }
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="blips-table">
                                 {
                                     this.state.allBlipsRows.map((row, rowIndex) =>
                                         <tr
                                             key={rowIndex}
+                                            style={{
+                                                display: this.state.blipRowStyles[rowIndex] || '',
+                                            }}
                                         >
                                             {
                                                 row.map((columnValue, index) => 
@@ -715,7 +740,6 @@ class Blips extends React.Component {
                                                                         const value = e.target.value;
                                                                         parent.state.changedAllBlipsRows[rowIndex] = value;
                                                                         row[0] = value;
-                                                                        //parent.setState(parent.state);
                                                                     }}
                                                                 />
                                                                 : columnValue
