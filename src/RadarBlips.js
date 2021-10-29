@@ -140,6 +140,7 @@ class RadarBlips extends React.Component {
         this.defaultRefs = {};
 
         this.state = {
+            isFirstRefresh: true,
             isLoading: true,
         }
     }
@@ -158,7 +159,7 @@ class RadarBlips extends React.Component {
         return self.indexOf(value) === index;
     }
 
-    drawSvgs() {
+    async drawSvgs() {
         this.handleParamsChange();
 
         for (const svgRefs of Object.values(this.svgRefs)) {
@@ -198,73 +199,6 @@ class RadarBlips extends React.Component {
     }
 
     async componentDidMount() {
-        let blips = [];
-
-        const response1 = await this.props.callApi('GET', `${this.props.baseUrl}/blips`);
-        if (response1.ok) {
-            blips = await response1.json();
-            this.lists[0] = [Object.values(blips).flat()];
-        } else {
-            this.lists[0] = [];
-        }
-
-        this.handleChange();
-
-        let blipLinks = [];
-        const radarId = this.props.match.params.radarId;
-        const response2 = await this.props.callApi('GET', `${this.props.baseUrl}/radar/${radarId}/blip-links`);
-        if (response2.ok) {
-            blipLinks = await response2.json();
-            const sectors = blipLinks.map(blipLink => blipLink.sector).filter(this.onlyUnique);
-            for (const sector of sectors) {
-                this.lists.push([]);
-                this.sectors.push(sector);
-            }
-            const rings = blipLinks.map(blipLink => blipLink.ring).filter(this.onlyUnique);
-            for (const ring of rings) {
-                this.newRing();
-                this.rings[this.rings.length - 1] = ring;
-            }
-
-            this.handleParamsChange();
-
-            for (const blipLink of blipLinks) {
-                const sectorIndex = this.sectors.indexOf(blipLink.sector)
-                const ringIndex = this.rings.indexOf(blipLink.ring)
-                const sector = this.lists.slice(1)[sectorIndex];
-                const ring = sector[ringIndex];
-                const blipVersion = blipLink.version;
-                const blipId = blipLink.id;
-                const rawBlipVersions = blips[blipId];
-                const rawBlip = rawBlipVersions.splice(blipVersion - 1, 1)[0];
-                if (!rawBlip) continue;
-
-                const toPush = {
-                    id: rawBlip.id,
-                    id_version: rawBlip.id_version,
-                    name: rawBlip.name,
-                    version: rawBlip.version,
-                    value: blipLink.value,
-                };
-                ring.push(toPush);
-
-                if (rawBlipVersions.length === 0) {
-                    delete blips[blipLink.blip];
-                }
-            }
-
-            // Remove used blips from list
-            this.lists[0] = [Object.values(blips).flat()];
-        } else {
-            this.newSector();
-            this.newRing();
-        }
-
-        this.state.isLoading = false;
-        this.setState(this.state);
-
-        svgValues[this.selectedDefaultRef].callback(this.defaultRef);
-        this.drawSvgs();
     }
 
     getList = (droppableId) => {
@@ -507,6 +441,87 @@ class RadarBlips extends React.Component {
             svg.selectAll("*").remove();
             svgValues[parent.selectedDefaultRef].callback(parent.defaultRef);
         }, 400);
+    }
+
+    async firstRefresh() {
+        this.state.isFirstRefresh = false;
+        this.setState(this.state);
+
+        let blips = [];
+
+        const response1 = await this.props.callApi('GET', `${this.props.baseUrl}/blips`);
+        if (response1.ok) {
+            blips = await response1.json();
+            this.lists[0] = [Object.values(blips).flat()];
+        } else {
+            this.lists[0] = [];
+        }
+
+        //this.handleChange();
+
+        let blipLinks = [];
+        const radarId = this.props.match.params.radarId;
+        const response2 = await this.props.callApi('GET', `${this.props.baseUrl}/radar/${radarId}/blip-links`);
+        if (response2.ok) {
+            blipLinks = await response2.json();
+            const sectors = blipLinks.map(blipLink => blipLink.sector).filter(this.onlyUnique);
+            for (const sector of sectors) {
+                this.lists.push([]);
+                this.sectors.push(sector);
+            }
+            const rings = blipLinks.map(blipLink => blipLink.ring).filter(this.onlyUnique);
+            for (const ring of rings) {
+                this.newRing();
+                this.rings[this.rings.length - 1] = ring;
+            }
+
+            //this.handleParamsChange();
+
+            for (const blipLink of blipLinks) {
+                const sectorIndex = this.sectors.indexOf(blipLink.sector)
+                const ringIndex = this.rings.indexOf(blipLink.ring)
+                const sector = this.lists.slice(1)[sectorIndex];
+                const ring = sector[ringIndex];
+                const blipVersion = blipLink.version;
+                const blipId = blipLink.id;
+                const rawBlipVersions = blips[blipId];
+                const rawBlip = rawBlipVersions.splice(blipVersion - 1, 1)[0];
+                if (!rawBlip) continue;
+
+                const toPush = {
+                    id: rawBlip.id,
+                    id_version: rawBlip.id_version,
+                    name: rawBlip.name,
+                    version: rawBlip.version,
+                    value: blipLink.value,
+                };
+                ring.push(toPush);
+
+                if (rawBlipVersions.length === 0) {
+                    delete blips[blipLink.blip];
+                }
+            }
+
+            // Remove used blips from list
+            this.lists[0] = [Object.values(blips).flat()];
+        } else {
+            this.newSector();
+            this.newRing();
+        }
+        
+        this.state.isLoading = false;
+        this.setState(this.state);
+
+        svgValues[this.selectedDefaultRef].callback(this.defaultRef);
+        this.drawSvgs();
+    }
+
+    async componentDidUpdate() {
+        if (this.state.isFirstRefresh) {
+            if (!this.props.isLoggingIn) {
+                this.firstRefresh();
+            }
+        }
     }
 
     render() {

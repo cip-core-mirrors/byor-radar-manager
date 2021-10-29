@@ -11,6 +11,7 @@ class Parameters extends React.Component {
         super(props);
 
         this.state = {
+            isFirstRefresh: true,
             isLoading: true,
         };
     }
@@ -20,6 +21,12 @@ class Parameters extends React.Component {
     }
 
     async componentDidMount() {
+    }
+
+    async firstRefresh() {
+        this.state.isFirstRefresh = false;
+        this.setState(this.state);
+
         const parameters = await (await this.props.callApi('GET', `${this.props.baseUrl}/parameters`)).json();
 
         const radarId = this.props.match.params.radarId;
@@ -37,9 +44,16 @@ class Parameters extends React.Component {
         }
 
         this.handleChange(parameters);
-
         this.state.isLoading = false;
         this.setState(this.state);
+    }
+
+    async componentDidUpdate() {
+        if (this.state.isFirstRefresh) {
+            if (!this.props.isLoggingIn) {
+                this.firstRefresh();
+            }
+        }
     }
 
     render() {
