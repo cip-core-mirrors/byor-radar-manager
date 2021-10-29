@@ -1,10 +1,6 @@
 import React from 'react';
 import {
-    BrowserRouter as Router,
-    Switch,
-    Route,
     Link,
-    Redirect,
     withRouter,
   } from "react-router-dom";
 import './MyRadars.css';
@@ -17,6 +13,7 @@ class MyRadars extends React.Component {
         super(props);
         const { path, url } = this.props.match;
         this.state = {
+            isFirstRefresh: true,
             isLoading: true,
             radarName: undefined,
             errorMessage: undefined,
@@ -28,10 +25,6 @@ class MyRadars extends React.Component {
     }
 
     async componentDidMount() {
-        if (this.props.authenticated) {
-            await this.updateRadarsList(false);
-        };
-
         this.state.isLoading = false;
         this.setState(this.state);
     }
@@ -100,6 +93,23 @@ class MyRadars extends React.Component {
         } else if (response.state === 403) {
             const data = await response.json();
             this.state.errorMessage = data.message;
+        }
+    }
+
+    async firstRefresh() {
+        this.state.isFirstRefresh = false;
+        this.setState(this.state);
+
+        if (this.props.authenticated) {
+            await this.updateRadarsList(false);
+        };
+    }
+
+    async componentDidUpdate() {
+        if (this.state.isFirstRefresh) {
+            if (!this.props.isLoggingIn && !this.state.isLoading) {
+                this.firstRefresh();
+            }
         }
     }
 

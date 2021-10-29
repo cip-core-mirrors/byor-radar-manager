@@ -126,11 +126,12 @@ class App extends React.Component {
 
     return new Promise(async function(resolve, reject) {
       let response = await fetch(url, config);
-      if (response.status === 401 || response.status === 403) {
+      if (response.status === 401) {
         window.localStorage.removeItem('access_token');
         if (!signInWindow) {
           signInWindow = window.open(signIn, 'signInFrame');
         }
+
         const intervalId = setInterval(async function() {
           const accessToken = window.localStorage.getItem('access_token');
           if (accessToken) {

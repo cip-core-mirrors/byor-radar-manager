@@ -10,6 +10,7 @@ class Themes extends React.Component {
         super(props);
         this.state = {
             isLoading: true,
+            isFirstRefresh: true,
             submitting: false,
             success1: undefined,
             returnMessage1: undefined,
@@ -25,14 +26,11 @@ class Themes extends React.Component {
     }
 
     async componentDidMount() {
-        const response = await this.props.callApi('GET', `${this.props.baseUrl}/parameters/themes`);
-        if (response.ok) {
-            this.state.defaultParameters = await response.json();
+        if (this.state.isFirstRefresh) {
+            if (!this.props.isLoggingIn) {
+                this.firstRefresh();
+            }
         }
-        await this.reloadThemesList();
-
-        this.state.isLoading = false;
-        this.setState(this.state);
     }
 
     async reloadParameters(themeId) {
@@ -137,6 +135,28 @@ class Themes extends React.Component {
             }, 2000);
         }
         this.setState(this.state);
+    }
+
+    async firstRefresh() {
+        this.state.isFirstRefresh = false;
+        this.setState(this.state);
+        
+        const response = await this.props.callApi('GET', `${this.props.baseUrl}/parameters/themes`);
+        if (response.ok) {
+            this.state.defaultParameters = await response.json();
+        }
+        await this.reloadThemesList();
+
+        this.state.isLoading = false;
+        this.setState(this.state);
+    }
+    
+    async componentDidUpdate() {
+        if (this.state.isFirstRefresh) {
+            if (!this.props.isLoggingIn) {
+                this.firstRefresh();
+            }
+        }
     }
 
     render() {

@@ -24,6 +24,7 @@ class Blips extends React.Component {
             isLoading: true,
             isLoadingMyBlips: false,
             isLoadingAllBlips: false,
+            isFirstRefresh: true,
             submitting: false,
             success1: undefined,
             returnMessage1: undefined,
@@ -45,9 +46,6 @@ class Blips extends React.Component {
     async componentDidMount() {
         this.state.isLoading = false;
         this.setState(this.state);
-
-        this.refreshMyBlips();
-        this.refreshAllBlips();
     }
 
     async refreshMyBlips() {
@@ -226,13 +224,45 @@ class Blips extends React.Component {
         this.setState(this.state);
     }
 
+    async handleDelete(blip) {
+        if (this.state.submitting) return;
+
+        this.state.submitting = true;
+        this.setState(this.state);
+
+        const response = await this.props.callApi('DELETE', `${this.props.baseUrl}/blips/${blip.id}`);
+        this.state.success4 = response.ok;
+        const data = await response.json();
+        const parent = this;
+        if (response.ok) {
+            this.state.returnMessage4 = `Successfully deleted blip`;
+            this.state.selectedBlip = undefined;
+            this.refreshMyBlips();
+            this.refreshAllBlips();
+            setTimeout(function() {
+                parent.state.success4 = undefined;
+                parent.state.submitting = false;
+                parent.state.returnMessage4 = undefined;
+                parent.setState(parent.state);
+            }, 5000);
+        } else {
+            this.state.returnMessage4 = data.routine;
+            setTimeout(function() {
+                parent.state.submitting = false;
+                parent.setState(parent.state);
+            }, 2000);
+        }
+
+        this.setState(this.state);
+    }
+
     async handleSubmit(blip) {
         if (this.state.submitting) return;
 
         this.state.submitting = true;
         this.setState(this.state);
 
-        const response = await this.props.callApi('PUT', `${this.props.baseUrl}/blips/${this.state.selectedBlip.id}`, {
+        const response = await this.props.callApi('PUT', `${this.props.baseUrl}/blips/${blip.id}`, {
             blip,
         });
         this.state.success1 = response.ok;
@@ -300,6 +330,22 @@ class Blips extends React.Component {
                 parent.state.submitting = false;
                 parent.setState(parent.state);
             }, 2000);
+        }
+    }
+
+    async firstRefresh() {
+        this.state.isFirstRefresh = false;
+        this.setState(this.state);
+
+        this.refreshMyBlips();
+        this.refreshAllBlips();
+    }
+
+    async componentDidUpdate() {
+        if (this.state.isFirstRefresh) {
+            if (!this.props.isLoggingIn && !this.state.isLoading) {
+                this.firstRefresh();
+            }
         }
     }
 
@@ -572,12 +618,36 @@ class Blips extends React.Component {
                     >
                         {this.state.returnMessage1}
                     </label>
+                    <label
+                        className={this.state.success4 ? "text-success" : "text-danger"}
+                        style={{
+                            display: this.state.returnMessage4 ? 'inline-block' : 'none',
+                            marginBottom: 0,
+                        }}
+                    >
+                        {this.state.returnMessage4}
+                    </label>
                     {
                         !this.state.selectedBlip ? null :
                         <input
                             //type="submit"
                             readOnly
-                            value="Save blip"
+                            value="Delete"
+                            style={{
+                                width: '100%',
+                            }}
+                            className={`new-blips-submit-btn btn btn-lg ${this.state.success4 === undefined ? 'btn-primary' : (this.state.success4 ? 'btn-success' : 'btn-danger')}`}
+                            onClick={async function(e) {
+                                await parent.handleDelete(parent.state.selectedBlip);
+                            }}
+                        />
+                    }
+                    {
+                        !this.state.selectedBlip ? null :
+                        <input
+                            //type="submit"
+                            readOnly
+                            value="Save"
                             style={{
                                 width: '100%',
                             }}
