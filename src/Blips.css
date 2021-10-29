@@ -24,6 +24,12 @@
     grid-row-gap: 1em;
 }
 
+.blip-buttons-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-column-gap: 1em;
+}
+
 .select-blip-list {
 }
 
