@@ -13,6 +13,7 @@ class Parameters extends React.Component {
         this.state = {
             isFirstRefresh: true,
             isLoading: true,
+            themes: [],
         };
     }
 
@@ -32,6 +33,14 @@ class Parameters extends React.Component {
         this.state.isFirstRefresh = false;
         this.setState(this.state);
 
+        await this.loadThemes();
+        await this.loadParameters();
+
+        this.state.isLoading = false;
+        this.setState(this.state);
+    }
+
+    async loadParameters() {
         const parameters = await (await this.props.callApi('GET', `${this.props.baseUrl}/parameters`)).json();
 
         const radarId = this.props.match.params.radarId;
@@ -49,8 +58,17 @@ class Parameters extends React.Component {
         }
 
         this.handleChange(parameters);
-        this.state.isLoading = false;
-        this.setState(this.state);
+    }
+
+    async loadThemes() {
+        const response = await this.props.callApi('GET', `${this.props.baseUrl}/themes`);
+        const json = await response.json();
+        json.sort(function(a, b) {
+            if (a.id < b.id) return -1;
+            else if (a.id > b.id) return 1;
+            return 0;
+        });
+        this.state.themes = json;
     }
 
     async componentDidUpdate() {
@@ -85,7 +103,7 @@ class Parameters extends React.Component {
             }
         }
 
-        const handleChange = this.handleChange
+        const parent = this;
 
         return (
             <form className="parameters">
@@ -98,15 +116,15 @@ class Parameters extends React.Component {
                                         <input
                                             type="checkbox"
                                             className="custom-control-input"
-                                            name={param.name}
+                                            name={param.displayName || param.name}
                                             id={param.name}
                                             defaultChecked={(param.value || param.defaultValue) === '1'}
                                             onClick={function(e) {
                                                 param.value = param.value === '1' ? '0' : '1';
-                                                handleChange(parameters);
+                                                parent.handleChange(parameters);
                                             }}
                                         />
-                                        <label className="paramName custom-control-label" htmlFor={param.name}>{param.name}&nbsp;</label>
+                                        <label className="paramName custom-control-label" htmlFor={param.name}>{param.displayName || param.name}&nbsp;</label>
                                         {
                                             param.tooltip ?
                                                 <span className="help-tooltip">
@@ -123,7 +141,7 @@ class Parameters extends React.Component {
                         } else if (param.name === 'titlePageHTML') {
                             return (
                                 <div className="form-group" key={param.name}>
-                                    <label className="paramName">{param.name}&nbsp;</label>
+                                    <label className="paramName">{param.displayName || param.name}&nbsp;</label>
                                     {
                                         param.tooltip ?
                                             <span className="help-tooltip">
@@ -144,7 +162,7 @@ class Parameters extends React.Component {
                                         defaultValue={param.value || (param.default || "")}
                                         onChange={function(e) {
                                             param.value = e.target.value
-                                            handleChange(parameters);
+                                            parent.handleChange(parameters);
                                         }}
                                     />
                                     <div className="dangerousInnerHTML border-bottom border-top border-left border-right" dangerouslySetInnerHTML={{
@@ -152,10 +170,46 @@ class Parameters extends React.Component {
                                     }} />
                                 </div>
                             )
+                        } else if (param.name === 'themeId') {
+                            return (
+                                <div className="form-group" key={param.name}>
+                                    <label className="paramName">{param.displayName || param.name}&nbsp;</label>
+                                    {
+                                        param.tooltip ?
+                                            <span className="help-tooltip">
+                                                <i className="icon icon-md">help_outline</i>
+                                                <div className="tooltip bs-tooltip-top" role="tooltip">
+                                                    <div className="tooltip-inner">{param.tooltip}</div>
+                                                </div>
+                                            </span>
+                                        : <span className="help-tooltip"/>
+                                    }
+                                    <select
+                                        className="custom-select"
+                                        onClick={async function(e) {
+                                            const target = e.target;
+                                            if (target.tagName !== 'SELECT') return;
+                                            param.value = target.value;
+                                        }}
+                                    >
+                                        {
+                                            parent.state.themes.map(theme => 
+                                                <option
+                                                    value={theme.id}
+                                                    key={theme.id}
+                                                    selected={param.value ? theme.id === param.value : theme.id === param.defaultValue}
+                                                >
+                                                    {theme.id}
+                                                </option>
+                                            )
+                                        }
+                                    </select>
+                                </div>
+                            )
                         }
                         return (
                             <div className="form-group" key={param.name}>
-                                <label className="paramName">{param.name}&nbsp;</label>
+                                <label className="paramName">{param.displayName || param.name}&nbsp;</label>
                                 {
                                     param.tooltip ?
                                         <span className="help-tooltip">
@@ -173,7 +227,7 @@ class Parameters extends React.Component {
                                     defaultValue={param.value || (param.default || "")}
                                     onChange={function(e) {
                                         param.value = e.target.value
-                                        handleChange(parameters);
+                                        parent.handleChange(parameters);
                                     }}
                                 />
                             </div>
@@ -186,7 +240,7 @@ class Parameters extends React.Component {
                                 {fieldParams.map(function(fParam) {
                                     return (
                                         <div className="form-group" key={fParam.name}>
-                                            <label className="paramName">{fParam.name}</label>
+                                            <label className="paramName">{fParam.displayName || fParam.name}</label>
                                             {
                                                 fParam.tooltip ?
                                                     <span className="help-tooltip">
@@ -204,7 +258,7 @@ class Parameters extends React.Component {
                                                 defaultValue={fParam.value || (fParam.default || "")}
                                                 onChange={function(e) {
                                                     fParam.value = e.target.value
-                                                    handleChange(parameters);
+                                                    parent.handleChange(parameters);
                                                 }}
                                             />
                                         </div>

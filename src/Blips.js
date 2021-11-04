@@ -676,15 +676,20 @@ class Blips extends React.Component {
                             placeholder="Search"
                             defaultValue={this.state.filterSearch}
                             onChange={function(e) {
-                                const value = e.target.value.trim().toLowerCase();
+                                e.target.value = e.target.value.trim();
+                                const value = e.target.value.toLowerCase();
                                 parent.state.filterSearch = value;
                                 let rowIndex = 0;
                                 for (const row of parent.state.allBlipsRows) {
-                                    const name = row[1].trim().toLowerCase();
-                                    if (name.includes(value)) {
-                                        parent.state.blipRowStyles[rowIndex] = '';
+                                    if (value) {
+                                        const name = row[1].trim().toLowerCase();
+                                        if (name.includes(value)) {
+                                            parent.state.blipRowStyles[rowIndex] = '';
+                                        } else {
+                                            parent.state.blipRowStyles[rowIndex] = 'none';
+                                        }
                                     } else {
-                                        parent.state.blipRowStyles[rowIndex] = 'none';
+                                        parent.state.blipRowStyles[rowIndex] = '';
                                     }
                                     rowIndex++;
                                 }

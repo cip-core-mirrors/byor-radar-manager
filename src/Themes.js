@@ -93,6 +93,10 @@ class Themes extends React.Component {
         const parent = this;
         if (response.ok) {
             this.state.returnMessage2 = "Successfully edited theme";
+            const iframe = document.getElementById("radar-preview");
+            const iframeSrc = iframe.src;
+            iframe.src = '';
+            iframe.src = iframeSrc;
             setTimeout(function() {
                 parent.state.success2 = undefined;
                 parent.state.submitting = false;
@@ -215,7 +219,7 @@ class Themes extends React.Component {
                                                 param.value = param.value === '1' ? '0' : '1';
                                             }}
                                         />
-                                        <label className="paramName custom-control-label" htmlFor={param.name}>{param.name}&nbsp;</label>
+                                        <label className="paramName custom-control-label" htmlFor={param.name}>{param.displayName || param.name}&nbsp;</label>
                                         {
                                             param.tooltip ?
                                                 <span className="help-tooltip">
@@ -232,7 +236,7 @@ class Themes extends React.Component {
                         } else if (param.name === 'titlePageHTML') {
                             return (
                                 <div className="form-group" key={param.name}>
-                                    <label className="paramName">{param.name}&nbsp;</label>
+                                    <label className="paramName">{param.displayName || param.name}&nbsp;</label>
                                     {
                                         param.tooltip ?
                                             <span className="help-tooltip">
@@ -264,7 +268,7 @@ class Themes extends React.Component {
                         }
                         return (
                             <div className="form-group" key={param.name}>
-                                <label className="paramName">{param.name}&nbsp;</label>
+                                <label className="paramName">{param.displayName || param.name}&nbsp;</label>
                                 {
                                     param.tooltip ?
                                         <span className="help-tooltip">
@@ -295,7 +299,7 @@ class Themes extends React.Component {
                                 {fieldParams.map(function(fParam) {
                                     return (
                                         <div className="form-group" key={fParam.name}>
-                                            <label className="paramName">{fParam.name}</label>
+                                            <label className="paramName">{fParam.displayName || fParam.name}</label>
                                             {
                                                 fParam.tooltip ?
                                                     <span className="help-tooltip">
@@ -414,21 +418,31 @@ class Themes extends React.Component {
                         parent.setState(parent.state);
                     }}
                 >
-                {
-                    this.state.themesPermissions.map(theme => 
-                        <option
-                            value={theme.id}
-                            key={theme.id}
-                        >
-                            {theme.id} {theme.user_id === this.props.userInfo.mail ? (
-                                theme.rights.split(',').indexOf('owner') !== -1 ? '(owner)' : '(edit)'
-                            ) : ''}
-                        </option>
-                    )
-                }
+                    {
+                        this.state.themesPermissions.map(theme => 
+                            <option
+                                value={theme.id}
+                                key={theme.id}
+                            >
+                                {theme.id} {theme.user_id === this.props.userInfo.mail ? (
+                                    theme.rights.split(',').indexOf('owner') !== -1 ? '(owner)' : '(edit)'
+                                ) : ''}
+                            </option>
+                        )
+                    }
                 </select>
                 {
                     this.state.selectedTheme ? <div className="selected-theme" key={this.state.selectedTheme}>
+                        <iframe
+                            id="radar-preview"
+                            src={`${process.env.REACT_APP_RADAR_URL}?sheetId=markdown&browserTheme=${this.state.selectedTheme}`}
+                            style={{
+                                border: "none",
+                                marginTop: "1em",
+                            }}
+                            width="100%" height="890"
+                            onload='javascript:(function(o){o.style.height=o.contentWindow.document.body.scrollHeight+"px";}(this));'
+                        />
                         {form}
                         <label
                             className={this.state.success2 ? "text-success" : "text-danger"}
