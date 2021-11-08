@@ -174,6 +174,9 @@ class Themes extends React.Component {
             const data = await response.json();
             this.state.errorMessage = data.message;
         }
+        
+        this.state.submitting = false;
+        this.setState(this.state);
     }
 
     async firstRefresh() {
