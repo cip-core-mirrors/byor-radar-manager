@@ -132,6 +132,8 @@ class App extends React.Component {
           signInWindow = window.open(signIn, 'signInFrame');
         }
 
+        let timeout = 10; // in seconds
+        const begin = new Date();
         const intervalId = setInterval(async function() {
           const accessToken = window.localStorage.getItem('access_token');
           if (accessToken) {
@@ -147,8 +149,12 @@ class App extends React.Component {
             signInWindow = undefined;
             clearInterval(intervalId);
             resolve(response);
+          } else {
+            if ((new Date() - begin) > timeout * 1000) {
+              reject();
+            }
           }
-        }, 500);
+        }, 50);
       } else {
         resolve(response);
       }

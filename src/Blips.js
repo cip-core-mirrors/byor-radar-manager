@@ -213,7 +213,7 @@ class Blips extends React.Component {
         const data = await response.json();
         const parent = this;
         if (response.ok) {
-            this.state.createBlip = {};
+            //this.state.createBlip = {};
             this.state.returnMessage3 = "Successfully created blip";
             this.refreshMyBlips();
             this.refreshAllBlips();
@@ -279,7 +279,7 @@ class Blips extends React.Component {
         const data = await response.json();
         const parent = this;
         if (response.ok) {
-            this.state.returnMessage1 = `Successfully added ${data.rows} blip${data.rows > 1 ? 's' : ''}`;
+            this.state.returnMessage1 = `Successfully edited blip`;
             this.refreshMyBlips();
             this.refreshAllBlips();
             setTimeout(function() {
@@ -422,6 +422,7 @@ class Blips extends React.Component {
                                 <input
                                     type="text"
                                     className="form-control form-control-alt"
+                                    placeholder="YYYY-MM-DD"
                                     defaultValue={this.state.createBlip.lastupdate || ""}
                                     onChange={function(e) {
                                         parent.state.createBlip.lastupdate = e.target.value;
@@ -452,6 +453,7 @@ class Blips extends React.Component {
                                         className="form-control form-control-alt"
                                         defaultValue={param.value || ""}
                                         style={{
+                                            display: 'none',
                                             minWidth: '175px',
                                             resize: 'vertical',
                                             maxHeight: '10em',
