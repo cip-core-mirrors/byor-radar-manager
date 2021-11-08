@@ -5,6 +5,10 @@ import './Themes.css';
 
 const createId = 'create-theme-input';
 
+function onlyUnique(value, index, self) {
+    return self.indexOf(value) === index;
+}
+
 class Themes extends React.Component {
     constructor(props) {
         super(props);
@@ -22,6 +26,7 @@ class Themes extends React.Component {
             defaultParameters: [],
             parameters: [],
             themesPermissions: [],
+            adminUrl: this.props.baseUrl + '/admin',
         };
     }
 
@@ -93,6 +98,10 @@ class Themes extends React.Component {
         const parent = this;
         if (response.ok) {
             this.state.returnMessage2 = "Successfully edited theme";
+            const iframe = document.getElementById("radar-preview");
+            const iframeSrc = iframe.src;
+            iframe.src = '';
+            iframe.src = iframeSrc;
             setTimeout(function() {
                 parent.state.success2 = undefined;
                 parent.state.submitting = false;
@@ -139,6 +148,34 @@ class Themes extends React.Component {
                 parent.setState(parent.state);
             }, 2000);
         }
+        this.setState(this.state);
+    }
+
+    async editEditors(editors, themeId) {
+        if (this.state.submitting) return;
+        this.state.submitting = true;
+        this.setState(this.state);
+
+        const theme = {
+            id: themeId,
+            permissions: editors.map(function(editor) {
+                editor.rights = editor.rights.split(',');
+                editor.userId = editor.user_id;
+                delete editor.user_id;
+                return editor;
+            }),
+        };
+
+        const response = await this.props.callApi('PUT', `${this.props.baseUrl}/themes`, theme);
+        if (response.ok) {
+            document.getElementById(`add-editor-${themeId}`).value = '';
+            await this.reloadThemesList();
+        } else if (response.state === 403) {
+            const data = await response.json();
+            this.state.errorMessage = data.message;
+        }
+        
+        this.state.submitting = false;
         this.setState(this.state);
     }
 
@@ -215,7 +252,7 @@ class Themes extends React.Component {
                                                 param.value = param.value === '1' ? '0' : '1';
                                             }}
                                         />
-                                        <label className="paramName custom-control-label" htmlFor={param.name}>{param.name}&nbsp;</label>
+                                        <label className="paramName custom-control-label" htmlFor={param.name}>{param.displayName || param.name}&nbsp;</label>
                                         {
                                             param.tooltip ?
                                                 <span className="help-tooltip">
@@ -232,7 +269,7 @@ class Themes extends React.Component {
                         } else if (param.name === 'titlePageHTML') {
                             return (
                                 <div className="form-group" key={param.name}>
-                                    <label className="paramName">{param.name}&nbsp;</label>
+                                    <label className="paramName">{param.displayName || param.name}&nbsp;</label>
                                     {
                                         param.tooltip ?
                                             <span className="help-tooltip">
@@ -264,7 +301,7 @@ class Themes extends React.Component {
                         }
                         return (
                             <div className="form-group" key={param.name}>
-                                <label className="paramName">{param.name}&nbsp;</label>
+                                <label className="paramName">{param.displayName || param.name}&nbsp;</label>
                                 {
                                     param.tooltip ?
                                         <span className="help-tooltip">
@@ -295,7 +332,7 @@ class Themes extends React.Component {
                                 {fieldParams.map(function(fParam) {
                                     return (
                                         <div className="form-group" key={fParam.name}>
-                                            <label className="paramName">{fParam.name}</label>
+                                            <label className="paramName">{fParam.displayName || fParam.name}</label>
                                             {
                                                 fParam.tooltip ?
                                                     <span className="help-tooltip">
@@ -396,37 +433,180 @@ class Themes extends React.Component {
                 }}
             />;
 
+            let editors = undefined;
+            let themeSelf = undefined;
+            if (this.state.selectedTheme) {
+                editors = this.state.themesPermissions.filter(permission => permission.id === this.state.selectedTheme);
+                themeSelf = editors.filter(permission => permission.user_id === this.props.userInfo.mail)[0];
+                if (!themeSelf) themeSelf = {
+                    id: this.state.selectedTheme,
+                    user_id: this.props.userInfo.mail,
+                    rights: '',
+                };
+            }
+
+            const themes = this.state.themesPermissions.map(theme => theme.id).filter(onlyUnique);
+            const userPermissions = this.state.themesPermissions.filter(permission => permission.user_id === this.props.userInfo.mail);
+            const themesWithUserPermissions = themes.map(function(themeId) {
+                const themePermission = userPermissions.filter(permission => permission.id === themeId)[0];
+                return {
+                    id: themeId,
+                    rights: themePermission ? themePermission.rights : '',
+                };
+            });
+
             return <div
                 className="theme-grid"
             >
                 <h3>My themes</h3>
-                <div>Select a theme to edit it</div>
-                <select
-                    className="custom-select"
-                    size="4"
-                    onClick={async function(e) {
-                        const target = e.target;
-                        if (target.tagName !== 'OPTION') return;
-                        if (target.value === parent.state.selectedTheme) return;
+                <div className="themes-metadata">
+                    <div className="themes-metadata-left">
+                        <div className="themes-select">
+                            <div className="font-weight-bold text-secondary">
+                                Select a theme to edit it
+                            </div>
+                            <select
+                                className="custom-select"
+                                size="4"
+                                onClick={async function(e) {
+                                    const target = e.target;
+                                    if (target.tagName !== 'OPTION') return;
+                                    if (target.value === parent.state.selectedTheme) return;
 
-                        parent.state.selectedTheme = target.value;
-                        await parent.reloadParameters(parent.state.selectedTheme);
-                        parent.setState(parent.state);
-                    }}
-                >
-                {
-                    this.state.themesPermissions.map(theme => 
-                        <option
-                            value={theme.id}
-                            key={theme.id}
-                        >
-                            {theme.id} {theme.user_id === this.props.userInfo.mail ? (
-                                theme.rights.split(',').indexOf('owner') !== -1 ? '(owner)' : '(edit)'
-                            ) : ''}
-                        </option>
-                    )
-                }
-                </select>
+                                    parent.state.selectedTheme = target.value;
+                                    await parent.reloadParameters(parent.state.selectedTheme);
+                                    parent.setState(parent.state);
+                                }}
+                            >
+                                {
+                                    themesWithUserPermissions.map(theme => 
+                                        <option
+                                            value={theme.id}
+                                            key={theme.id}
+                                        >
+                                            {theme.id} {
+                                                theme.rights.split(',').indexOf('owner') !== -1 ? '(owner)' :
+                                                (
+                                                    theme.rights.split(',').indexOf('edit') !== -1 ? '(edit)' :
+                                                    ''
+                                                )}
+                                        </option>
+                                    )
+                                }
+                            </select>
+                        </div>
+                        {
+                            this.state.selectedTheme ?
+                            <ul
+                                className="themes-permissions list-group-flush"
+                                style={{
+                                    paddingLeft: 0,
+                                }}
+                            >
+                                <p
+                                    className="font-weight-bold text-secondary"
+                                    style={{
+                                        marginBottom: 0,
+                                    }}
+                                >
+                                    Editors
+                                </p>
+                                {
+                                    editors.map(permission => 
+                                        <li
+                                            key={permission.user_id}
+                                            className="radar-editor-item list-group-item border-light"
+                                        >
+                                            <label>
+                                                <label
+                                                    className={this.props.userInfo.mail === permission.user_id ? 'font-weight-bold' : ''}
+                                                    style={{
+                                                        marginBottom: 0,
+                                                    }}
+                                                >
+                                                    {permission.user_id}
+                                                </label>
+                                                <label
+                                                    className="text-light"
+                                                    style={{
+                                                        marginBottom: 0,
+                                                    }}
+                                                >
+                                                    &nbsp;
+                                                    {this.props.userInfo.mail === permission.user_id ? '' :
+                                                        (
+                                                            permission.rights.indexOf('owner') !== -1 ? '- owner' : ''
+                                                        )
+                                                    }
+                                                </label>
+                                            </label>
+                                            {
+                                                (this.props.permissions.adminUser || themeSelf.rights.split(',').indexOf('owner') !== -1) ? 
+                                                <button
+                                                    className="btn btn-lg btn-discreet-danger"
+                                                    type="button"
+                                                    onClick={async function(e) {
+                                                        const editorsCopy = JSON.parse(JSON.stringify(editors));
+                                                        const editorsId = editorsCopy.map(editor => editor.id);
+                                                        const index = editorsId.indexOf(permission.user_id);
+                                                        editorsCopy.splice(index, 1);
+                                                        await parent.editEditors(editorsCopy, parent.state.selectedTheme);
+                                                    }}
+                                                >
+                                                    <i className="icon">remove</i>
+                                                </button> :
+                                                null
+                                            }
+                                        </li>
+                                    )
+                                }
+                                {
+                                    (this.props.permissions.adminUser || themeSelf.rights.split(',').indexOf('owner') !== -1) ?
+                                    <div
+                                        className="input-group mb-3"
+                                        style={{
+                                            marginTop: "0.3em",
+                                        }}
+                                    >
+                                        <input className="form-control form-control-lg" id={`add-editor-${themeSelf.id}`} type="text" placeholder="john.doe@socgen.com" aria-label="" />
+                                        <button
+                                            className="btn btn-lg btn-discreet-success"
+                                            type="button"
+                                            onClick={async function(e) {
+                                                const email = document.getElementById(`add-editor-${themeSelf.id}`).value;
+                                                
+                                                const editorsCopy = JSON.parse(JSON.stringify(editors));
+                                                editorsCopy.push({
+                                                    id: parent.state.selectedTheme,
+                                                    user_id: email,
+                                                    rights: 'edit',
+                                                });
+
+                                                parent.editEditors(editorsCopy, parent.state.selectedTheme);
+                                            }}
+                                        >
+                                            <i className="icon">add</i>
+                                        </button>
+                                    </div> : null
+                                }
+                            </ul>
+                            : null
+                        }
+                    </div>
+                    {
+                        this.state.selectedTheme ?
+                        <iframe
+                            id="radar-preview"
+                            src={`${process.env.REACT_APP_RADAR_URL}?sheetId=markdown&browserTheme=${this.state.selectedTheme}`}
+                            style={{
+                                border: "none",
+                                marginTop: "1em",
+                            }}
+                            width="100%" height="890"
+                            onload='javascript:(function(o){o.style.height=o.contentWindow.document.body.scrollHeight+"px";}(this));'
+                        /> : null
+                    }
+                </div>
                 {
                     this.state.selectedTheme ? <div className="selected-theme" key={this.state.selectedTheme}>
                         {form}
