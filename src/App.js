@@ -227,7 +227,6 @@ class App extends React.Component {
                 onBlipsChange={this.handleBlipsChange}
                 onSectorNameChange={this.handleSectorNameChange}
                 onRingNameChange={this.handleRingNameChange}
-                blips={this.state.blips}
                 baseUrl={baseUrl}
                 callApi={this.callApi}
                 isLoggingIn={this.state.isLoggingIn}

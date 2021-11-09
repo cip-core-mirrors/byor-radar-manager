@@ -13,7 +13,7 @@ const svgWidth = 10;
 const svgValues = [
     {
         name: 'svg-triangle',
-        callback: function(svg) {
+        callback: async function(svg) {
             d3.select(svg)
                 .append('polygon')
                 .attr('points', trianglePoints.map(point => `${point.x * svgWidth},${point.y * svgWidth}`).join(' '))
@@ -21,7 +21,7 @@ const svgValues = [
     },
     {
         name: 'svg-circle',
-        callback: function(svg) {
+        callback: async function(svg) {
             d3.select(svg)
                 .append('circle')
                 .attr('cx', svgWidth / 2)
@@ -31,7 +31,7 @@ const svgValues = [
     },
     {
         name: 'svg-square',
-        callback: function(svg) {
+        callback: async function(svg) {
             d3.select(svg)
                 .append("rect")
                 .attr("x", 0)
@@ -42,7 +42,7 @@ const svgValues = [
     },
     {
         name: 'svg-diamond',
-        callback: function(svg) {
+        callback: async function(svg) {
             d3.select(svg)
                 .append('polygon')
                 .attr('points', diamondPoints.map(point => `${point.x * svgWidth},${point.y * svgWidth}`).join(' '))
@@ -50,7 +50,7 @@ const svgValues = [
     },
     {
         name: 'svg-wye',
-        callback: function(svg) {
+        callback: async function(svg) {
             const symbol = d3.symbol().type(d3.symbolWye).size(svgWidth * svgWidth / 2);
             d3.select(svg)
                 .append('path')
@@ -60,7 +60,7 @@ const svgValues = [
     },
     {
         name: 'svg-star',
-        callback: function(svg) {
+        callback: async function(svg) {
             d3.select(svg)
                 .append('polygon')
                 .attr('points', starPoints.map(point => `${point.x * svgWidth},${point.y * svgWidth}`).join(' '))
@@ -68,7 +68,7 @@ const svgValues = [
     },
     {
         name: 'svg-cross',
-        callback: function(svg) {
+        callback: async function(svg) {
             const symbol = d3.symbol().type(d3.symbolCross).size(svgWidth * svgWidth / 2);
             d3.select(svg)
                 .append('path')
@@ -108,50 +108,30 @@ class RadarBlips extends React.Component {
     constructor(props) {
         super(props);
 
-        this.reorder = this.reorder.bind(this);
-        this.move = this.move.bind(this);
-        this.onDragEnd = this.onDragEnd.bind(this);
-        this.getListStyle = this.getListStyle.bind(this);
-        this.getItemStyle = this.getItemStyle.bind(this);
-
-        this.newSector = this.newSector.bind(this);
-        this.moveSector = this.moveSector.bind(this);
-        this.deleteSector = this.deleteSector.bind(this);
-        this.sectorNameChange = this.sectorNameChange.bind(this);
-
-        this.newRing = this.newRing.bind(this);
-        this.moveRing = this.moveRing.bind(this);
-        this.deleteRing = this.deleteRing.bind(this);
-        this.ringNameChange = this.ringNameChange.bind(this);
-
-        this.setBlipValue = this.setBlipValue.bind(this);
-        this.setDefaultBlipValue = this.setDefaultBlipValue.bind(this);
-
-        this.getList = this.getList.bind(this);
-
-        this.lists = Array.from(this.props.blips);
-        this.sectors = [];
-        this.rings = [];
-
-        this.svgRefs = {};
-
-        this.selectedDefaultRef = 0;
-        this.defaultRef = undefined;
-        this.defaultRefs = {};
-
         this.state = {
             isFirstRefresh: true,
             isLoading: true,
+            lists: [
+                [],
+            ],
+            sectors: [],
+            rings: [],
+            
+            svgRefs: {},
+
+            selectedDefaultRef: 0,
+            defaultRef: undefined,
+            defaultRefs: {},
         }
     }
 
     handleChange() {
-        this.props.onBlipsChange(this.lists);
+        this.props.onBlipsChange(this.state.lists);
     }
 
-    handleParamsChange() {
-        this.props.onSectorNameChange(this.sectors);
-        this.props.onRingNameChange(this.rings);
+    async handleParamsChange() {
+        this.props.onSectorNameChange(this.state.sectors);
+        this.props.onRingNameChange(this.state.rings);
         this.handleChange();
     }
 
@@ -159,10 +139,23 @@ class RadarBlips extends React.Component {
         return self.indexOf(value) === index;
     }
 
-    async drawSvgs() {
+    async drawSvgs(blip) {
         this.handleParamsChange();
 
-        for (const svgRefs of Object.values(this.svgRefs)) {
+        if (blip) {
+            const svgRefs = this.state.svgRefs[blip.id_version];
+            const svg = svgRefs[blip.value] || this.state.defaultRefs[this.state.selectedDefaultRef];
+            const classList = svg.classList;
+            for (const svgObject of svgValues) {
+                if (classList.contains(svgObject.name)) {
+                    svgObject.callback(svg);
+                    this.handleSvgChange(blip);
+                    return;
+                }
+            }
+        }
+
+        for (const svgRefs of Object.values(this.state.svgRefs)) {
             for (const svg of Object.values(svgRefs)) {
                 if (!svg) continue;
                 if (svg.firstChild) continue;
@@ -180,14 +173,14 @@ class RadarBlips extends React.Component {
         this.handleSvgChange();
     }
 
-    handleSvgChange(blip) {
+    async handleSvgChange(blip) {
         if (blip) {
             const svg = d3.select(blip.ref);
             svg.selectAll("*").remove();
             const svgObject = svgValues[blip.value];
             svgObject.callback(blip.ref);
         } else {
-            for (const blip of this.lists.slice(1).flat().flat()) {
+            for (const blip of this.state.lists.slice(1).flat().flat()) {
                 const svg = d3.select(blip.ref);
                 svg.selectAll("*").remove();
                 const svgObject = svgValues[blip.value];
@@ -206,17 +199,17 @@ class RadarBlips extends React.Component {
         }
     }
 
-    getList = (droppableId) => {
+    getList(droppableId) {
         const delimiter = '-';
         const delimiterIndex = droppableId.indexOf(delimiter);
         const sectorIndex = parseInt(droppableId.substring(0, delimiterIndex));
         const ringIndex = parseInt(droppableId.substring(delimiterIndex + 1));
 
-        return this.lists[sectorIndex][ringIndex];
+        return this.state.lists[sectorIndex][ringIndex];
     }
 
     // a little function to help us with reordering the result
-    reorder = (source, destination) => {
+    reorder(source, destination) {
         const droppableId = source.droppableId;
         const startIndex = source.index;
         const endIndex = destination.index;
@@ -229,7 +222,7 @@ class RadarBlips extends React.Component {
   /**
    * Moves an item from one list to another list.
    */
-    move = (droppableSource, droppableDestination) => {
+    move(droppableSource, droppableDestination) {
         const source = this.getList(droppableSource.droppableId);
         const destination = this.getList(droppableDestination.droppableId);
 
@@ -239,12 +232,12 @@ class RadarBlips extends React.Component {
             id_version: `${removed.id}-${removed.version}`,
             name: removed.name,
             version: removed.version,
-            value: removed.value || this.selectedDefaultRef,
+            value: removed.value || this.state.selectedDefaultRef,
         };
 
         destination.splice(droppableDestination.index, 0, inserted);
 
-        if (droppableSource.droppableId === '0-0') {
+        if (droppableDestination.droppableId !== '0-0') {
             const parent = this;
             setTimeout(function() {
                 parent.drawSvgs();
@@ -270,18 +263,18 @@ class RadarBlips extends React.Component {
 
     newSector(event) {
         const sector = [];
-        for (let i = 0; i < this.rings.length; i++) {
+        for (let i = 0; i < this.state.rings.length; i++) {
             sector.push([]);
         }
-        this.lists.push(sector);
-        this.sectors.push(`Sector ${this.sectors.length + 1}`);
+        this.state.lists.push(sector);
+        this.state.sectors.push(`Sector ${this.state.sectors.length + 1}`);
 
         this.handleParamsChange();
     }
 
     newRing(event) {
-        this.lists.slice(1).map(list => list.push([]));
-        this.rings.push(`Ring ${this.rings.length + 1}`);
+        this.state.lists.slice(1).map(list => list.push([]));
+        this.state.rings.push(`Ring ${this.state.rings.length + 1}`);
 
         this.handleParamsChange();
     }
@@ -290,7 +283,7 @@ class RadarBlips extends React.Component {
         const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
         const index = parseInt(targetId.substring('sector-name-'.length));
 
-        this.sectors[index] = event.target.value;
+        this.state.sectors[index] = event.target.value;
 
         this.handleParamsChange();
     }
@@ -299,7 +292,7 @@ class RadarBlips extends React.Component {
         const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
         const index = parseInt(targetId.substring('ring-name-'.length));
 
-        this.rings[index] = event.target.value;
+        this.state.rings[index] = event.target.value;
 
         this.handleParamsChange();
     }
@@ -316,11 +309,11 @@ class RadarBlips extends React.Component {
             destIndex = srcIndex + 1;
         }
 
-        const srcRingName = this.rings[srcIndex];
-        this.rings[srcIndex] = this.rings[destIndex];
-        this.rings[destIndex] = srcRingName;
+        const srcRingName = this.state.rings[srcIndex];
+        this.state.rings[srcIndex] = this.state.rings[destIndex];
+        this.state.rings[destIndex] = srcRingName;
 
-        for (const sector of this.lists.slice(1)) {
+        for (const sector of this.state.lists.slice(1)) {
             const srcRing = sector[srcIndex];
             sector[srcIndex] = sector[destIndex];
             sector[destIndex] = srcRing;
@@ -333,13 +326,13 @@ class RadarBlips extends React.Component {
         const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
         const index = parseInt(targetId.substring('delete-ring-'.length));
 
-        this.rings.splice(index, 1);
+        this.state.rings.splice(index, 1);
         const blips = [];
-        for (const sector of this.lists.slice(1)) {
+        for (const sector of this.state.lists.slice(1)) {
             const ring = sector.splice(index, 1)[0];
             blips.push(...ring);
         }
-        this.lists[0][0].push(...blips);
+        this.state.lists[0][0].push(...blips);
 
         this.handleParamsChange();
     }
@@ -356,13 +349,13 @@ class RadarBlips extends React.Component {
             destIndex = srcIndex + 1;
         }
 
-        const srcSectorName = this.sectors[srcIndex];
-        this.sectors[srcIndex] = this.sectors[destIndex];
-        this.sectors[destIndex] = srcSectorName;
+        const srcSectorName = this.state.sectors[srcIndex];
+        this.state.sectors[srcIndex] = this.state.sectors[destIndex];
+        this.state.sectors[destIndex] = srcSectorName;
 
-        const srcSector = this.lists[srcIndex + 1];
-        this.lists[srcIndex + 1] = this.lists[destIndex + 1];
-        this.lists[destIndex + 1] = srcSector;
+        const srcSector = this.state.lists[srcIndex + 1];
+        this.state.lists[srcIndex + 1] = this.state.lists[destIndex + 1];
+        this.state.lists[destIndex + 1] = srcSector;
 
         this.handleParamsChange();
     }
@@ -371,9 +364,9 @@ class RadarBlips extends React.Component {
         const targetId = event.target.id ? event.target.id : event.target.parentElement.id;
         const index = parseInt(targetId.substring('delete-sector-'.length));
 
-        this.sectors.splice(index, 1);
-        const sector = this.lists.splice(index + 1, 1)[0];
-        this.lists[0][0].push(...sector.flat());
+        this.state.sectors.splice(index, 1);
+        const sector = this.state.lists.splice(index + 1, 1)[0];
+        this.state.lists[0][0].push(...sector.flat());
 
         this.handleParamsChange();
     }
@@ -410,7 +403,7 @@ class RadarBlips extends React.Component {
         }
     }
 
-    setBlipValue(event) {
+    setBlipValue(parent, event) {
         let dataValue = event.target;
         while (!dataValue.getAttribute('data-value')) {
             dataValue = dataValue.parentElement;
@@ -420,10 +413,10 @@ class RadarBlips extends React.Component {
             element = element.parentElement;
         }
 
-        for (const blip of this.lists.slice(1).flat().flat()) {
+        for (const blip of parent.state.lists.slice(1).flat().flat()) {
             if (blip.id_version === element.id) {
                 blip.value = parseInt(dataValue.getAttribute('data-value'));
-                this.handleSvgChange(blip);
+                parent.handleSvgChange(blip);
                 break;
             }
         }
@@ -439,12 +432,12 @@ class RadarBlips extends React.Component {
             element = element.parentElement;
         }
 
-        this.selectedDefaultRef = parseInt(dataValue.getAttribute('data-value'));
+        this.state.selectedDefaultRef = parseInt(dataValue.getAttribute('data-value'));
         const parent = this;
         setTimeout(function() {
-            const svg = d3.select(parent.defaultRef);
+            const svg = d3.select(parent.state.defaultRefs);
             svg.selectAll("*").remove();
-            svgValues[parent.selectedDefaultRef].callback(parent.defaultRef);
+            svgValues[parent.state.selectedDefaultRef].callback(parent.state.defaultRefs);
         }, 400);
     }
 
@@ -457,9 +450,9 @@ class RadarBlips extends React.Component {
         const response1 = await this.props.callApi('GET', `${this.props.baseUrl}/blips`);
         if (response1.ok) {
             blips = await response1.json();
-            this.lists[0] = [Object.values(blips).flat()];
+            this.state.lists[0] = [Object.values(blips).flat()];
         } else {
-            this.lists[0] = [];
+            this.state.lists[0] = [];
         }
 
         //this.handleChange();
@@ -471,21 +464,21 @@ class RadarBlips extends React.Component {
             blipLinks = await response2.json();
             const sectors = blipLinks.map(blipLink => blipLink.sector).filter(this.onlyUnique);
             for (const sector of sectors) {
-                this.lists.push([]);
-                this.sectors.push(sector);
+                this.state.lists.push([]);
+                this.state.sectors.push(sector);
             }
             const rings = blipLinks.map(blipLink => blipLink.ring).filter(this.onlyUnique);
             for (const ring of rings) {
                 this.newRing();
-                this.rings[this.rings.length - 1] = ring;
+                this.state.rings[this.state.rings.length - 1] = ring;
             }
 
             //this.handleParamsChange();
 
             for (const blipLink of blipLinks) {
-                const sectorIndex = this.sectors.indexOf(blipLink.sector)
-                const ringIndex = this.rings.indexOf(blipLink.ring)
-                const sector = this.lists.slice(1)[sectorIndex];
+                const sectorIndex = this.state.sectors.indexOf(blipLink.sector)
+                const ringIndex = this.state.rings.indexOf(blipLink.ring)
+                const sector = this.state.lists.slice(1)[sectorIndex];
                 const ring = sector[ringIndex];
                 const blipVersion = blipLink.version;
                 const blipId = blipLink.id;
@@ -508,22 +501,22 @@ class RadarBlips extends React.Component {
             }
 
             // Remove used blips from list
-            this.lists[0] = [Object.values(blips).flat()];
+            this.state.lists[0] = [Object.values(blips).flat()];
         } else {
             this.newSector();
             this.newRing();
         }
-        
-        this.lists[0].sort(function(a, b) {
+
+        this.state.lists[0].sort(function(a, b) {
             if (a.name < b.name) return -1;
             else if (a.name > b.name) return 1;
             return 0;
         });
-        
+
         this.state.isLoading = false;
         this.setState(this.state);
-
-        svgValues[this.selectedDefaultRef].callback(this.defaultRef);
+        
+        svgValues[this.state.selectedDefaultRef].callback(this.state.defaultRefs);
         this.drawSvgs();
     }
 
@@ -542,9 +535,9 @@ class RadarBlips extends React.Component {
 
         return (
             <div className="blips border-bottom">
-                <DragDropContext onDragEnd={this.onDragEnd}>
+                <DragDropContext onDragEnd={result => parent.onDragEnd(result)}>
                     {
-                        this.lists.slice(0, 1).map(function(sector, indexSector) {
+                        this.state.lists.slice(0, 1).map(function(sector, indexSector) {
                             return <div className="list-grid list-grid-blips" key={indexSector}>
                                 <span className="blips-list-label">All items</span>
                                 <div className="default-blip">
@@ -556,8 +549,10 @@ class RadarBlips extends React.Component {
                                             className="btn btn-sm btn-outline-secondary dropdownMenuButton"
                                         >
                                             <svg
-                                                className={svgValues[parent.selectedDefaultRef].name}
-                                                ref={node => parent.defaultRef = node}
+                                                className={svgValues[parent.state.selectedDefaultRef].name}
+                                                ref={function(node) {
+                                                    if (node) parent.state.defaultRefs = node
+                                                }}
                                             />
                                         </button>
                                         <div className="dropdown-content">
@@ -571,10 +566,10 @@ class RadarBlips extends React.Component {
                                                     <svg
                                                         className={svgObject.name}
                                                         ref={function(node) {
-                                                            let svgRefs = parent.defaultRefs[indexSvg];
+                                                            let svgRefs = parent.state.defaultRefs[indexSvg];
                                                             if (!svgRefs) {
                                                                 svgRefs = {};
-                                                                parent.svgRefs[indexSvg] = svgRefs;
+                                                                parent.state.svgRefs[indexSvg] = svgRefs;
                                                             }
                                                             svgRefs[indexSvg] = node;
                                                         }}
@@ -634,7 +629,7 @@ class RadarBlips extends React.Component {
                     }
                     <div className="rings-list border-bottom">
                         {
-                            this.rings.map(function(ring, indexRing) {
+                            this.state.rings.map(function(ring, indexRing) {
                                 return <div className="ring-name-grid" key={indexRing}>
                                     <button
                                         className="btn btn-lg delete-ring-btn"
@@ -670,7 +665,7 @@ class RadarBlips extends React.Component {
                     </div>
                     <div className="sectors-list" id="sectors-list">
                         {
-                            this.lists.slice(1).map(function (sector, indexSector) {
+                            this.state.lists.slice(1).map(function (sector, indexSector) {
                                 return <div className="list-grid" key={indexSector + 1}>
                                     <div className="list-buttons">
                                         <button
@@ -697,7 +692,7 @@ class RadarBlips extends React.Component {
                                         <input
                                             className="form-control form-control-alt sector-name"
                                             id={`sector-name-${indexSector}`}
-                                            value={parent.sectors[indexSector]}
+                                            value={parent.state.sectors[indexSector]}
                                             onChange={parent.sectorNameChange}
                                         />
                                     </div>
@@ -754,16 +749,16 @@ class RadarBlips extends React.Component {
                                                                                     return <button
                                                                                         className="btn btn-lg btn-link dropdown-item"
                                                                                         data-value={indexSvg}
-                                                                                        onClick={parent.setBlipValue}
+                                                                                        onClick={e => parent.setBlipValue(parent, e)}
                                                                                         key={indexSvg}
                                                                                     >
                                                                                         <svg
                                                                                             className={svgObject.name}
                                                                                             ref={function(node) {
-                                                                                                let svgRefs = parent.svgRefs[item.id_version];
+                                                                                                let svgRefs = parent.state.svgRefs[item.id_version];
                                                                                                 if (!svgRefs) {
                                                                                                     svgRefs = {};
-                                                                                                    parent.svgRefs[item.id_version] = svgRefs;
+                                                                                                    parent.state.svgRefs[item.id_version] = svgRefs;
                                                                                                 }
                                                                                                 svgRefs[indexSvg] = node;
                                                                                             }}
@@ -799,7 +794,7 @@ class RadarBlips extends React.Component {
                             className="btn btn-lg btn-flat-primary new-ring-btn"
                             id="new-ring-btn"
                             style={{
-                                display: this.rings.length < 5 ? 'block' : 'none'
+                                display: this.state.rings.length < 5 ? 'block' : 'none'
                             }}
                             onClick={parent.newRing}
                         >
