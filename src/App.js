@@ -23,6 +23,7 @@ const baseUrl = process.env.REACT_APP_DATABASE_URL;
 const scope = process.env.REACT_APP_IAM_SCOPE;
 const clientId = process.env.REACT_APP_IAM_CLIENT_ID;
 const signIn = `${process.env.REACT_APP_IAM_URL}/authorize?response_type=id_token%20token&client_id=${clientId}&redirect_uri=${encodeURIComponent(window.location.origin + '/')}&scope=${encodeURIComponent(scope)}&nonce=${new Date().getTime()}`;
+const renewSignIn = `${process.env.REACT_APP_IAM_URL}/authorize?response_type=id_token%20token&client_id=${clientId}&redirect_uri=${encodeURIComponent(window.location.origin + '/renew')}&scope=${encodeURIComponent(scope)}&nonce=${new Date().getTime()}`;
 let signInWindow = undefined;
 
 async function getAccessToken() {
@@ -129,7 +130,7 @@ class App extends React.Component {
       if (response.status === 401) {
         window.localStorage.removeItem('access_token');
         if (!signInWindow) {
-          signInWindow = window.open(signIn, 'signInFrame');
+          signInWindow = window.open(renewSignIn, 'signInFrame');
         }
 
         let timeout = 10; // in seconds
