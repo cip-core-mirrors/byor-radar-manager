@@ -774,16 +774,23 @@ class Blips extends React.Component {
                         >
                             {this.state.returnMessage2}
                         </label>
-                        <input
-                            //type="submit"
-                            readOnly
-                            value="Change authors"
-                            className={`submit-btn btn btn-lg ${this.state.success2 === undefined ? 'btn-primary' : (this.state.success2 ? 'btn-success' : 'btn-danger')}`}
-                            onClick={async function(e) {
-                                await parent.handleChangeAuthors();
-                            }}
-                        />
-                        <ButtonLegend/>
+                        {
+                            this.props.permissions.adminUser ?
+                            <div
+                                className="blips-change-authors-button"
+                            >
+                                <input
+                                    //type="submit"
+                                    readOnly
+                                    value="Change authors"
+                                    className={`submit-btn btn btn-lg ${this.state.success2 === undefined ? 'btn-primary' : (this.state.success2 ? 'btn-success' : 'btn-danger')}`}
+                                    onClick={async function(e) {
+                                        await parent.handleChangeAuthors();
+                                    }}
+                                />
+                                <ButtonLegend/>
+                            </div> : null
+                        }
                     </div>
                 }
             </div>
