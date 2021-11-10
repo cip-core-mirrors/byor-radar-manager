@@ -7,7 +7,7 @@ class ButtonLegend extends React.Component {
             <div className="button-legend">
                 <div className="button-legend-row">
                     <div
-                        class="bg-success float-left"
+                        className="bg-success float-left"
                         style={{
                             height: 15,
                             width: 15,
@@ -24,7 +24,7 @@ class ButtonLegend extends React.Component {
                 </div>
                 <div className="button-legend-row">
                     <div
-                        class="bg-danger float-left"
+                        className="bg-danger float-left"
                         style={{
                             height: 15,
                             width: 15,
