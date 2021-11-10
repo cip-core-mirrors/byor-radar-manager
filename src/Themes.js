@@ -1,6 +1,7 @@
 import React from 'react';
 
 import Spinner from './Spinner';
+import ButtonLegend from './ButtonLegend';
 import './Themes.css';
 
 const createId = 'create-theme-input';
@@ -366,7 +367,7 @@ class Themes extends React.Component {
                 //type="submit"
                 readOnly
                 value="Submit"
-                className={`new-blips-submit-btn btn btn-lg ${this.state.success2 === undefined ? 'btn-primary' : (this.state.success2 ? 'btn-success' : 'btn-danger')}`}
+                className={`submit-btn btn btn-lg ${this.state.success2 === undefined ? 'btn-primary' : (this.state.success2 ? 'btn-success' : 'btn-danger')}`}
                 onClick={async function(e) {
                     await parent.handleSubmit();
                 }}
@@ -375,14 +376,19 @@ class Themes extends React.Component {
                 //type="submit"
                 readOnly
                 value="Delete"
-                className={`new-blips-submit-btn btn btn-lg ${this.state.deleteSuccess === undefined ? 'btn-primary' : (this.state.deleteSuccess ? 'btn-success' : 'btn-danger')}`}
+                className={`submit-btn btn btn-lg ${this.state.deleteSuccess === undefined ? 'btn-primary' : (this.state.deleteSuccess ? 'btn-success' : 'btn-danger')}`}
                 onClick={async function(e) {
                     await parent.handleDelete();
                 }}
             /> : null;
 
             const createForm = <form className="create-radar">
-                <div className="form-group">
+                <div
+                    className="form-group"
+                    style={{
+                        marginBottom: 0,
+                    }}
+                >
                     <label className="paramName">Theme name &nbsp;</label>
                     <input
                         type="text"
@@ -619,14 +625,18 @@ class Themes extends React.Component {
                         >
                             {this.state.returnMessage2}
                         </label>
-                        <div className="buttons-grid">
-                            {submit}
-                            {deleteButton}
+                        <div className="buttons-legend-grid">
+                            <div className="buttons-grid">
+                                {submit}
+                                {deleteButton}
+                            </div>
+                            <ButtonLegend/>
                         </div>
                     </div> :
                     <div className="create-theme">
                         {createForm}
                         {createSubmit}
+                        <ButtonLegend/>
                     </div>
                 }
             </div>

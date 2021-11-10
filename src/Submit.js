@@ -1,5 +1,8 @@
 import React from 'react';
 
+import ButtonLegend from './ButtonLegend';
+import './Submit.css'
+
 class Submit extends React.Component {
     constructor(props) {
         super(props);
@@ -33,13 +36,16 @@ class Submit extends React.Component {
 
     render() {
         return (
-            <input
-                //type="submit"
-                readOnly
-                value="Submit"
-                className={`submit-btn btn btn-lg ${this.state.success === undefined ? 'btn-primary' : (this.state.success ? 'btn-success' : 'btn-danger')}`}
-                onClick={this.handleSubmit}
-            />
+            <div className="submit-radar-button-grid">
+                <input
+                    //type="submit"
+                    readOnly
+                    value="Submit"
+                    className={`submit-btn btn btn-lg ${this.state.success === undefined ? 'btn-primary' : (this.state.success ? 'btn-success' : 'btn-danger')}`}
+                    onClick={this.handleSubmit}
+                />
+                <ButtonLegend/>
+            </div>
         );
     }
 }

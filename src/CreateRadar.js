@@ -1,6 +1,8 @@
 import React from 'react';
 import './CreateRadar.css';
 
+import ButtonLegend from './ButtonLegend';
+
 class CreateRadar extends React.Component {
     constructor(props) {
         super(props)
@@ -45,7 +47,12 @@ class CreateRadar extends React.Component {
             return (
                 <div className="new-radar-grid border-top">
                     <form className="create-radar">
-                        <div className="form-group">
+                        <div
+                            className="form-group"
+                            style={{
+                                marginBottom: 0,
+                            }}
+                        >
                             <label className="paramName">Radar name &nbsp;</label>
                             <input
                                 type="text"
@@ -74,6 +81,7 @@ class CreateRadar extends React.Component {
                             await parent.createRadar()
                         }}
                     />
+                    <ButtonLegend/>
                 </div>
             )
         } else if (this.props.authenticated) {

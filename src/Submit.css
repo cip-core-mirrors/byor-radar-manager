@@ -1,4 +1,12 @@
+.submit-radar-button-grid {
+    display: grid;
+    grid-auto-flow: row;
+    grid-row-gap: 1em;
+}
+
 .submit-btn {
-    width: fit-content;
+    max-width: fit-content;
+    padding-left: 5em;
+    padding-right: 5em;
     justify-self: center;
 }

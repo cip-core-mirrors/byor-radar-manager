@@ -1,6 +1,7 @@
 import React from 'react';
 
 import Spinner from './Spinner';
+import ButtonLegend from './ButtonLegend';
 import './Blips.css';
 
 function normalizeColumnName(name) {
@@ -503,11 +504,12 @@ class Blips extends React.Component {
                         style={{
                             width: '100%',
                         }}
-                        className={`new-blips-submit-btn btn btn-lg ${this.state.success3 === undefined ? 'btn-primary' : (this.state.success3 ? 'btn-success' : 'btn-danger')}`}
+                        className={`submit-btn btn btn-lg ${this.state.success3 === undefined ? 'btn-primary' : (this.state.success3 ? 'btn-success' : 'btn-danger')}`}
                         onClick={async function(e) {
                             await parent.handleCreate(parent.state.createBlip);
                         }}
                     />
+                    <ButtonLegend/>
                 </div>
                 <h3>My blips</h3>
                 <div className="my-blips-grid">
@@ -641,31 +643,34 @@ class Blips extends React.Component {
                     </label>
                     {
                         !this.state.selectedBlip ? null :
-                        <div className="blip-buttons-grid">
-                            <input
-                                //type="submit"
-                                readOnly
-                                value="Delete blip"
-                                style={{
-                                    width: '100%',
-                                }}
-                                className={`new-blips-submit-btn btn btn-lg ${this.state.success4 === undefined ? 'btn-primary' : (this.state.success4 ? 'btn-success' : 'btn-danger')}`}
-                                onClick={async function(e) {
-                                    await parent.handleDelete(parent.state.selectedBlip);
-                                }}
-                            />
-                            <input
-                                //type="submit"
-                                readOnly
-                                value="Save blip"
-                                style={{
-                                    width: '100%',
-                                }}
-                                className={`new-blips-submit-btn btn btn-lg ${this.state.success1 === undefined ? 'btn-primary' : (this.state.success1 ? 'btn-success' : 'btn-danger')}`}
-                                onClick={async function(e) {
-                                    await parent.handleSubmit(parent.state.selectedBlip);
-                                }}
-                            />
+                        <div className="blip-buttons-legend-grid">
+                            <div className="blip-buttons-grid">
+                                <input
+                                    //type="submit"
+                                    readOnly
+                                    value="Delete blip"
+                                    style={{
+                                        width: '100%',
+                                    }}
+                                    className={`submit-btn btn btn-lg ${this.state.success4 === undefined ? 'btn-primary' : (this.state.success4 ? 'btn-success' : 'btn-danger')}`}
+                                    onClick={async function(e) {
+                                        await parent.handleDelete(parent.state.selectedBlip);
+                                    }}
+                                />
+                                <input
+                                    //type="submit"
+                                    readOnly
+                                    value="Save blip"
+                                    style={{
+                                        width: '100%',
+                                    }}
+                                    className={`submit-btn btn btn-lg ${this.state.success1 === undefined ? 'btn-primary' : (this.state.success1 ? 'btn-success' : 'btn-danger')}`}
+                                    onClick={async function(e) {
+                                        await parent.handleSubmit(parent.state.selectedBlip);
+                                    }}
+                                />
+                            </div>
+                            <ButtonLegend/>
                         </div>
                     }
                 </div>
@@ -773,11 +778,12 @@ class Blips extends React.Component {
                             //type="submit"
                             readOnly
                             value="Change authors"
-                            className={`new-blips-submit-btn btn btn-lg ${this.state.success2 === undefined ? 'btn-primary' : (this.state.success2 ? 'btn-success' : 'btn-danger')}`}
+                            className={`submit-btn btn btn-lg ${this.state.success2 === undefined ? 'btn-primary' : (this.state.success2 ? 'btn-success' : 'btn-danger')}`}
                             onClick={async function(e) {
                                 await parent.handleChangeAuthors();
                             }}
                         />
+                        <ButtonLegend/>
                     </div>
                 }
             </div>
