@@ -108,6 +108,17 @@ class RadarBlips extends React.Component {
     constructor(props) {
         super(props);
 
+        this.newSector = this.newSector.bind(this);
+        this.sectorNameChange = this.sectorNameChange.bind(this);
+        this.ringNameChange = this.ringNameChange.bind(this);
+        this.newRing = this.newRing.bind(this);
+        this.moveRing = this.moveRing.bind(this);
+        this.deleteRing = this.deleteRing.bind(this);
+        this.moveSector = this.moveSector.bind(this);
+        this.deleteSector = this.deleteSector.bind(this);
+        this.setBlipValue = this.setBlipValue.bind(this);
+        this.setDefaultBlipValue = this.setDefaultBlipValue.bind(this);
+
         this.state = {
             isFirstRefresh: true,
             isLoading: true,
@@ -403,7 +414,7 @@ class RadarBlips extends React.Component {
         }
     }
 
-    setBlipValue(parent, event) {
+    setBlipValue(event) {
         let dataValue = event.target;
         while (!dataValue.getAttribute('data-value')) {
             dataValue = dataValue.parentElement;
@@ -413,10 +424,10 @@ class RadarBlips extends React.Component {
             element = element.parentElement;
         }
 
-        for (const blip of parent.state.lists.slice(1).flat().flat()) {
+        for (const blip of this.state.lists.slice(1).flat().flat()) {
             if (blip.id_version === element.id) {
                 blip.value = parseInt(dataValue.getAttribute('data-value'));
-                parent.handleSvgChange(blip);
+                this.handleSvgChange(blip);
                 break;
             }
         }
@@ -749,7 +760,7 @@ class RadarBlips extends React.Component {
                                                                                     return <button
                                                                                         className="btn btn-lg btn-link dropdown-item"
                                                                                         data-value={indexSvg}
-                                                                                        onClick={e => parent.setBlipValue(parent, e)}
+                                                                                        onClick={parent.setBlipValue}
                                                                                         key={indexSvg}
                                                                                     >
                                                                                         <svg
