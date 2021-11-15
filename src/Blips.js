@@ -33,7 +33,7 @@ class Blips extends React.Component {
             returnMessage2: undefined,
             success3: undefined,
             returnMessage3: undefined,
-            myBlips: [],
+            myBlips: {},
             selectedBlip: undefined,
             createBlip: {},
             blipIds: [],
@@ -402,6 +402,16 @@ class Blips extends React.Component {
                 this.state.createBlip[entry[0]] = entry[1];
             }
 
+            const myBlips = Object.values(this.state.myBlips);
+            myBlips.sort(function(a, b) {
+                const aName = a.name.trim().toLowerCase();
+                const bName = b.name.trim().toLowerCase();
+
+                if (aName < bName) return -1;
+                else if (aName > bName) return 1;
+                return 0;
+            })
+
             return <div className="new-blips-grid">
                 <h3>New blip</h3>
                 <div className="new-blip-grid">
@@ -528,7 +538,7 @@ class Blips extends React.Component {
                         >
                             <option selected disabled value="">Select a blip to edit</option>
                             {
-                                Object.values(this.state.myBlips).map(blip =>
+                                myBlips.map(blip =>
                                     <option
                                         value={blip.id}
                                         key={blip.id}
