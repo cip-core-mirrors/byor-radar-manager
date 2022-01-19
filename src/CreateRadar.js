@@ -61,6 +61,12 @@ class CreateRadar extends React.Component {
                                 onChange={function(e) {
                                     state.radarName = e.target.value;
                                 }}
+                                onKeyDown={async function(e) {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        await parent.createRadar()
+                                    }
+                                }}
                             />
                             <label
                                 className="text-danger"

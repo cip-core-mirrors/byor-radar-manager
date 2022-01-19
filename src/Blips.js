@@ -412,6 +412,8 @@ class Blips extends React.Component {
                 return 0;
             })
 
+            const blipDefaultSelection = 'DEFAULT-SELECTION';
+
             return <div className="new-blips-grid">
                 <h3>New blip</h3>
                 <div className="new-blip-grid">
@@ -527,16 +529,18 @@ class Blips extends React.Component {
                         this.state.isLoadingMyBlips ? <Spinner/> :
                         <select
                             className="custom-select select-blip-list"
+                            defaultValue={blipDefaultSelection}
                             onClick={function(e) {
                                 const blipId = e.target.value;
                                 if (!blipId) return;
+                                else if (blipId === blipDefaultSelection) return;
                                 if (parent.state.selectedBlip && blipId === parent.state.selectedBlip.id) return;
 
                                 parent.state.selectedBlip = Object.assign({}, parent.state.myBlips[blipId]);
                                 parent.setState(parent.state);
                             }}
                         >
-                            <option selected disabled value="">Select a blip to edit</option>
+                            <option disabled value={blipDefaultSelection}>Select a blip to edit</option>
                             {
                                 myBlips.map(blip =>
                                     <option
@@ -655,30 +659,33 @@ class Blips extends React.Component {
                         !this.state.selectedBlip ? null :
                         <div className="blip-buttons-legend-grid">
                             <div className="blip-buttons-grid">
-                                <input
-                                    //type="submit"
-                                    readOnly
-                                    value="Delete blip"
+                                <button
+                                    type="button"
                                     style={{
                                         width: '100%',
+                                        whiteSpace: 'nowrap',
                                     }}
                                     className={`submit-btn btn btn-lg ${this.state.success4 === undefined ? 'btn-primary' : (this.state.success4 ? 'btn-success' : 'btn-danger')}`}
                                     onClick={async function(e) {
                                         await parent.handleDelete(parent.state.selectedBlip);
                                     }}
-                                />
-                                <input
-                                    //type="submit"
-                                    readOnly
+                                >
+                                    Delete blip
+                                </button>
+                                <button
+                                    type="button"
                                     value="Save blip"
                                     style={{
                                         width: '100%',
+                                        whiteSpace: 'nowrap',
                                     }}
                                     className={`submit-btn btn btn-lg ${this.state.success1 === undefined ? 'btn-primary' : (this.state.success1 ? 'btn-success' : 'btn-danger')}`}
                                     onClick={async function(e) {
                                         await parent.handleSubmit(parent.state.selectedBlip);
                                     }}
-                                />
+                                >
+                                    Save blip
+                                </button>
                             </div>
                             <ButtonLegend/>
                         </div>
