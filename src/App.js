@@ -110,7 +110,6 @@ class App extends React.Component {
     const headers = {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
     };
     
     const accessToken = await getAccessToken();

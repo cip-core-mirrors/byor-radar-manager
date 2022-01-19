@@ -412,6 +412,8 @@ class Blips extends React.Component {
                 return 0;
             })
 
+            const blipDefaultSelection = 'DEFAULT-SELECTION';
+
             return <div className="new-blips-grid">
                 <h3>New blip</h3>
                 <div className="new-blip-grid">
@@ -527,16 +529,18 @@ class Blips extends React.Component {
                         this.state.isLoadingMyBlips ? <Spinner/> :
                         <select
                             className="custom-select select-blip-list"
+                            defaultValue={blipDefaultSelection}
                             onClick={function(e) {
                                 const blipId = e.target.value;
                                 if (!blipId) return;
+                                else if (blipId === blipDefaultSelection) return;
                                 if (parent.state.selectedBlip && blipId === parent.state.selectedBlip.id) return;
 
                                 parent.state.selectedBlip = Object.assign({}, parent.state.myBlips[blipId]);
                                 parent.setState(parent.state);
                             }}
                         >
-                            <option selected disabled value="">Select a blip to edit</option>
+                            <option disabled value={blipDefaultSelection}>Select a blip to edit</option>
                             {
                                 myBlips.map(blip =>
                                     <option
