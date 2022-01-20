@@ -203,6 +203,12 @@ class Blips extends React.Component {
 
     async handleCreate(blip) {
         if (this.state.submitting) return;
+
+        if (Object.keys(blip).length <= 5) {
+            this.state.returnMessage3 = "Please provide at least one column";
+            this.setState(this.state);
+            return;
+        }
         
         this.state.submitting = true;
         this.setState(this.state);
@@ -495,6 +501,7 @@ class Blips extends React.Component {
                                     if (!columnName) return;
                                     input.value = "";
                                     parent.state.createBlip[columnName] = "";
+                                    parent.state.returnMessage3 = undefined;
                                     parent.setState(parent.state);
                                 }}
                             />
