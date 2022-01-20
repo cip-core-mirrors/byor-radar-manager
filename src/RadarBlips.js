@@ -625,7 +625,11 @@ class RadarBlips extends React.Component {
                                                                     snapshot.isDragging,
                                                                     provided.draggableProps.style,
                                                                 );
-                                                                if (parent.state.filterSearch && !author.toLowerCase().includes(parent.state.filterSearch)) style.display = 'none';
+                                                                if (parent.state.filterSearch) {
+                                                                    if (!author.toLowerCase().includes(parent.state.filterSearch) && !item.name.toLowerCase().includes(parent.state.filterSearch)) {
+                                                                        style.display = 'none';
+                                                                    }
+                                                                }
 
                                                                 return <li
                                                                     ref={provided.innerRef}
