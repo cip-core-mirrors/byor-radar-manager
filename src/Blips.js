@@ -203,6 +203,12 @@ class Blips extends React.Component {
 
     async handleCreate(blip) {
         if (this.state.submitting) return;
+
+        if (Object.keys(blip).length <= 5) {
+            this.state.returnMessage3 = "Please provide at least one column";
+            this.setState(this.state);
+            return;
+        }
         
         this.state.submitting = true;
         this.setState(this.state);
@@ -495,6 +501,7 @@ class Blips extends React.Component {
                                     if (!columnName) return;
                                     input.value = "";
                                     parent.state.createBlip[columnName] = "";
+                                    parent.state.returnMessage3 = undefined;
                                     parent.setState(parent.state);
                                 }}
                             />
@@ -700,23 +707,9 @@ class Blips extends React.Component {
                             placeholder="Search"
                             defaultValue={this.state.filterSearch}
                             onChange={function(e) {
-                                e.target.value = e.target.value.trim();
+                                e.target.value = e.target.value.trimStart();
                                 const value = e.target.value.toLowerCase();
                                 parent.state.filterSearch = value;
-                                let rowIndex = 0;
-                                for (const row of parent.state.allBlipsRows) {
-                                    if (value) {
-                                        const name = row[1].trim().toLowerCase();
-                                        if (name.includes(value)) {
-                                            parent.state.blipRowStyles[rowIndex] = '';
-                                        } else {
-                                            parent.state.blipRowStyles[rowIndex] = 'none';
-                                        }
-                                    } else {
-                                        parent.state.blipRowStyles[rowIndex] = '';
-                                    }
-                                    rowIndex++;
-                                }
                                 parent.setState(parent.state);
                             }}
                         />
@@ -747,7 +740,7 @@ class Blips extends React.Component {
                                         <tr
                                             key={rowIndex}
                                             style={{
-                                                display: this.state.blipRowStyles[rowIndex] || '',
+                                                display: row[1].toLowerCase().includes(this.state.filterSearch) ? '' : 'none',
                                             }}
                                         >
                                             {

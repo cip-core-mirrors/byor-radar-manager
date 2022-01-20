@@ -133,6 +133,8 @@ class RadarBlips extends React.Component {
             selectedDefaultRef: 0,
             defaultRef: undefined,
             defaultRefs: {},
+
+            filterSearch: undefined,
         }
     }
 
@@ -551,6 +553,17 @@ class RadarBlips extends React.Component {
                         this.state.lists.slice(0, 1).map(function(sector, indexSector) {
                             return <div className="list-grid list-grid-blips" key={indexSector}>
                                 <span className="blips-list-label">All items</span>
+                                <input
+                                    type="text"
+                                    placeholder="Filter"
+                                    defaultValue={parent.state.filterSearch}
+                                    onChange={function(e) {
+                                        e.target.value = e.target.value.trimStart();
+                                        const value = e.target.value.toLowerCase();
+                                        parent.state.filterSearch = value;
+                                        parent.setState(parent.state);
+                                    }}
+                                />
                                 <div className="default-blip">
                                     <span className="default-blip-label">Default :</span>
                                     <div
@@ -604,15 +617,25 @@ class RadarBlips extends React.Component {
                                                             draggableId={`${item.id}-${item.version}`}
                                                             index={index}
                                                             className="list-group-item list-group-item-action border-light">
-                                                            {(provided, snapshot) => (
-                                                                <li
+                                                            {function (provided, snapshot) {
+                                                                const sheetId = item.id.substring(0, item.id.lastIndexOf('-'));
+                                                                const author = sheetId.replace(/-\d+$/, "");
+
+                                                                const style = parent.getItemStyle(
+                                                                    snapshot.isDragging,
+                                                                    provided.draggableProps.style,
+                                                                );
+                                                                if (parent.state.filterSearch) {
+                                                                    if (!author.toLowerCase().includes(parent.state.filterSearch) && !item.name.toLowerCase().includes(parent.state.filterSearch)) {
+                                                                        style.display = 'none';
+                                                                    }
+                                                                }
+
+                                                                return <li
                                                                     ref={provided.innerRef}
                                                                     {...provided.draggableProps}
                                                                     {...provided.dragHandleProps}
-                                                                    style={parent.getItemStyle(
-                                                                        snapshot.isDragging,
-                                                                        provided.draggableProps.style
-                                                                    )}
+                                                                    style={style}
                                                                 >
                                                                     <span className="font-weight-medium">{item.name}</span>
                                                                     <span
@@ -622,11 +645,11 @@ class RadarBlips extends React.Component {
                                                                             borderTopStyle: 'groove',
                                                                         }}
                                                                     >
-                                                                        {item.id.substring(0, item.id.lastIndexOf('-'))}
+                                                                        {author}
                                                                     </span>
                                                                     <span className="text-light">Row {item.id.substring(item.id.lastIndexOf('-') + 1)} (v{item.version})</span>
                                                                 </li>
-                                                            )}
+                                                            }}
                                                         </Draggable>
                                                     })}
                                                     {provided.placeholder}
@@ -641,71 +664,90 @@ class RadarBlips extends React.Component {
                     <div className="rings-list border-bottom">
                         {
                             this.state.rings.map(function(ring, indexRing) {
+                                const buttons = [];
+                                buttons.push(<button
+                                    className="btn btn-lg delete-ring-btn"
+                                    id={`delete-ring-${indexRing}`}
+                                    onClick={parent.deleteRing}
+                                    key={buttons.length}
+                                >
+                                    <i className="icon icon-md">delete</i>
+                                </button>);
+                                // Move rings not yet implemented
+                                /*
+                                buttons.push(<button
+                                    className="btn btn-lg ring-left-btn"
+                                    id={`ring-left-${indexRing}`}
+                                    onClick={parent.moveRing}
+                                    key={buttons.length}
+                                >
+                                    <i className="icon icon-md">arrow_back</i>
+                                </button>);
+                                buttons.push(<button
+                                    className="btn btn-lg ring-right-btn"
+                                    id={`ring-right-${indexRing}`}
+                                    onClick={parent.moveRing}
+                                    key={buttons.length}
+                                >
+                                    <i className="icon icon-md">arrow_forward</i>
+                                </button>);
+                                */
+                                buttons.push(<input
+                                    className={`ring-name theme-${indexRing}`}
+                                    id={`ring-name-${indexRing}`}
+                                    value={ring}
+                                    onChange={parent.ringNameChange}
+                                    key={buttons.length}
+                                />);
+
                                 return <div className="ring-name-grid" key={indexRing}>
-                                    <button
-                                        className="btn btn-lg delete-ring-btn"
-                                        id={`delete-ring-${indexRing}`}
-                                        onClick={parent.deleteRing}
-                                    >
-                                        <i className="icon icon-md">delete</i>
-                                    </button>
-                                    <button
-                                        className="btn btn-lg ring-left-btn"
-                                        id={`ring-left-${indexRing}`}
-                                        onClick={parent.moveRing}
-                                    >
-                                        <i className="icon icon-md">arrow_back</i>
-                                    </button>
-                                    <button
-                                        className="btn btn-lg ring-right-btn"
-                                        id={`ring-right-${indexRing}`}
-                                        onClick={parent.moveRing}
-                                    >
-                                        <i className="icon icon-md">arrow_forward</i>
-                                    </button>
-                                    <input
-                                        className={`ring-name theme-${indexRing}`}
-                                        id={`ring-name-${indexRing}`}
-                                        value={ring}
-                                        onChange={parent.ringNameChange}
-                                        key={indexRing}
-                                    />
-                                </div>
+                                    {buttons}
+                                </div>;
                             })
                         }
                     </div>
                     <div className="sectors-list" id="sectors-list">
                         {
                             this.state.lists.slice(1).map(function (sector, indexSector) {
+                                const buttons = [];
+                                buttons.push(<button
+                                    className="btn btn-lg delete-sector-btn"
+                                    id={`delete-sector-${indexSector}`}
+                                    onClick={parent.deleteSector}
+                                    key={buttons.length}
+                                >
+                                    <i className="icon icon-md">delete</i>
+                                </button>);
+                                // Move sectors not yet implemented
+                                /*
+                                buttons.push(<button
+                                    className="btn btn-lg sector-left-btn"
+                                    id={`sector-left-${indexSector}`}
+                                    onClick={parent.moveSector}
+                                    key={buttons.length}
+                                >
+                                    <i className="icon icon-md">arrow_back</i>
+                                </button>);
+                                buttons.push(<button
+                                    className="btn btn-lg sector-right-btn"
+                                    id={`sector-right-${indexSector}`}
+                                    onClick={parent.moveSector}
+                                    key={buttons.length}
+                                >
+                                    <i className="icon icon-md">arrow_forward</i>
+                                </button>);
+                                */
+                                buttons.push(<input
+                                    className="form-control form-control-alt sector-name"
+                                    id={`sector-name-${indexSector}`}
+                                    value={parent.state.sectors[indexSector]}
+                                    onChange={parent.sectorNameChange}
+                                    key={buttons.length}
+                                />);
+
                                 return <div className="list-grid" key={indexSector + 1}>
                                     <div className="list-buttons">
-                                        <button
-                                            className="btn btn-lg delete-sector-btn"
-                                            id={`delete-sector-${indexSector}`}
-                                            onClick={parent.deleteSector}
-                                        >
-                                            <i className="icon icon-md">delete</i>
-                                        </button>
-                                        <button
-                                            className="btn btn-lg sector-left-btn"
-                                            id={`sector-left-${indexSector}`}
-                                            onClick={parent.moveSector}
-                                        >
-                                            <i className="icon icon-md">arrow_back</i>
-                                        </button>
-                                        <button
-                                            className="btn btn-lg sector-right-btn"
-                                            id={`sector-right-${indexSector}`}
-                                            onClick={parent.moveSector}
-                                        >
-                                            <i className="icon icon-md">arrow_forward</i>
-                                        </button>
-                                        <input
-                                            className="form-control form-control-alt sector-name"
-                                            id={`sector-name-${indexSector}`}
-                                            value={parent.state.sectors[indexSector]}
-                                            onChange={parent.sectorNameChange}
-                                        />
+                                        {buttons}
                                     </div>
                                     {
                                         sector.map(function (ring, indexRing) {
@@ -722,8 +764,11 @@ class RadarBlips extends React.Component {
                                                                 draggableId={item.id_version}
                                                                 index={index}
                                                                 className="list-group-item list-group-item-action border-light">
-                                                                {(provided, snapshot) => (
-                                                                    <li
+                                                                {function (provided, snapshot) {
+                                                                    const sheetId = item.id.substring(0, item.id.lastIndexOf('-'));
+                                                                    const author = sheetId.replace(/-\d+$/, "");
+
+                                                                    return <li
                                                                         ref={provided.innerRef}
                                                                         {...provided.draggableProps}
                                                                         {...provided.dragHandleProps}
@@ -740,7 +785,7 @@ class RadarBlips extends React.Component {
                                                                                 borderTopStyle: 'groove',
                                                                             }}
                                                                         >
-                                                                            {item.id.substring(0, item.id.lastIndexOf('-'))}
+                                                                            {author}
                                                                         </span>
                                                                         <span className="text-light blip-version">Row {item.id.substring(item.id.lastIndexOf('-') + 1)} (v{item.version})</span>
                                                                         <div
@@ -779,7 +824,7 @@ class RadarBlips extends React.Component {
                                                                             </div>
                                                                         </div>
                                                                     </li>
-                                                                )}
+                                                                }}
                                                             </Draggable>
                                                         })}
                                                         {provided.placeholder}

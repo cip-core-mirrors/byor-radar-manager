@@ -9,10 +9,14 @@ class CreateRadar extends React.Component {
         this.state = {
             radarName: undefined,
             errorMessage: undefined,
+            successMessage: undefined,
         }
     }
 
     async createRadar() {
+        this.state.errorMessage = undefined;
+        this.state.successMessage = undefined;
+        
         let radarId = (this.state.radarName || '').trim();
         radarId = radarId.toLowerCase();
         radarId = radarId.replace(/\s\s+/g, ' ');
@@ -29,7 +33,8 @@ class CreateRadar extends React.Component {
             });
             if (response.ok) {
                 document.getElementById(this.props.createId).value = '';
-                await this.props.updateRadarsList();
+                this.state.successMessage = 'Your radar has been successfully created';
+                await this.props.updateRadarsList(false);
             } else if (response.status === 404) {
                 const data = await response.json();
                 this.state.errorMessage = data.message;
@@ -68,15 +73,24 @@ class CreateRadar extends React.Component {
                                     }
                                 }}
                             />
-                            <label
+                            { this.state.errorMessage ? <label
                                 className="text-danger"
                                 style={{
-                                    display: this.state.errorMessage ? 'inline-block' : 'none',
+                                    display: 'inline-block',
                                     marginBottom: 0,
                                 }}
                             >
                                 {this.state.errorMessage}
-                            </label>
+                            </label> : null }
+                            { this.state.successMessage ? <label
+                                className="text-success"
+                                style={{
+                                    display: 'inline-block',
+                                    marginBottom: 0,
+                                }}
+                            >
+                                {this.state.successMessage}
+                            </label> : null }
                         </div>
                     </form>
                     <input
