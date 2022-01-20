@@ -133,6 +133,8 @@ class RadarBlips extends React.Component {
             selectedDefaultRef: 0,
             defaultRef: undefined,
             defaultRefs: {},
+
+            filterSearch: undefined,
         }
     }
 
@@ -551,6 +553,17 @@ class RadarBlips extends React.Component {
                         this.state.lists.slice(0, 1).map(function(sector, indexSector) {
                             return <div className="list-grid list-grid-blips" key={indexSector}>
                                 <span className="blips-list-label">All items</span>
+                                <input
+                                    type="text"
+                                    placeholder="Filter"
+                                    defaultValue={parent.state.filterSearch}
+                                    onChange={function(e) {
+                                        e.target.value = e.target.value.trimStart();
+                                        const value = e.target.value.toLowerCase();
+                                        parent.state.filterSearch = value;
+                                        parent.setState(parent.state);
+                                    }}
+                                />
                                 <div className="default-blip">
                                     <span className="default-blip-label">Default :</span>
                                     <div
@@ -604,15 +617,21 @@ class RadarBlips extends React.Component {
                                                             draggableId={`${item.id}-${item.version}`}
                                                             index={index}
                                                             className="list-group-item list-group-item-action border-light">
-                                                            {(provided, snapshot) => (
-                                                                <li
+                                                            {function (provided, snapshot) {
+                                                                const sheetId = item.id.substring(0, item.id.lastIndexOf('-'));
+                                                                const author = sheetId.replace(/-\d+$/, "");
+
+                                                                const style = parent.getItemStyle(
+                                                                    snapshot.isDragging,
+                                                                    provided.draggableProps.style,
+                                                                );
+                                                                if (parent.state.filterSearch && !author.toLowerCase().includes(parent.state.filterSearch)) style.display = 'none';
+
+                                                                return <li
                                                                     ref={provided.innerRef}
                                                                     {...provided.draggableProps}
                                                                     {...provided.dragHandleProps}
-                                                                    style={parent.getItemStyle(
-                                                                        snapshot.isDragging,
-                                                                        provided.draggableProps.style
-                                                                    )}
+                                                                    style={style}
                                                                 >
                                                                     <span className="font-weight-medium">{item.name}</span>
                                                                     <span
@@ -622,11 +641,11 @@ class RadarBlips extends React.Component {
                                                                             borderTopStyle: 'groove',
                                                                         }}
                                                                     >
-                                                                        {item.id.substring(0, item.id.lastIndexOf('-'))}
+                                                                        {author}
                                                                     </span>
                                                                     <span className="text-light">Row {item.id.substring(item.id.lastIndexOf('-') + 1)} (v{item.version})</span>
                                                                 </li>
-                                                            )}
+                                                            }}
                                                         </Draggable>
                                                     })}
                                                     {provided.placeholder}
@@ -722,8 +741,11 @@ class RadarBlips extends React.Component {
                                                                 draggableId={item.id_version}
                                                                 index={index}
                                                                 className="list-group-item list-group-item-action border-light">
-                                                                {(provided, snapshot) => (
-                                                                    <li
+                                                                {function (provided, snapshot) {
+                                                                    const sheetId = item.id.substring(0, item.id.lastIndexOf('-'));
+                                                                    const author = sheetId.replace(/-\d+$/, "");
+
+                                                                    return <li
                                                                         ref={provided.innerRef}
                                                                         {...provided.draggableProps}
                                                                         {...provided.dragHandleProps}
@@ -740,7 +762,7 @@ class RadarBlips extends React.Component {
                                                                                 borderTopStyle: 'groove',
                                                                             }}
                                                                         >
-                                                                            {item.id.substring(0, item.id.lastIndexOf('-'))}
+                                                                            {author}
                                                                         </span>
                                                                         <span className="text-light blip-version">Row {item.id.substring(item.id.lastIndexOf('-') + 1)} (v{item.version})</span>
                                                                         <div
@@ -779,7 +801,7 @@ class RadarBlips extends React.Component {
                                                                             </div>
                                                                         </div>
                                                                     </li>
-                                                                )}
+                                                                }}
                                                             </Draggable>
                                                         })}
                                                         {provided.placeholder}
