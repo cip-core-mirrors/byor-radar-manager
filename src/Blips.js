@@ -707,7 +707,7 @@ class Blips extends React.Component {
                             placeholder="Search"
                             defaultValue={this.state.filterSearch}
                             onChange={function(e) {
-                                e.target.value = e.target.value.trim();
+                                e.target.value = e.target.value.trimStart();
                                 const value = e.target.value.toLowerCase();
                                 parent.state.filterSearch = value;
                                 let rowIndex = 0;
