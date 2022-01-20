@@ -664,71 +664,90 @@ class RadarBlips extends React.Component {
                     <div className="rings-list border-bottom">
                         {
                             this.state.rings.map(function(ring, indexRing) {
+                                const buttons = [];
+                                buttons.push(<button
+                                    className="btn btn-lg delete-ring-btn"
+                                    id={`delete-ring-${indexRing}`}
+                                    onClick={parent.deleteRing}
+                                    key={buttons.length}
+                                >
+                                    <i className="icon icon-md">delete</i>
+                                </button>);
+                                // Move rings not yet implemented
+                                /*
+                                buttons.push(<button
+                                    className="btn btn-lg ring-left-btn"
+                                    id={`ring-left-${indexRing}`}
+                                    onClick={parent.moveRing}
+                                    key={buttons.length}
+                                >
+                                    <i className="icon icon-md">arrow_back</i>
+                                </button>);
+                                buttons.push(<button
+                                    className="btn btn-lg ring-right-btn"
+                                    id={`ring-right-${indexRing}`}
+                                    onClick={parent.moveRing}
+                                    key={buttons.length}
+                                >
+                                    <i className="icon icon-md">arrow_forward</i>
+                                </button>);
+                                */
+                                buttons.push(<input
+                                    className={`ring-name theme-${indexRing}`}
+                                    id={`ring-name-${indexRing}`}
+                                    value={ring}
+                                    onChange={parent.ringNameChange}
+                                    key={buttons.length}
+                                />);
+
                                 return <div className="ring-name-grid" key={indexRing}>
-                                    <button
-                                        className="btn btn-lg delete-ring-btn"
-                                        id={`delete-ring-${indexRing}`}
-                                        onClick={parent.deleteRing}
-                                    >
-                                        <i className="icon icon-md">delete</i>
-                                    </button>
-                                    <button
-                                        className="btn btn-lg ring-left-btn"
-                                        id={`ring-left-${indexRing}`}
-                                        onClick={parent.moveRing}
-                                    >
-                                        <i className="icon icon-md">arrow_back</i>
-                                    </button>
-                                    <button
-                                        className="btn btn-lg ring-right-btn"
-                                        id={`ring-right-${indexRing}`}
-                                        onClick={parent.moveRing}
-                                    >
-                                        <i className="icon icon-md">arrow_forward</i>
-                                    </button>
-                                    <input
-                                        className={`ring-name theme-${indexRing}`}
-                                        id={`ring-name-${indexRing}`}
-                                        value={ring}
-                                        onChange={parent.ringNameChange}
-                                        key={indexRing}
-                                    />
-                                </div>
+                                    {buttons}
+                                </div>;
                             })
                         }
                     </div>
                     <div className="sectors-list" id="sectors-list">
                         {
                             this.state.lists.slice(1).map(function (sector, indexSector) {
+                                const buttons = [];
+                                buttons.push(<button
+                                    className="btn btn-lg delete-sector-btn"
+                                    id={`delete-sector-${indexSector}`}
+                                    onClick={parent.deleteSector}
+                                    key={buttons.length}
+                                >
+                                    <i className="icon icon-md">delete</i>
+                                </button>);
+                                // Move sectors not yet implemented
+                                /*
+                                buttons.push(<button
+                                    className="btn btn-lg sector-left-btn"
+                                    id={`sector-left-${indexSector}`}
+                                    onClick={parent.moveSector}
+                                    key={buttons.length}
+                                >
+                                    <i className="icon icon-md">arrow_back</i>
+                                </button>);
+                                buttons.push(<button
+                                    className="btn btn-lg sector-right-btn"
+                                    id={`sector-right-${indexSector}`}
+                                    onClick={parent.moveSector}
+                                    key={buttons.length}
+                                >
+                                    <i className="icon icon-md">arrow_forward</i>
+                                </button>);
+                                */
+                                buttons.push(<input
+                                    className="form-control form-control-alt sector-name"
+                                    id={`sector-name-${indexSector}`}
+                                    value={parent.state.sectors[indexSector]}
+                                    onChange={parent.sectorNameChange}
+                                    key={buttons.length}
+                                />);
+
                                 return <div className="list-grid" key={indexSector + 1}>
                                     <div className="list-buttons">
-                                        <button
-                                            className="btn btn-lg delete-sector-btn"
-                                            id={`delete-sector-${indexSector}`}
-                                            onClick={parent.deleteSector}
-                                        >
-                                            <i className="icon icon-md">delete</i>
-                                        </button>
-                                        <button
-                                            className="btn btn-lg sector-left-btn"
-                                            id={`sector-left-${indexSector}`}
-                                            onClick={parent.moveSector}
-                                        >
-                                            <i className="icon icon-md">arrow_back</i>
-                                        </button>
-                                        <button
-                                            className="btn btn-lg sector-right-btn"
-                                            id={`sector-right-${indexSector}`}
-                                            onClick={parent.moveSector}
-                                        >
-                                            <i className="icon icon-md">arrow_forward</i>
-                                        </button>
-                                        <input
-                                            className="form-control form-control-alt sector-name"
-                                            id={`sector-name-${indexSector}`}
-                                            value={parent.state.sectors[indexSector]}
-                                            onChange={parent.sectorNameChange}
-                                        />
+                                        {buttons}
                                     </div>
                                     {
                                         sector.map(function (ring, indexRing) {
