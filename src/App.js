@@ -50,6 +50,7 @@ class App extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleSectorNameChange = this.handleSectorNameChange.bind(this);
     this.handleRingNameChange = this.handleRingNameChange.bind(this);
+    this.handleRadarVersionChange = this.handleRadarVersionChange.bind(this);
 
     this.state = {
       isLoggingIn: true,
@@ -59,6 +60,7 @@ class App extends React.Component {
       ],
       sectors: [],
       rings: [],
+      radarVersion: undefined,
       authenticated: false,
       userInfo: undefined,
       permissions: {},
@@ -103,6 +105,11 @@ class App extends React.Component {
 
   handleRingNameChange(ringsName) {
     this.state.rings = ringsName;
+    this.setState(this.state);
+  }
+
+  handleRadarVersionChange(radarVersion) {
+    this.state.radarVersion = radarVersion;
     this.setState(this.state);
   }
 
@@ -226,12 +233,14 @@ class App extends React.Component {
                 onBlipsChange={this.handleBlipsChange}
                 onSectorNameChange={this.handleSectorNameChange}
                 onRingNameChange={this.handleRingNameChange}
+                onRadarVersionChange={this.handleRadarVersionChange}
                 baseUrl={baseUrl}
                 callApi={this.callApi}
                 isLoggingIn={this.state.isLoggingIn}
               />
               <Parameters
                 onParamsChange={this.handleParamsChange}
+                radarVersion={this.state.radarVersion}
                 parameters={this.state.parameters}
                 baseUrl={baseUrl}
                 callApi={this.callApi}
