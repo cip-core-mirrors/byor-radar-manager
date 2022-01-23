@@ -23,7 +23,7 @@ class Parameters extends React.Component {
 
     async componentDidMount() {
         if (this.state.isFirstRefresh) {
-            if (!this.props.isLoggingIn) {
+            if (!this.props.isLoggingIn && this.props.radarVersion !== undefined) {
                 this.firstRefresh();
             }
         }
@@ -44,7 +44,7 @@ class Parameters extends React.Component {
         const parameters = await (await this.props.callApi('GET', `${this.props.baseUrl}/parameters`)).json();
 
         const radarId = this.props.match.params.radarId;
-        const response = await this.props.callApi('GET', `${this.props.baseUrl}/radar/${radarId}/parameters`);
+        const response = await this.props.callApi('GET', `${this.props.baseUrl}/radar/${radarId}/${this.props.radarVersion}/parameters`);
         const data = await response.json();
         for (const p1 of data) {
             for (const p2 of parameters) {
@@ -73,7 +73,7 @@ class Parameters extends React.Component {
 
     async componentDidUpdate() {
         if (this.state.isFirstRefresh) {
-            if (!this.props.isLoggingIn) {
+            if (!this.props.isLoggingIn && this.props.radarVersion !== undefined) {
                 this.firstRefresh();
             }
         }
