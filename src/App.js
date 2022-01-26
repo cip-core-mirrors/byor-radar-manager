@@ -14,6 +14,7 @@ import Blips from './Blips';
 import MyRadars from './MyRadars';
 import AllRadars from './AllRadars';
 import Navbar from './Navbar';
+import RadarVersions from './RadarVersions';
 import Parameters from './Parameters';
 import RadarBlips from './RadarBlips';
 import Submit from './Submit';
@@ -60,7 +61,10 @@ class App extends React.Component {
       ],
       sectors: [],
       rings: [],
+      radarId: undefined,
       radarVersion: undefined,
+      fork: undefined,
+      forkVersion: undefined,
       authenticated: false,
       userInfo: undefined,
       permissions: {},
@@ -108,8 +112,11 @@ class App extends React.Component {
     this.setState(this.state);
   }
 
-  handleRadarVersionChange(radarVersion) {
+  handleRadarVersionChange(radarId, radarVersion, fork, forkVersion) {
+    this.state.radarId = radarId;
     this.state.radarVersion = radarVersion;
+    this.state.fork = fork;
+    this.state.forkVersion = forkVersion;
     this.setState(this.state);
   }
 
@@ -168,7 +175,7 @@ class App extends React.Component {
     })
   }
 
-  async handleSubmit(radarId) {
+  async handleSubmit() {
     const links = [];
     let sectorIndex = 0;
     for (const sector of this.state.blips.slice(1)) {
@@ -200,9 +207,12 @@ class App extends React.Component {
             value: param.value || param.default,
           };
         }),
+      version: this.state.radarVersion,
     };
 
-    return await this.callApi('PUT', `${baseUrl}/radar/${radarId}`, data);
+    if (this.state.fork) data.fork = this.state.fork;
+
+    return await this.callApi('PUT', `${baseUrl}/radar/${this.state.radarId}`, data);
   }
 
   render() {
@@ -227,13 +237,12 @@ class App extends React.Component {
       <div className="App">
         {navbar}
         <Switch>
-          <Route path="/radars/:radarId">
+          <Route path="/radars/:radarId/versions/:version">
             <div className="edit-radar">
               <RadarBlips
                 onBlipsChange={this.handleBlipsChange}
                 onSectorNameChange={this.handleSectorNameChange}
                 onRingNameChange={this.handleRingNameChange}
-                onRadarVersionChange={this.handleRadarVersionChange}
                 baseUrl={baseUrl}
                 callApi={this.callApi}
                 isLoggingIn={this.state.isLoggingIn}
@@ -248,9 +257,19 @@ class App extends React.Component {
               />
               <Submit
                 onSubmit={async function(e) {
-                  return await parent.handleSubmit(endPath);
+                  return await parent.handleSubmit();
                 }}
               />
+            </div>
+          </Route>
+          <Route path="/radars/:radarId">
+            <div className="versions-radar">
+              <RadarVersions
+                onRadarVersionChange={this.handleRadarVersionChange}
+                baseUrl={baseUrl}
+                callApi={this.callApi}
+                isLoggingIn={this.state.isLoggingIn}
+              ></RadarVersions>
             </div>
           </Route>
           <Route path="/radars">

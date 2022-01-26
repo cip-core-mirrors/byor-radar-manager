@@ -158,7 +158,7 @@ class MyRadars extends React.Component {
                                     className="radar-edit"
                                     to={`${this.state.url}/${radar.id}`}
                                 >
-                                    Edit
+                                    Versions
                                 </Link> : null
                             }
                             {

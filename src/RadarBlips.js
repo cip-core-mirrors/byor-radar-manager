@@ -476,7 +476,6 @@ class RadarBlips extends React.Component {
         const radarVersions = await response4.json();
 
         const radarVersion = radarVersions.length;
-        this.props.onRadarVersionChange(radarVersion);
 
         let blipLinks = [];
         const response2 = await this.props.callApi('GET', `${this.props.baseUrl}/radar/${radarId}/${radarVersion}/blip-links`);
