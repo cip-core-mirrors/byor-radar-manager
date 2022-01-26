@@ -28,7 +28,6 @@ class RadarVersions extends React.Component {
             }
         }
     }
- 
 
     async componentDidUpdate() {
         if (this.state.isFirstRefresh) {
@@ -67,14 +66,9 @@ class RadarVersions extends React.Component {
         this.setState(this.state);
     }
 
-    handleVersionChange() {
+    async loadRadarParameters() {
         const selectedVersion = this.state.selectedVersion;
-        this.props.onRadarVersionChange(selectedVersion.radar, selectedVersion.version, selectedVersion.fork, selectedVersion.fork_version);
-    }
 
-    async loadParameters() {
-        const selectedVersion = this.state.selectedVersion;
-        
         let url = `${this.props.baseUrl}/radar/${selectedVersion.radar}/${selectedVersion.version}/parameters`;
 
         const response = await this.props.callApi('GET', url);
@@ -83,15 +77,29 @@ class RadarVersions extends React.Component {
         return data;
     }
 
-    async fork() {
-        const parameters = await this.loadParameters();
-        //console.log(parameters);
+    async loadRadarBlipLinks() {
+        const selectedVersion = this.state.selectedVersion;
+
+        let url = `${this.props.baseUrl}/radar/${selectedVersion.radar}/${selectedVersion.version}/blip-links`;
+
+        const response = await this.props.callApi('GET', url);
+        const data = await response.json();
+
+        return data;
     }
 
     render() {
         if (this.props.isLoggingIn || this.state.isLoading) return <Spinner />;
 
         const parent = this;
+
+        let previewUrl;
+        if (this.state.selectedVersion) {
+            previewUrl = `${process.env.REACT_APP_RADAR_URL}?sheetId=${this.state.selectedVersion.radar}`;
+            if (this.state.selectedVersion.version !== null) previewUrl += `&version=${this.state.selectedVersion.version}`;
+            if (this.state.selectedVersion.fork !== null) previewUrl += `&fork=${this.state.selectedVersion.fork}`;
+            if (this.state.selectedVersion.fork_version !== null) previewUrl += `&forkVersion=${this.state.selectedVersion.fork_version}`;
+        }
 
         return <div
             className="theme-grid"
@@ -115,17 +123,27 @@ class RadarVersions extends React.Component {
 
                                 parent.state.selectedVersion = parent.state.versions.filter(version => version.id === versionId)[0];
 
-                                let queryString = '';
+                                const queryString = {};
+                                queryString.version = parent.state.selectedVersion.version;
                                 if (parent.state.selectedVersion.fork) {
-                                    queryString += `?fork=${parent.state.selectedVersion.fork}`;
+                                    queryString.fork = parent.state.selectedVersion.fork;
                                     if (parent.state.selectedVersion.fork_version) {
-                                        queryString += `&forkVersion=${parent.state.selectedVersion.fork_version}`;
+                                        queryString.forkVersion = parent.state.selectedVersion.fork_version;
                                     }
                                 }
 
-                                parent.handleVersionChange();
+                                parent.props.onRadarVersionChange(
+                                    parent.state.selectedVersion.radar,
+                                    parent.state.selectedVersion.version,
+                                    parent.state.selectedVersion.fork,
+                                    parent.state.selectedVersion.fork_version,
+                                );
 
-                                parent.state.editLink = `/radars/${parent.state.radarId}/versions/${parent.state.selectedVersion.id}${queryString}`;
+                                let url = `/radars/${parent.state.selectedVersion.radar}/edit`;
+                                if (Object.keys(queryString).length > 0) url += `?${Object.entries(queryString).map(function (entry) {
+                                    return `${entry[0]}=${entry[1]}`;
+                                }).join('&')}`;
+                                parent.state.editLink = url;
                                 parent.setState(parent.state);
                             }}
                         >
@@ -135,8 +153,8 @@ class RadarVersions extends React.Component {
                                         value={version.id}
                                         key={version.id}
                                     >
-                                        {version.radar} - v{version.version} {
-                                            version.fork !== null ? `(fork ${version.fork} - version ${version.fork_version})` : ''
+                                        {version.radar} - version {version.version} {
+                                            version.fork !== null ? `(fork ${version.fork} - v${version.fork_version})` : ''
                                         }
                                     </option>
                                 )
@@ -156,16 +174,8 @@ class RadarVersions extends React.Component {
                                             className="submit-btn btn btn-lg btn-primary"
                                         />
                                     </Link>
-                                    <input
-                                        readOnly
-                                        value="Fork"
-                                        className="submit-btn btn btn-lg btn-primary"
-                                        onClick={function(e) {
-                                            parent.fork();
-                                        }}
-                                    />
                                 </div>
-                            : null
+                                : null
                         }
                     </div>
                 </div>
@@ -173,7 +183,7 @@ class RadarVersions extends React.Component {
                     this.state.selectedVersion ?
                         <iframe
                             id="radar-preview"
-                            src={`${process.env.REACT_APP_RADAR_URL}?sheetId=markdown&version=${this.state.selectedVersion}`}
+                            src={previewUrl}
                             style={{
                                 border: "none",
                                 marginTop: "1em",

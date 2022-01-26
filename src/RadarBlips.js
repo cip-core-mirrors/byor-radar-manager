@@ -472,13 +472,19 @@ class RadarBlips extends React.Component {
 
         const radarId = this.props.match.params.radarId;
 
-        const response4 = await this.props.callApi('GET', `${this.props.baseUrl}/radar/${radarId}`);
-        const radarVersions = await response4.json();
+        const queryString = new URLSearchParams(this.props.location.search);
+        const radarVersion = queryString.get('version');
+        const fork = queryString.get('fork');
+        const forkVersion = queryString.get('forkVersion');
 
-        const radarVersion = radarVersions.length;
+        this.props.onRadarVersionChange(radarId, radarVersion, fork, forkVersion);
+
+        let url = `${this.props.baseUrl}/radar/${radarId}/${radarVersion}/blip-links`;
+        if (fork !== undefined ) url += `?fork=${fork}`;
+        if (forkVersion !== undefined) url += `&forkVersion=${forkVersion}`;
 
         let blipLinks = [];
-        const response2 = await this.props.callApi('GET', `${this.props.baseUrl}/radar/${radarId}/${radarVersion}/blip-links`);
+        const response2 = await this.props.callApi('GET', url);
         if (response2.ok) {
             blipLinks = await response2.json();
             const sectors = blipLinks.map(blipLink => blipLink.sector).filter(this.onlyUnique);

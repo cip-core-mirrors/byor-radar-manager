@@ -62,7 +62,7 @@ class App extends React.Component {
       sectors: [],
       rings: [],
       radarId: undefined,
-      radarVersion: undefined,
+      version: undefined,
       fork: undefined,
       forkVersion: undefined,
       authenticated: false,
@@ -112,9 +112,9 @@ class App extends React.Component {
     this.setState(this.state);
   }
 
-  handleRadarVersionChange(radarId, radarVersion, fork, forkVersion) {
+  handleRadarVersionChange(radarId, version, fork, forkVersion) {
     this.state.radarId = radarId;
-    this.state.radarVersion = radarVersion;
+    this.state.version = version;
     this.state.fork = fork;
     this.state.forkVersion = forkVersion;
     this.setState(this.state);
@@ -175,7 +175,7 @@ class App extends React.Component {
     })
   }
 
-  async handleSubmit() {
+  async handleSubmit(arg) {
     const links = [];
     let sectorIndex = 0;
     for (const sector of this.state.blips.slice(1)) {
@@ -207,10 +207,16 @@ class App extends React.Component {
             value: param.value || param.default,
           };
         }),
-      version: this.state.radarVersion,
     };
 
-    if (this.state.fork) data.fork = this.state.fork;
+    for (const key of arg.keys) {
+      if (this.state[key] !== undefined) data[key] = this.state[key];
+    }
+    delete arg.keys;
+    
+    for (const entry of Object.entries(arg)) {
+      data[entry[0]] = entry[1];
+    }
 
     return await this.callApi('PUT', `${baseUrl}/radar/${this.state.radarId}`, data);
   }
@@ -220,8 +226,6 @@ class App extends React.Component {
     
     let paths = window.location.pathname.split('/').slice(1);
     paths = paths.slice(paths.length - 2);
-    const endPath = paths[1];
-    const beforeEndPath = paths[0];
 
     const navbar = <Navbar
       onUserInfoChange={this.handleUserInfoChange}
@@ -237,27 +241,35 @@ class App extends React.Component {
       <div className="App">
         {navbar}
         <Switch>
-          <Route path="/radars/:radarId/versions/:version">
+          <Route path="/radars/:radarId/edit">
             <div className="edit-radar">
               <RadarBlips
                 onBlipsChange={this.handleBlipsChange}
                 onSectorNameChange={this.handleSectorNameChange}
                 onRingNameChange={this.handleRingNameChange}
+                onRadarVersionChange={this.handleRadarVersionChange}
                 baseUrl={baseUrl}
                 callApi={this.callApi}
                 isLoggingIn={this.state.isLoggingIn}
               />
               <Parameters
                 onParamsChange={this.handleParamsChange}
-                radarVersion={this.state.radarVersion}
                 parameters={this.state.parameters}
                 baseUrl={baseUrl}
                 callApi={this.callApi}
                 isLoggingIn={this.state.isLoggingIn}
               />
               <Submit
-                onSubmit={async function(e) {
-                  return await parent.handleSubmit();
+                key={this.state.userInfo}
+                baseUrl={baseUrl}
+                callApi={this.callApi}
+                userInfo={this.state.userInfo}
+                radarId={this.state.radarId}
+                version={this.state.version}
+                fork={this.state.fork}
+                forkVersion={this.state.forkVersion}
+                onSubmit={async function(arg) {
+                  return await parent.handleSubmit(arg);
                 }}
               />
             </div>
