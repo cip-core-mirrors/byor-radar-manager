@@ -71,7 +71,7 @@ class Submit extends React.Component {
                         <input
                             //type="submit"
                             readOnly
-                            value="Save"
+                            value="Save version"
                             className={`submit-btn btn btn-lg ${this.state.success === undefined ? 'btn-primary' : (this.state.success ? 'btn-success' : 'btn-danger')}`}
                             onClick={function(e) {
                                 parent.handleSubmit({
@@ -86,7 +86,7 @@ class Submit extends React.Component {
                         <input
                             //type="submit"
                             readOnly
-                            value="Commit"
+                            value="New fork version"
                             className={`submit-btn btn btn-lg ${this.state.success === undefined ? 'btn-primary' : (this.state.success ? 'btn-success' : 'btn-danger')}`}
                             onClick={function(e) {
                                 parent.handleSubmit({
@@ -116,7 +116,7 @@ class Submit extends React.Component {
                         <input
                             //type="submit"
                             readOnly
-                            value="New version"
+                            value="New radar version"
                             className={`submit-btn btn btn-lg ${this.state.success === undefined ? 'btn-primary' : (this.state.success ? 'btn-success' : 'btn-danger')}`}
                             onClick={function(e) {
                                 parent.handleSubmit({
