@@ -480,8 +480,8 @@ class RadarBlips extends React.Component {
         this.props.onRadarVersionChange(radarId, radarVersion, fork, forkVersion);
 
         let url = `${this.props.baseUrl}/radar/${radarId}/${radarVersion}/blip-links`;
-        if (fork !== undefined ) url += `?fork=${fork}`;
-        if (forkVersion !== undefined) url += `&forkVersion=${forkVersion}`;
+        if (fork !== undefined && fork !== null) url += `?fork=${fork}`;
+        if (forkVersion !== undefined && forkVersion !== null) url += `&forkVersion=${forkVersion}`;
 
         let blipLinks = [];
         const response2 = await this.props.callApi('GET', url);

@@ -95,6 +95,7 @@ class RadarVersions extends React.Component {
 
         let previewUrl;
         if (this.state.selectedVersion) {
+            console.log(this.state.selectedVersion)
             previewUrl = `${process.env.REACT_APP_RADAR_URL}?sheetId=${this.state.selectedVersion.radar}`;
             if (this.state.selectedVersion.version !== null) previewUrl += `&version=${this.state.selectedVersion.version}`;
             if (this.state.selectedVersion.fork !== null) previewUrl += `&fork=${this.state.selectedVersion.fork}`;

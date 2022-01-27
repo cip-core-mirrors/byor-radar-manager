@@ -139,7 +139,14 @@ class App extends React.Component {
     if (data) config.body = JSON.stringify(data);
 
     return new Promise(async function(resolve, reject) {
-      let response = await fetch(url, config);
+      let response;
+      try {
+        response = await fetch(url, config);
+      } catch (e) {
+        reject();
+        return;
+      }
+
       if (response.status === 401) {
         window.localStorage.removeItem('access_token');
         if (!signInWindow) {

@@ -51,8 +51,8 @@ class Parameters extends React.Component {
         const forkVersion = queryString.get('forkVersion');
 
         let url = `${this.props.baseUrl}/radar/${radarId}/${radarVersion}/parameters`;
-        if (fork !== undefined ) url += `?fork=${fork}`;
-        if (forkVersion !== undefined) url += `&forkVersion=${forkVersion}`;
+        if (fork !== undefined && fork !== null) url += `?fork=${fork}`;
+        if (forkVersion !== undefined && forkVersion !== null) url += `&forkVersion=${forkVersion}`;
 
         const response = await this.props.callApi('GET', url);
         const data = await response.json();
