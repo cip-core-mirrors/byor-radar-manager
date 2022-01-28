@@ -1,5 +1,5 @@
 .radar-version-buttons {
     display: grid;
-    grid-auto-flow: column;
     grid-column-gap: 1em;
+    grid-row-gap: 1em;
 }

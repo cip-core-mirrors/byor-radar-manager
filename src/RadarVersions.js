@@ -4,7 +4,7 @@ import {
 } from "react-router-dom";
 
 import Spinner from './Spinner';
-import './Parameters.css';
+import './RadarVersions.css';
 import { Link } from 'react-router-dom/cjs/react-router-dom.min';
 
 class RadarVersions extends React.Component {
@@ -14,6 +14,9 @@ class RadarVersions extends React.Component {
         this.state = {
             isFirstRefresh: true,
             isLoading: true,
+            success1: undefined,
+            success2: undefined,
+            submitting: false,
             radarId: this.props.match.params.radarId,
             versions: [],
             selectedVersion: undefined,
@@ -88,6 +91,33 @@ class RadarVersions extends React.Component {
         return data;
     }
 
+    async deleteRadarVersion() {
+        if (this.state.submitting) return;
+
+        this.state.submitting = true;
+        this.setState(this.state);
+
+        const selectedVersion = this.state.selectedVersion;
+
+        let url = `${this.props.baseUrl}/radar/${selectedVersion.radar}/versions/${selectedVersion.id}`;
+
+        const response = await this.props.callApi('DELETE', url);
+        this.state.success1 = response.ok;
+        if (this.state.success1) {
+            const index = this.state.versions.map(v => v.id).indexOf(selectedVersion.id);
+            this.state.versions.splice(index, 1);
+        }
+
+        this.setState(this.state);
+        
+        const parent = this;
+        setTimeout(() => {
+            parent.state.success1 = undefined;
+            parent.state.submitting = false;
+            parent.setState(this.state);
+        }, 5000);
+    }
+
     render() {
         if (this.props.isLoggingIn || this.state.isLoading) return <Spinner />;
 
@@ -95,7 +125,6 @@ class RadarVersions extends React.Component {
 
         let previewUrl;
         if (this.state.selectedVersion) {
-            console.log(this.state.selectedVersion)
             previewUrl = `${process.env.REACT_APP_RADAR_URL}?sheetId=${this.state.selectedVersion.radar}`;
             if (this.state.selectedVersion.version !== null) previewUrl += `&version=${this.state.selectedVersion.version}`;
             if (this.state.selectedVersion.fork !== null) previewUrl += `&fork=${this.state.selectedVersion.fork}`;
@@ -165,6 +194,9 @@ class RadarVersions extends React.Component {
                             parent.state.selectedVersion !== undefined ?
                                 <div
                                     className="radar-version-buttons"
+                                    style={{
+                                        marginTop: '1em',
+                                    }}
                                 >
                                     <Link
                                         to={parent.state.editLink}
@@ -173,8 +205,24 @@ class RadarVersions extends React.Component {
                                             readOnly
                                             value="Edit"
                                             className="submit-btn btn btn-lg btn-primary"
+                                            style={{
+                                                gridRow: 1,
+                                                gridColumn: 1,
+                                            }}
                                         />
                                     </Link>
+                                    <input
+                                        readOnly
+                                        value="Delete"
+                                        className={`submit-btn btn btn-lg ${this.state.success1 === undefined ? 'btn-primary' : (this.state.success1 ? 'btn-success' : 'btn-danger')}`}
+                                        style={{
+                                            gridRow: 1,
+                                            gridColumn: 2,
+                                        }}
+                                        onClick={async function(e) {
+                                            parent.deleteRadarVersion();
+                                        }}
+                                    />
                                 </div>
                                 : null
                         }
