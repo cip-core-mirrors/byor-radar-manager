@@ -129,7 +129,7 @@ class RadarVersions extends React.Component {
         this.state.success1 = response.ok;
         if (this.state.success1) {
             const index = this.state.versions.map(v => v.id).indexOf(selectedVersion.id);
-            this.state.versions.splice(index, 1);
+            if (index !== -1) this.state.versions.splice(index, 1);
             this.state.selectedVersion = undefined;
         }
 
@@ -205,7 +205,7 @@ class RadarVersions extends React.Component {
         this.state.success4 = response.ok;
         if (this.state.success4) {
             const index = this.state.tags.map(t => t.name).indexOf(tagName);
-            this.state.tags.splice(index, 1);
+            if (index !== 1) this.state.tags.splice(index, 1);
             this.state.selectedTag = undefined;
         }
 
