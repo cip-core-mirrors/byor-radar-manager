@@ -1,5 +1,39 @@
+.radar-versions-select {
+    display: grid;
+    grid-auto-flow: row;
+    height: fit-content;
+    grid-row-gap: 1em;
+}
+
+.radar-versions-table {
+}
+
+.radar-version-buttons-grid {
+    display: grid;
+    grid-auto-flow: row;
+    grid-column-gap: 1em;
+    grid-row-gap: 1em;
+}
+
 .radar-version-buttons {
     display: grid;
     grid-column-gap: 1em;
     grid-row-gap: 1em;
+}
+
+.create-tag {
+    display: grid;
+    grid-auto-flow: row;
+    grid-row-gap: 1em;
+    width: min-content;
+}
+
+.radar-tags {
+    display: grid;
+    grid-auto-flow: row;
+    grid-row-gap: 1em;
+}
+
+.small-btn {
+    max-width: 200px !important;
 }
