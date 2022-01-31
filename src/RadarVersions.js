@@ -169,7 +169,7 @@ class RadarVersions extends React.Component {
             if (selectedVersion.fork_version !== undefined && selectedVersion.fork_version !== null) radarVersionId += `-${selectedVersion.fork_version}`;
 
             const index = this.state.tags.map(t => t.name).indexOf(tagName);
-            this.state.tags.splice(index, 1);
+            if (index !== -1) this.state.tags.splice(index, 1);
 
             this.state.tags.push({
                 id: `${selectedVersion.radar}-${tagName}`,
