@@ -162,11 +162,14 @@ class RadarVersions extends React.Component {
 
         const response = await this.props.callApi('POST', url, body);
         this.state.success3 = response.ok;
-        
+
         if (this.state.success3) {
             let radarVersionId = `${selectedVersion.radar}-${selectedVersion.version}`;
             if (selectedVersion.fork !== undefined && selectedVersion.fork !== null) radarVersionId += `-${selectedVersion.fork}`;
             if (selectedVersion.fork_version !== undefined && selectedVersion.fork_version !== null) radarVersionId += `-${selectedVersion.fork_version}`;
+
+            const index = this.state.tags.map(t => t.name).indexOf(tagName);
+            this.state.tags.splice(index, 1);
 
             this.state.tags.push({
                 id: `${selectedVersion.radar}-${tagName}`,
