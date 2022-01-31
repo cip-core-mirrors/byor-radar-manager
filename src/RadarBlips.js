@@ -240,6 +240,20 @@ class RadarBlips extends React.Component {
         const destination = this.getList(droppableDestination.droppableId);
 
         const [removed] = source.splice(droppableSource.index, 1);
+
+        if (droppableSource.droppableId === '0-0') {
+            for (const sector of this.state.lists.slice(1)) {
+                for (const ring of sector) {
+                    for (const blip of ring) {
+                        if (blip.id === removed.id) {
+                            source.splice(droppableSource.index, 0, removed);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+        
         const inserted = {
             id: removed.id,
             id_version: `${removed.id}-${removed.version}`,
@@ -247,7 +261,6 @@ class RadarBlips extends React.Component {
             version: removed.version,
             value: removed.value || this.state.selectedDefaultRef,
         };
-
         destination.splice(droppableDestination.index, 0, inserted);
 
         if (droppableDestination.droppableId !== '0-0') {
@@ -500,6 +513,7 @@ class RadarBlips extends React.Component {
 
             //this.handleParamsChange();
 
+            const usingBlips = [];
             for (const blipLink of blipLinks) {
                 const sectorIndex = this.state.sectors.indexOf(blipLink.sector)
                 const ringIndex = this.state.rings.indexOf(blipLink.ring)
@@ -507,22 +521,32 @@ class RadarBlips extends React.Component {
                 const ring = sector[ringIndex];
                 const blipVersion = blipLink.version;
                 const blipId = blipLink.id;
+                
+                const usedBlip = usingBlips.filter(blip => blip.id === blipId && blip.version === blipVersion)[0];
+                if (usedBlip) continue;
+
                 const rawBlipVersions = blips[blipId];
-                const rawBlip = rawBlipVersions.splice(blipVersion - 1, 1)[0];
+                const rawBlip = rawBlipVersions[blipVersion - 1];
                 if (!rawBlip) continue;
 
                 const toPush = {
                     id: rawBlip.id,
-                    id_version: rawBlip.id_version,
+                    id_version: `${rawBlip.id}-${rawBlip.version}`,
                     name: rawBlip.name,
                     version: rawBlip.version,
                     value: blipLink.value,
                 };
                 ring.push(toPush);
+                usingBlips.push({
+                    id: rawBlip.id,
+                    version: rawBlip.version,
+                });
+            }
 
-                if (rawBlipVersions.length === 0) {
-                    delete blips[blipLink.blip];
-                }
+            for (const usingBlip of usingBlips) {
+                const rawBlipVersions = blips[usingBlip.id];
+                rawBlipVersions.splice(usingBlip.version - 1, 1);
+                if (rawBlipVersions.length === 0) delete blips[usingBlips.id];
             }
 
             // Remove used blips from list
