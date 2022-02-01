@@ -443,6 +443,16 @@ class Themes extends React.Component {
             let themeSelf = undefined;
             if (this.state.selectedTheme) {
                 editors = this.state.themesPermissions.filter(permission => permission.id === this.state.selectedTheme);
+                editors.sort(function(a, b) {
+                    const isOwnerA = a.rights.split(',').indexOf('owner') !== -1;
+                    if (isOwnerA) return -1;
+                    const isOwnerB = b.rights.split(',').indexOf('owner') !== -1;
+                    if (isOwnerB) return 1;
+
+                    if (a.user_id < b.user_id) return 1;
+                    else if (a.user_id > b.user_id) return -1;
+                    return 0;
+                });
                 themeSelf = editors.filter(permission => permission.user_id === this.props.userInfo.mail)[0];
                 if (!themeSelf) themeSelf = {
                     id: this.state.selectedTheme,
@@ -539,10 +549,8 @@ class Themes extends React.Component {
                                                     }}
                                                 >
                                                     &nbsp;
-                                                    {this.props.userInfo.mail === permission.user_id ? '' :
-                                                        (
-                                                            permission.rights.indexOf('owner') !== -1 ? '- owner' : ''
-                                                        )
+                                                    {
+                                                        permission.rights.indexOf('owner') !== -1 ? '- owner' : ''
                                                     }
                                                 </label>
                                             </label>
@@ -553,9 +561,16 @@ class Themes extends React.Component {
                                                     type="button"
                                                     onClick={async function(e) {
                                                         const editorsCopy = JSON.parse(JSON.stringify(editors));
-                                                        const editorsId = editorsCopy.map(editor => editor.id);
+                                                        const editorsId = editorsCopy.map(editor => editor.user_id);
                                                         const index = editorsId.indexOf(permission.user_id);
-                                                        editorsCopy.splice(index, 1);
+                                                        const removed = editorsCopy.splice(index, 1)[0];
+                                                        if (removed.rights.split(',').indexOf('owner') !== -1 && editorsCopy.length > 0) {
+                                                            const firstEditor = editorsCopy[0];
+                                                            const rights = firstEditor.rights.split(',');
+                                                            rights.push('owner');
+                                                            firstEditor.rights = rights.join(',');
+                                                        }
+
                                                         await parent.editEditors(editorsCopy, parent.state.selectedTheme);
                                                     }}
                                                 >
