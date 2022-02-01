@@ -130,7 +130,7 @@ class RadarBlips extends React.Component {
             
             svgRefs: {},
 
-            selectedDefaultRef: 0,
+            selectedDefaultRef: 1,
             defaultRef: undefined,
             defaultRefs: {},
 
@@ -157,7 +157,7 @@ class RadarBlips extends React.Component {
 
         if (blip) {
             const svgRefs = this.state.svgRefs[blip.id_version];
-            const svg = svgRefs[blip.value] || this.state.defaultRefs[this.state.selectedDefaultRef];
+            const svg = svgRefs[blip.value - 1] || this.state.defaultRefs[this.state.selectedDefaultRef];
             const classList = svg.classList;
             for (const svgObject of svgValues) {
                 if (classList.contains(svgObject.name)) {
@@ -190,13 +190,13 @@ class RadarBlips extends React.Component {
         if (blip) {
             const svg = d3.select(blip.ref);
             svg.selectAll("*").remove();
-            const svgObject = svgValues[blip.value];
+            const svgObject = svgValues[blip.value - 1];
             svgObject.callback(blip.ref);
         } else {
             for (const blip of this.state.lists.slice(1).flat().flat()) {
                 const svg = d3.select(blip.ref);
                 svg.selectAll("*").remove();
-                const svgObject = svgValues[blip.value];
+                const svgObject = svgValues[blip.value - 1];
                 svgObject.callback(blip.ref);
             }
         }
@@ -832,7 +832,7 @@ class RadarBlips extends React.Component {
                                                                                 className="btn btn-sm btn-outline-secondary dropdownMenuButton"
                                                                             >
                                                                                 <svg
-                                                                                    className={svgValues[item.value].name}
+                                                                                    className={svgValues[item.value - 1].name}
                                                                                     ref={node => item.ref = node}
                                                                                 />
                                                                             </button>

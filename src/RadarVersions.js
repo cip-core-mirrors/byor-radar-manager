@@ -205,7 +205,7 @@ class RadarVersions extends React.Component {
         this.state.success4 = response.ok;
         if (this.state.success4) {
             const index = this.state.tags.map(t => t.name).indexOf(tagName);
-            if (index !== 1) this.state.tags.splice(index, 1);
+            if (index !== -1) this.state.tags.splice(index, 1);
             this.state.selectedTag = undefined;
         }
 
