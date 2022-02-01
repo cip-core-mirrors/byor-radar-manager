@@ -150,7 +150,7 @@ class RadarVersions extends React.Component {
         this.setState(this.state);
 
         const selectedVersion = this.state.selectedVersion;
-        const tagName = this.state.tagName;
+        const tagName = this.state.tagName.toLowerCase().replace(/[ _]/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
 
         const url = `${this.props.baseUrl}/radar/${selectedVersion.radar}/tags`;
         const body = {
