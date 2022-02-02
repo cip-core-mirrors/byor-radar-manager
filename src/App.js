@@ -204,6 +204,14 @@ class App extends React.Component {
       sectorIndex++;
     }
 
+    for (const param of this.state.parameters) {
+      if (param.name === 'sectorsOrder') {
+        param.value = this.state.sectors.join(',');
+      } else if (param.name === 'ringsOrder') {
+        param.value = this.state.rings.join(',');
+      }
+    }
+
     const data = {
       links: links,
       parameters: this.state.parameters
@@ -225,6 +233,11 @@ class App extends React.Component {
       data[entry[0]] = entry[1];
     }
 
+    /*
+    return {
+      ok: true,
+    }
+    */
     return await this.callApi('PUT', `${baseUrl}/radar/${this.state.radarId}`, data);
   }
 
@@ -258,6 +271,7 @@ class App extends React.Component {
                 baseUrl={baseUrl}
                 callApi={this.callApi}
                 isLoggingIn={this.state.isLoggingIn}
+                parameters={this.state.parameters}
               />
               <Parameters
                 onParamsChange={this.handleParamsChange}

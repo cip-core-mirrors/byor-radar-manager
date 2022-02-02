@@ -206,7 +206,7 @@ class RadarBlips extends React.Component {
 
     async componentDidMount() {
         if (this.state.isFirstRefresh) {
-            if (!this.props.isLoggingIn) {
+            if (!this.props.isLoggingIn && this.props.parameters.length > 0) {
                 this.firstRefresh();
             }
         }
@@ -346,6 +346,10 @@ class RadarBlips extends React.Component {
         }
 
         this.handleParamsChange();
+        const parent = this;
+        setTimeout(function() {
+            parent.drawSvgs();
+        }, 200);
     }
 
     deleteRing(event) {
@@ -384,6 +388,10 @@ class RadarBlips extends React.Component {
         this.state.lists[destIndex + 1] = srcSector;
 
         this.handleParamsChange();
+        const parent = this;
+        setTimeout(function() {
+            parent.drawSvgs();
+        }, 200);
     }
 
     deleteSector(event) {
@@ -498,14 +506,17 @@ class RadarBlips extends React.Component {
 
         let blipLinks = [];
         const response2 = await this.props.callApi('GET', url);
+
         if (response2.ok) {
             blipLinks = await response2.json();
-            const sectors = blipLinks.map(blipLink => blipLink.sector).filter(this.onlyUnique);
+            //const sectors = blipLinks.map(blipLink => blipLink.sector).filter(this.onlyUnique);
+            const sectors = this.props.parameters.filter(param => param.name === 'sectorsOrder')[0].value.split(',');
             for (const sector of sectors) {
                 this.state.lists.push([]);
                 this.state.sectors.push(sector);
             }
-            const rings = blipLinks.map(blipLink => blipLink.ring).filter(this.onlyUnique);
+            //const rings = blipLinks.map(blipLink => blipLink.ring).filter(this.onlyUnique);
+            const rings = this.props.parameters.filter(param => param.name === 'ringsOrder')[0].value.split(',');
             for (const ring of rings) {
                 this.newRing();
                 this.state.rings[this.state.rings.length - 1] = ring;
@@ -571,7 +582,7 @@ class RadarBlips extends React.Component {
 
     async componentDidUpdate() {
         if (this.state.isFirstRefresh) {
-            if (!this.props.isLoggingIn) {
+            if (!this.props.isLoggingIn && this.props.parameters.length > 0) {
                 this.firstRefresh();
             }
         }
@@ -709,8 +720,6 @@ class RadarBlips extends React.Component {
                                 >
                                     <i className="icon icon-md">delete</i>
                                 </button>);
-                                // Move rings not yet implemented
-                                /*
                                 buttons.push(<button
                                     className="btn btn-lg ring-left-btn"
                                     id={`ring-left-${indexRing}`}
@@ -727,7 +736,6 @@ class RadarBlips extends React.Component {
                                 >
                                     <i className="icon icon-md">arrow_forward</i>
                                 </button>);
-                                */
                                 buttons.push(<input
                                     className={`ring-name theme-${indexRing}`}
                                     id={`ring-name-${indexRing}`}
@@ -754,8 +762,6 @@ class RadarBlips extends React.Component {
                                 >
                                     <i className="icon icon-md">delete</i>
                                 </button>);
-                                // Move sectors not yet implemented
-                                /*
                                 buttons.push(<button
                                     className="btn btn-lg sector-left-btn"
                                     id={`sector-left-${indexSector}`}
@@ -772,7 +778,6 @@ class RadarBlips extends React.Component {
                                 >
                                     <i className="icon icon-md">arrow_forward</i>
                                 </button>);
-                                */
                                 buttons.push(<input
                                     className="form-control form-control-alt sector-name"
                                     id={`sector-name-${indexSector}`}

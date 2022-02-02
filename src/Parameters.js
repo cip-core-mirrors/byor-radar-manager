@@ -113,6 +113,15 @@ class Parameters extends React.Component {
             }
         }
 
+        const uniqueThemes = [];
+        const themeIdsSeen = {};
+        for (const theme of (this.state.themes || [])) {
+            const seen = themeIdsSeen[theme.id];
+            if (seen) continue;
+            themeIdsSeen[theme.id] = true;
+            uniqueThemes.push(theme);
+        }
+
         const parent = this;
 
         return (
@@ -201,13 +210,13 @@ class Parameters extends React.Component {
                                             if (target.tagName !== 'SELECT') return;
                                             param.value = target.value;
                                         }}
+                                        defaultValue={param.value || param.default}
                                     >
                                         {
-                                            parent.state.themes.map(theme => 
+                                            uniqueThemes.map(theme => 
                                                 <option
                                                     value={theme.id}
                                                     key={theme.id}
-                                                    selected={param.value ? theme.id === param.value : theme.id === param.defaultValue}
                                                 >
                                                     {theme.id}
                                                 </option>
@@ -244,6 +253,8 @@ class Parameters extends React.Component {
                         )
                     } else {
                         const fieldParams = fieldSets[param.name];
+                        if (param.name === 'Order') return null; // Disable "Order" fieldset
+
                         return (
                             <fieldset key={param.name}>
                                 <legend>{param.name}</legend>
