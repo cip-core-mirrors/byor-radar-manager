@@ -22,6 +22,8 @@ class Themes extends React.Component {
             success2: undefined,
             deleteSuccess: undefined,
             returnMessage2: undefined,
+            success3: undefined,
+            returnMessage3: undefined,
             newTheme: undefined,
             selectedTheme: undefined,
             defaultParameters: [],
@@ -177,6 +179,40 @@ class Themes extends React.Component {
         }
         
         this.state.submitting = false;
+        this.setState(this.state);
+    }
+
+    async duplicateTheme(oldThemeId, newThemeId) {
+        if (this.state.submitting) return;
+        this.state.submitting = true;
+        this.state.success3 = undefined;
+        this.state.returnMessage3 = undefined;
+        this.setState(this.state);
+        
+        const url = `${this.props.baseUrl}/themes/${oldThemeId}/duplicate`;
+        const body = { id: newThemeId };
+        const response = await this.props.callApi('POST', url, body);
+        this.state.success3 = response.ok;
+
+        const parent = this;
+        if (response.ok) {
+            this.state.returnMessage3 = "Successfully duplicated theme";
+            this.state.selectedTheme = undefined;
+            await this.reloadThemesList();
+            setTimeout(function() {
+                parent.state.success3 = undefined;
+                parent.state.submitting = false;
+                parent.state.returnMessage3 = undefined;
+                parent.setState(parent.state);
+            }, 5000);
+        } else {
+            const data = await response.json();
+            this.state.returnMessage3 = data.message;
+            setTimeout(function() {
+                parent.state.submitting = false;
+                parent.setState(parent.state);
+            }, 2000);
+        }
         this.setState(this.state);
     }
 
@@ -611,6 +647,40 @@ class Themes extends React.Component {
                                     </div> : null
                                 }
                             </ul>
+                            : null
+                        }
+                        {
+                            this.state.selectedTheme ?
+                                <div className="duplicate-theme">
+                                    <label className="paramName">Theme name &nbsp;:</label>
+                                    <input
+                                        type="text"
+                                        className="form-control form-control-alt"
+                                        id={"duplicate-theme"}
+                                    />
+                                    <input
+                                        readOnly={true}
+                                        style={{
+                                            alignSelf: "center",
+                                        }}
+                                        className="submit-btn btn btn-lg btn-primary"
+                                        value="Duplicate"
+                                        onClick={function(e) {
+                                            const oldThemeId = parent.state.selectedTheme;
+                                            const element = document.getElementById('duplicate-theme')
+                                            const newThemeId = (element.value || '').trim();
+                                            parent.duplicateTheme(oldThemeId, newThemeId);
+                                        }}
+                                    />
+                                    <label
+                                        className={this.state.success3 ? "text-success" : "text-danger"}
+                                        style={{
+                                            display: this.state.returnMessage3 ? 'inline-block' : 'none',
+                                        }}
+                                    >
+                                        {this.state.returnMessage3}
+                                    </label>
+                                </div>
                             : null
                         }
                     </div>

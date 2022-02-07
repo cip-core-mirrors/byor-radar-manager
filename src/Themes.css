@@ -16,7 +16,7 @@
 }
 
 .themes-permissions {
-    height: 100%;
+    height: fit-content;
 }
 
 .form-group-grid {
@@ -51,4 +51,10 @@
     display: grid;
     grid-auto-flow: column;
     grid-column-gap: 1em;
+}
+
+.duplicate-theme {
+    display: grid;
+    grid-auto-flow: row;
+    grid-row-gap: 0.5em;
 }
