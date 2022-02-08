@@ -36,6 +36,8 @@ class Parameters extends React.Component {
         await this.loadThemes();
         await this.loadParameters();
 
+        this.props.onParamsLoaded(true);
+
         this.state.isLoading = false;
         this.setState(this.state);
     }

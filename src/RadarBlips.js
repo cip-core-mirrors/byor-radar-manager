@@ -206,7 +206,7 @@ class RadarBlips extends React.Component {
 
     async componentDidMount() {
         if (this.state.isFirstRefresh) {
-            if (!this.props.isLoggingIn && this.props.parameters.length > 0) {
+            if (!this.props.isLoggingIn && this.props.isParamsLoaded) {
                 this.firstRefresh();
             }
         }
@@ -510,13 +510,15 @@ class RadarBlips extends React.Component {
         if (response2.ok) {
             blipLinks = await response2.json();
             //const sectors = blipLinks.map(blipLink => blipLink.sector).filter(this.onlyUnique);
-            const sectors = this.props.parameters.filter(param => param.name === 'sectorsOrder')[0].value.split(',');
+            const sectorsOrder = this.props.parameters.filter(param => param.name === 'sectorsOrder')[0].value;
+            const sectors = sectorsOrder ? sectorsOrder.split(',') : [];
             for (const sector of sectors) {
                 this.state.lists.push([]);
                 this.state.sectors.push(sector);
             }
             //const rings = blipLinks.map(blipLink => blipLink.ring).filter(this.onlyUnique);
-            const rings = this.props.parameters.filter(param => param.name === 'ringsOrder')[0].value.split(',');
+            const ringsOrder = this.props.parameters.filter(param => param.name === 'ringsOrder')[0].value;
+            const rings = ringsOrder ? ringsOrder.split(',') : [];
             for (const ring of rings) {
                 this.newRing();
                 this.state.rings[this.state.rings.length - 1] = ring;
@@ -526,8 +528,18 @@ class RadarBlips extends React.Component {
 
             const usingBlips = [];
             for (const blipLink of blipLinks) {
-                const sectorIndex = this.state.sectors.indexOf(blipLink.sector)
-                const ringIndex = this.state.rings.indexOf(blipLink.ring)
+                let sectorIndex = parseInt(this.state.sectors.indexOf(blipLink.sector));
+                if (sectorIndex === -1) {
+                    this.newSector();
+                    this.state.sectors[this.state.sectors.length - 1] = blipLink.sector;
+                    sectorIndex = this.state.sectors.length - 1;
+                }
+                let ringIndex = parseInt(this.state.rings.indexOf(blipLink.ring))
+                if (ringIndex === -1) {
+                    this.newRing();
+                    this.state.rings[this.state.rings.length - 1] = blipLink.ring;
+                    ringIndex = this.state.rings.length - 1;
+                }
                 const sector = this.state.lists.slice(1)[sectorIndex];
                 const ring = sector[ringIndex];
                 const blipVersion = blipLink.version;
@@ -582,7 +594,7 @@ class RadarBlips extends React.Component {
 
     async componentDidUpdate() {
         if (this.state.isFirstRefresh) {
-            if (!this.props.isLoggingIn && this.props.parameters.length > 0) {
+            if (!this.props.isLoggingIn && this.props.isParamsLoaded) {
                 this.firstRefresh();
             }
         }

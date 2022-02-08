@@ -52,9 +52,11 @@ class App extends React.Component {
     this.handleSectorNameChange = this.handleSectorNameChange.bind(this);
     this.handleRingNameChange = this.handleRingNameChange.bind(this);
     this.handleRadarVersionChange = this.handleRadarVersionChange.bind(this);
+    this.setParamsLoaded = this.setParamsLoaded.bind(this);
 
     this.state = {
       isLoggingIn: true,
+      paramsLoaded: false,
       parameters: [],
       blips: [
           [],
@@ -117,6 +119,11 @@ class App extends React.Component {
     this.state.version = version;
     this.state.fork = fork;
     this.state.forkVersion = forkVersion;
+    this.setState(this.state);
+  }
+
+  setParamsLoaded(isParamsLoaded) {
+    this.state.paramsLoaded = isParamsLoaded;
     this.setState(this.state);
   }
 
@@ -272,8 +279,10 @@ class App extends React.Component {
                 callApi={this.callApi}
                 isLoggingIn={this.state.isLoggingIn}
                 parameters={this.state.parameters}
+                isParamsLoaded={this.state.paramsLoaded}
               />
               <Parameters
+                onParamsLoaded={this.setParamsLoaded}
                 onParamsChange={this.handleParamsChange}
                 parameters={this.state.parameters}
                 baseUrl={baseUrl}
@@ -298,6 +307,7 @@ class App extends React.Component {
           <Route path="/radars/:radarId">
             <div className="versions-radar">
               <RadarVersions
+                onParamsLoaded={this.setParamsLoaded}
                 onRadarVersionChange={this.handleRadarVersionChange}
                 baseUrl={baseUrl}
                 callApi={this.callApi}

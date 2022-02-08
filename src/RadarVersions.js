@@ -49,6 +49,7 @@ class RadarVersions extends React.Component {
         this.state.isFirstRefresh = false;
         this.setState(this.state);
 
+        this.props.onParamsLoaded(false);
         await this.loadVersions();
         await this.loadTags();
 
