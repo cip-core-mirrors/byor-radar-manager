@@ -14,6 +14,7 @@ import Blips from './Blips';
 import MyRadars from './MyRadars';
 import AllRadars from './AllRadars';
 import Navbar from './Navbar';
+import RadarVersions from './RadarVersions';
 import Parameters from './Parameters';
 import RadarBlips from './RadarBlips';
 import Submit from './Submit';
@@ -51,16 +52,21 @@ class App extends React.Component {
     this.handleSectorNameChange = this.handleSectorNameChange.bind(this);
     this.handleRingNameChange = this.handleRingNameChange.bind(this);
     this.handleRadarVersionChange = this.handleRadarVersionChange.bind(this);
+    this.setParamsLoaded = this.setParamsLoaded.bind(this);
 
     this.state = {
       isLoggingIn: true,
+      paramsLoaded: false,
       parameters: [],
       blips: [
           [],
       ],
       sectors: [],
       rings: [],
-      radarVersion: undefined,
+      radarId: undefined,
+      version: undefined,
+      fork: undefined,
+      forkVersion: undefined,
       authenticated: false,
       userInfo: undefined,
       permissions: {},
@@ -108,8 +114,16 @@ class App extends React.Component {
     this.setState(this.state);
   }
 
-  handleRadarVersionChange(radarVersion) {
-    this.state.radarVersion = radarVersion;
+  handleRadarVersionChange(radarId, version, fork, forkVersion) {
+    this.state.radarId = radarId;
+    this.state.version = version;
+    this.state.fork = fork;
+    this.state.forkVersion = forkVersion;
+    this.setState(this.state);
+  }
+
+  setParamsLoaded(isParamsLoaded) {
+    this.state.paramsLoaded = isParamsLoaded;
     this.setState(this.state);
   }
 
@@ -132,7 +146,14 @@ class App extends React.Component {
     if (data) config.body = JSON.stringify(data);
 
     return new Promise(async function(resolve, reject) {
-      let response = await fetch(url, config);
+      let response;
+      try {
+        response = await fetch(url, config);
+      } catch (e) {
+        reject();
+        return;
+      }
+
       if (response.status === 401) {
         window.localStorage.removeItem('access_token');
         if (!signInWindow) {
@@ -168,7 +189,7 @@ class App extends React.Component {
     })
   }
 
-  async handleSubmit(radarId) {
+  async handleSubmit(arg) {
     const links = [];
     let sectorIndex = 0;
     for (const sector of this.state.blips.slice(1)) {
@@ -190,6 +211,14 @@ class App extends React.Component {
       sectorIndex++;
     }
 
+    for (const param of this.state.parameters) {
+      if (param.name === 'sectorsOrder') {
+        param.value = this.state.sectors.join(',');
+      } else if (param.name === 'ringsOrder') {
+        param.value = this.state.rings.join(',');
+      }
+    }
+
     const data = {
       links: links,
       parameters: this.state.parameters
@@ -202,7 +231,21 @@ class App extends React.Component {
         }),
     };
 
-    return await this.callApi('PUT', `${baseUrl}/radar/${radarId}`, data);
+    for (const key of arg.keys) {
+      if (this.state[key] !== undefined) data[key] = this.state[key];
+    }
+    delete arg.keys;
+    
+    for (const entry of Object.entries(arg)) {
+      data[entry[0]] = entry[1];
+    }
+
+    /*
+    return {
+      ok: true,
+    }
+    */
+    return await this.callApi('PUT', `${baseUrl}/radar/${this.state.radarId}`, data);
   }
 
   render() {
@@ -210,8 +253,6 @@ class App extends React.Component {
     
     let paths = window.location.pathname.split('/').slice(1);
     paths = paths.slice(paths.length - 2);
-    const endPath = paths[1];
-    const beforeEndPath = paths[0];
 
     const navbar = <Navbar
       onUserInfoChange={this.handleUserInfoChange}
@@ -227,7 +268,7 @@ class App extends React.Component {
       <div className="App">
         {navbar}
         <Switch>
-          <Route path="/radars/:radarId">
+          <Route path="/radars/:radarId/edit">
             <div className="edit-radar">
               <RadarBlips
                 onBlipsChange={this.handleBlipsChange}
@@ -237,20 +278,41 @@ class App extends React.Component {
                 baseUrl={baseUrl}
                 callApi={this.callApi}
                 isLoggingIn={this.state.isLoggingIn}
+                parameters={this.state.parameters}
+                isParamsLoaded={this.state.paramsLoaded}
               />
               <Parameters
+                onParamsLoaded={this.setParamsLoaded}
                 onParamsChange={this.handleParamsChange}
-                radarVersion={this.state.radarVersion}
                 parameters={this.state.parameters}
                 baseUrl={baseUrl}
                 callApi={this.callApi}
                 isLoggingIn={this.state.isLoggingIn}
               />
               <Submit
-                onSubmit={async function(e) {
-                  return await parent.handleSubmit(endPath);
+                key={this.state.userInfo}
+                baseUrl={baseUrl}
+                callApi={this.callApi}
+                userInfo={this.state.userInfo}
+                radarId={this.state.radarId}
+                version={this.state.version}
+                fork={this.state.fork}
+                forkVersion={this.state.forkVersion}
+                onSubmit={async function(arg) {
+                  return await parent.handleSubmit(arg);
                 }}
               />
+            </div>
+          </Route>
+          <Route path="/radars/:radarId">
+            <div className="versions-radar">
+              <RadarVersions
+                onParamsLoaded={this.setParamsLoaded}
+                onRadarVersionChange={this.handleRadarVersionChange}
+                baseUrl={baseUrl}
+                callApi={this.callApi}
+                isLoggingIn={this.state.isLoggingIn}
+              ></RadarVersions>
             </div>
           </Route>
           <Route path="/radars">

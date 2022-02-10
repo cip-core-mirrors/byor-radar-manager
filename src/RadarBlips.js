@@ -157,7 +157,7 @@ class RadarBlips extends React.Component {
 
         if (blip) {
             const svgRefs = this.state.svgRefs[blip.id_version];
-            const svg = svgRefs[blip.value] || this.state.defaultRefs[this.state.selectedDefaultRef];
+            const svg = svgRefs[blip.value - 1] || this.state.defaultRefs[this.state.selectedDefaultRef];
             const classList = svg.classList;
             for (const svgObject of svgValues) {
                 if (classList.contains(svgObject.name)) {
@@ -190,13 +190,13 @@ class RadarBlips extends React.Component {
         if (blip) {
             const svg = d3.select(blip.ref);
             svg.selectAll("*").remove();
-            const svgObject = svgValues[blip.value];
+            const svgObject = svgValues[blip.value - 1];
             svgObject.callback(blip.ref);
         } else {
             for (const blip of this.state.lists.slice(1).flat().flat()) {
                 const svg = d3.select(blip.ref);
                 svg.selectAll("*").remove();
-                const svgObject = svgValues[blip.value];
+                const svgObject = svgValues[blip.value - 1];
                 svgObject.callback(blip.ref);
             }
         }
@@ -206,7 +206,7 @@ class RadarBlips extends React.Component {
 
     async componentDidMount() {
         if (this.state.isFirstRefresh) {
-            if (!this.props.isLoggingIn) {
+            if (!this.props.isLoggingIn && this.props.isParamsLoaded) {
                 this.firstRefresh();
             }
         }
@@ -240,14 +240,27 @@ class RadarBlips extends React.Component {
         const destination = this.getList(droppableDestination.droppableId);
 
         const [removed] = source.splice(droppableSource.index, 1);
+
+        if (droppableSource.droppableId === '0-0') {
+            for (const sector of this.state.lists.slice(1)) {
+                for (const ring of sector) {
+                    for (const blip of ring) {
+                        if (blip.id === removed.id) {
+                            source.splice(droppableSource.index, 0, removed);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+        
         const inserted = {
             id: removed.id,
             id_version: `${removed.id}-${removed.version}`,
             name: removed.name,
             version: removed.version,
-            value: removed.value || this.state.selectedDefaultRef,
+            value: removed.value || this.state.selectedDefaultRef + 1,
         };
-
         destination.splice(droppableDestination.index, 0, inserted);
 
         if (droppableDestination.droppableId !== '0-0') {
@@ -333,6 +346,10 @@ class RadarBlips extends React.Component {
         }
 
         this.handleParamsChange();
+        const parent = this;
+        setTimeout(function() {
+            parent.drawSvgs();
+        }, 200);
     }
 
     deleteRing(event) {
@@ -371,6 +388,10 @@ class RadarBlips extends React.Component {
         this.state.lists[destIndex + 1] = srcSector;
 
         this.handleParamsChange();
+        const parent = this;
+        setTimeout(function() {
+            parent.drawSvgs();
+        }, 200);
     }
 
     deleteSector(event) {
@@ -472,22 +493,32 @@ class RadarBlips extends React.Component {
 
         const radarId = this.props.match.params.radarId;
 
-        const response4 = await this.props.callApi('GET', `${this.props.baseUrl}/radar/${radarId}`);
-        const radarVersions = await response4.json();
+        const queryString = new URLSearchParams(this.props.location.search);
+        const radarVersion = queryString.get('version');
+        const fork = queryString.get('fork');
+        const forkVersion = queryString.get('forkVersion');
 
-        const radarVersion = radarVersions.length;
-        this.props.onRadarVersionChange(radarVersion);
+        this.props.onRadarVersionChange(radarId, radarVersion, fork, forkVersion);
+
+        let url = `${this.props.baseUrl}/radar/${radarId}/${radarVersion}/blip-links`;
+        if (fork !== undefined && fork !== null) url += `?fork=${fork}`;
+        if (forkVersion !== undefined && forkVersion !== null) url += `&forkVersion=${forkVersion}`;
 
         let blipLinks = [];
-        const response2 = await this.props.callApi('GET', `${this.props.baseUrl}/radar/${radarId}/${radarVersion}/blip-links`);
+        const response2 = await this.props.callApi('GET', url);
+
         if (response2.ok) {
             blipLinks = await response2.json();
-            const sectors = blipLinks.map(blipLink => blipLink.sector).filter(this.onlyUnique);
+            //const sectors = blipLinks.map(blipLink => blipLink.sector).filter(this.onlyUnique);
+            const sectorsOrder = this.props.parameters.filter(param => param.name === 'sectorsOrder')[0].value;
+            const sectors = sectorsOrder ? sectorsOrder.split(',') : [];
             for (const sector of sectors) {
                 this.state.lists.push([]);
                 this.state.sectors.push(sector);
             }
-            const rings = blipLinks.map(blipLink => blipLink.ring).filter(this.onlyUnique);
+            //const rings = blipLinks.map(blipLink => blipLink.ring).filter(this.onlyUnique);
+            const ringsOrder = this.props.parameters.filter(param => param.name === 'ringsOrder')[0].value;
+            const rings = ringsOrder ? ringsOrder.split(',') : [];
             for (const ring of rings) {
                 this.newRing();
                 this.state.rings[this.state.rings.length - 1] = ring;
@@ -495,29 +526,50 @@ class RadarBlips extends React.Component {
 
             //this.handleParamsChange();
 
+            const usingBlips = [];
             for (const blipLink of blipLinks) {
-                const sectorIndex = this.state.sectors.indexOf(blipLink.sector)
-                const ringIndex = this.state.rings.indexOf(blipLink.ring)
+                let sectorIndex = parseInt(this.state.sectors.indexOf(blipLink.sector));
+                if (sectorIndex === -1) {
+                    this.newSector();
+                    this.state.sectors[this.state.sectors.length - 1] = blipLink.sector;
+                    sectorIndex = this.state.sectors.length - 1;
+                }
+                let ringIndex = parseInt(this.state.rings.indexOf(blipLink.ring))
+                if (ringIndex === -1) {
+                    this.newRing();
+                    this.state.rings[this.state.rings.length - 1] = blipLink.ring;
+                    ringIndex = this.state.rings.length - 1;
+                }
                 const sector = this.state.lists.slice(1)[sectorIndex];
                 const ring = sector[ringIndex];
                 const blipVersion = blipLink.version;
                 const blipId = blipLink.id;
+                
+                const usedBlip = usingBlips.filter(blip => blip.id === blipId && blip.version === blipVersion)[0];
+                if (usedBlip) continue;
+
                 const rawBlipVersions = blips[blipId];
-                const rawBlip = rawBlipVersions.splice(blipVersion - 1, 1)[0];
+                const rawBlip = rawBlipVersions[blipVersion - 1];
                 if (!rawBlip) continue;
 
                 const toPush = {
                     id: rawBlip.id,
-                    id_version: rawBlip.id_version,
+                    id_version: `${rawBlip.id}-${rawBlip.version}`,
                     name: rawBlip.name,
                     version: rawBlip.version,
                     value: blipLink.value,
                 };
                 ring.push(toPush);
+                usingBlips.push({
+                    id: rawBlip.id,
+                    version: rawBlip.version,
+                });
+            }
 
-                if (rawBlipVersions.length === 0) {
-                    delete blips[blipLink.blip];
-                }
+            for (const usingBlip of usingBlips) {
+                const rawBlipVersions = blips[usingBlip.id];
+                rawBlipVersions.splice(usingBlip.version - 1, 1);
+                if (rawBlipVersions.length === 0) delete blips[usingBlips.id];
             }
 
             // Remove used blips from list
@@ -542,7 +594,7 @@ class RadarBlips extends React.Component {
 
     async componentDidUpdate() {
         if (this.state.isFirstRefresh) {
-            if (!this.props.isLoggingIn) {
+            if (!this.props.isLoggingIn && this.props.isParamsLoaded) {
                 this.firstRefresh();
             }
         }
@@ -590,7 +642,7 @@ class RadarBlips extends React.Component {
                                             {svgValues.map(function(svgObject, indexSvg) {
                                                 return <button
                                                     className="btn btn-lg btn-link dropdown-item"
-                                                    data-value={indexSvg}
+                                                    data-value={indexSvg + 1}
                                                     onClick={parent.setDefaultBlipValue}
                                                     key={indexSvg}
                                                 >
@@ -680,8 +732,6 @@ class RadarBlips extends React.Component {
                                 >
                                     <i className="icon icon-md">delete</i>
                                 </button>);
-                                // Move rings not yet implemented
-                                /*
                                 buttons.push(<button
                                     className="btn btn-lg ring-left-btn"
                                     id={`ring-left-${indexRing}`}
@@ -698,7 +748,6 @@ class RadarBlips extends React.Component {
                                 >
                                     <i className="icon icon-md">arrow_forward</i>
                                 </button>);
-                                */
                                 buttons.push(<input
                                     className={`ring-name theme-${indexRing}`}
                                     id={`ring-name-${indexRing}`}
@@ -725,8 +774,6 @@ class RadarBlips extends React.Component {
                                 >
                                     <i className="icon icon-md">delete</i>
                                 </button>);
-                                // Move sectors not yet implemented
-                                /*
                                 buttons.push(<button
                                     className="btn btn-lg sector-left-btn"
                                     id={`sector-left-${indexSector}`}
@@ -743,7 +790,6 @@ class RadarBlips extends React.Component {
                                 >
                                     <i className="icon icon-md">arrow_forward</i>
                                 </button>);
-                                */
                                 buttons.push(<input
                                     className="form-control form-control-alt sector-name"
                                     id={`sector-name-${indexSector}`}
@@ -803,7 +849,7 @@ class RadarBlips extends React.Component {
                                                                                 className="btn btn-sm btn-outline-secondary dropdownMenuButton"
                                                                             >
                                                                                 <svg
-                                                                                    className={svgValues[item.value].name}
+                                                                                    className={svgValues[item.value - 1].name}
                                                                                     ref={node => item.ref = node}
                                                                                 />
                                                                             </button>
@@ -811,7 +857,7 @@ class RadarBlips extends React.Component {
                                                                                 {svgValues.map(function(svgObject, indexSvg) {
                                                                                     return <button
                                                                                         className="btn btn-lg btn-link dropdown-item"
-                                                                                        data-value={indexSvg}
+                                                                                        data-value={indexSvg + 1}
                                                                                         onClick={parent.setBlipValue}
                                                                                         key={indexSvg}
                                                                                     >

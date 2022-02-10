@@ -23,7 +23,7 @@ class Parameters extends React.Component {
 
     async componentDidMount() {
         if (this.state.isFirstRefresh) {
-            if (!this.props.isLoggingIn && this.props.radarVersion !== undefined) {
+            if (!this.props.isLoggingIn) {
                 this.firstRefresh();
             }
         }
@@ -36,6 +36,8 @@ class Parameters extends React.Component {
         await this.loadThemes();
         await this.loadParameters();
 
+        this.props.onParamsLoaded(true);
+
         this.state.isLoading = false;
         this.setState(this.state);
     }
@@ -44,7 +46,17 @@ class Parameters extends React.Component {
         const parameters = await (await this.props.callApi('GET', `${this.props.baseUrl}/parameters`)).json();
 
         const radarId = this.props.match.params.radarId;
-        const response = await this.props.callApi('GET', `${this.props.baseUrl}/radar/${radarId}/${this.props.radarVersion}/parameters`);
+
+        const queryString = new URLSearchParams(this.props.location.search);
+        const radarVersion = queryString.get('version');
+        const fork = queryString.get('fork');
+        const forkVersion = queryString.get('forkVersion');
+
+        let url = `${this.props.baseUrl}/radar/${radarId}/${radarVersion}/parameters`;
+        if (fork !== undefined && fork !== null) url += `?fork=${fork}`;
+        if (forkVersion !== undefined && forkVersion !== null) url += `&forkVersion=${forkVersion}`;
+
+        const response = await this.props.callApi('GET', url);
         const data = await response.json();
         for (const p1 of data) {
             for (const p2 of parameters) {
@@ -73,7 +85,7 @@ class Parameters extends React.Component {
 
     async componentDidUpdate() {
         if (this.state.isFirstRefresh) {
-            if (!this.props.isLoggingIn && this.props.radarVersion !== undefined) {
+            if (!this.props.isLoggingIn) {
                 this.firstRefresh();
             }
         }
@@ -101,6 +113,15 @@ class Parameters extends React.Component {
                 param.paramType = 'param';
                 params.push(param)
             }
+        }
+
+        const uniqueThemes = [];
+        const themeIdsSeen = {};
+        for (const theme of (this.state.themes || [])) {
+            const seen = themeIdsSeen[theme.id];
+            if (seen) continue;
+            themeIdsSeen[theme.id] = true;
+            uniqueThemes.push(theme);
         }
 
         const parent = this;
@@ -191,13 +212,13 @@ class Parameters extends React.Component {
                                             if (target.tagName !== 'SELECT') return;
                                             param.value = target.value;
                                         }}
+                                        defaultValue={param.value || param.default}
                                     >
                                         {
-                                            parent.state.themes.map(theme => 
+                                            uniqueThemes.map(theme => 
                                                 <option
                                                     value={theme.id}
                                                     key={theme.id}
-                                                    selected={param.value ? theme.id === param.value : theme.id === param.defaultValue}
                                                 >
                                                     {theme.id}
                                                 </option>
@@ -234,6 +255,8 @@ class Parameters extends React.Component {
                         )
                     } else {
                         const fieldParams = fieldSets[param.name];
+                        if (param.name === 'Order') return null; // Disable "Order" fieldset
+
                         return (
                             <fieldset key={param.name}>
                                 <legend>{param.name}</legend>
