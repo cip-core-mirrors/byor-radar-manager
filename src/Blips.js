@@ -574,7 +574,7 @@ class Blips extends React.Component {
                                         value={blip.id}
                                         key={blip.id}
                                     >
-                                        {blip.name}
+                                        {`${blip.name} (v${blip.version})`}
                                     </option>
                                 )
                             }
