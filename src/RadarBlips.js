@@ -242,15 +242,22 @@ class RadarBlips extends React.Component {
         const [removed] = source.splice(droppableSource.index, 1);
 
         if (droppableSource.droppableId === '0-0') {
+            // Insert blip from blip source list to radar
+            let sectorIndex = 1;
             for (const sector of this.state.lists.slice(1)) {
+                let ringIndex = 0;
                 for (const ring of sector) {
                     for (const blip of ring) {
                         if (blip.id === removed.id) {
-                            source.splice(droppableSource.index, 0, removed);
-                            return;
+                            // Remove existing same blips from radar
+                            const foundRing = this.getList(`${sectorIndex}-${ringIndex}`);
+                            const [replaced] = foundRing.splice(foundRing.map(b => b.id).indexOf(blip.id), 1);
+                            source.splice(droppableSource.index, 0, replaced);
                         }
                     }
+                    ringIndex++;
                 }
+                sectorIndex++;
             }
         }
         
