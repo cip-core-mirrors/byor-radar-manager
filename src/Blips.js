@@ -51,6 +51,27 @@ class Blips extends React.Component {
         this.setState(this.state);
     }
 
+    clearBlipCreate() {
+        const createdBlip = this.state.createBlip;
+        delete createdBlip.id;
+        delete createdBlip.id_version;
+        delete createdBlip.lastupdate;
+        delete createdBlip.name;
+        delete createdBlip.version;
+        for (const key of Object.keys(createdBlip)) {
+            createdBlip[key] = "";
+        }
+
+        const inputs = document.querySelectorAll('.new-blip-grid .form-group input');
+        inputs.forEach(function(input) {
+            input.value = "";
+        })
+        const textAreas = document.querySelectorAll('.new-blip-grid .form-group textarea');
+        textAreas.forEach(function(textArea) {
+            textArea.value = "";
+        })
+    }
+
     async refreshMyBlips() {
         this.state.isLoadingMyBlips = true;
         this.setState(this.state);
@@ -220,8 +241,8 @@ class Blips extends React.Component {
         const data = await response.json();
         const parent = this;
         if (response.ok) {
-            //this.state.createBlip = {};
             this.state.returnMessage3 = "Successfully created blip";
+            this.clearBlipCreate();
             this.refreshMyBlips();
             this.refreshAllBlips();
             setTimeout(function() {
@@ -472,7 +493,6 @@ class Blips extends React.Component {
                                         className="form-control form-control-alt"
                                         defaultValue={param.value || ""}
                                         style={{
-                                            display: 'none',
                                             minWidth: '175px',
                                             resize: 'vertical',
                                             maxHeight: '10em',
