@@ -688,19 +688,6 @@ class Blips extends React.Component {
                             <div className="blip-buttons-grid">
                                 <button
                                     type="button"
-                                    style={{
-                                        width: '100%',
-                                        whiteSpace: 'nowrap',
-                                    }}
-                                    className={`submit-btn btn btn-lg ${this.state.success4 === undefined ? 'btn-primary' : (this.state.success4 ? 'btn-success' : 'btn-danger')}`}
-                                    onClick={async function(e) {
-                                        await parent.handleDelete(parent.state.selectedBlip);
-                                    }}
-                                >
-                                    Delete blip
-                                </button>
-                                <button
-                                    type="button"
                                     value="Save blip"
                                     style={{
                                         width: '100%',
@@ -712,6 +699,19 @@ class Blips extends React.Component {
                                     }}
                                 >
                                     Save blip
+                                </button>
+                                <button
+                                    type="button"
+                                    style={{
+                                        width: '100%',
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                    className={`submit-btn btn btn-lg ${this.state.success4 === undefined ? 'btn-primary' : (this.state.success4 ? 'btn-success' : 'btn-danger')}`}
+                                    onClick={async function(e) {
+                                        await parent.handleDelete(parent.state.selectedBlip);
+                                    }}
+                                >
+                                    Delete blip
                                 </button>
                             </div>
                             <ButtonLegend/>
