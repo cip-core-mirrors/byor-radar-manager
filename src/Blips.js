@@ -76,105 +76,112 @@ class Blips extends React.Component {
         this.state.isLoadingMyBlips = true;
         this.setState(this.state);
 
-        const response = await this.props.callApi('GET', `${this.props.baseUrl}/blip`)
-        if (!response.ok) {
-            return;
+        try {
+            const response = await this.props.callApi('GET', `${this.props.baseUrl}/blip`)
+            if (!response.ok) return;
+    
+            const data = await response.json();
+            for (const blipId in data) {
+                const blipVersions = data[blipId];
+                this.state.myBlips[blipId] = blipVersions[blipVersions.length - 1];
+            }
+        } catch (e) {
+        } finally {
+            this.state.isLoadingMyBlips = false;
+            this.setState(this.state);
+        }
+    }
+
+    displayAllBlips(allBlips) {
+        allBlips = Object.values(allBlips);
+        allBlips.sort(function(a, b) {
+            const nameA = a[a.length - 1].name.trim().toLowerCase();
+            const nameB = b[b.length - 1].name.trim().toLowerCase();
+            if (nameA < nameB) return -1;
+            else if (nameA > nameB) return 1;
+            return 0;
+        });
+        const columnsIndex = {};
+        for (const blipVersions of allBlips) {
+            const blipVersion = blipVersions[blipVersions.length - 1];
+            const { id, id_version, lastupdate, name, version, permissions } = blipVersion;
+            delete blipVersion.id;
+            delete blipVersion.id_version;
+            delete blipVersion.lastupdate;
+            delete blipVersion.name;
+            delete blipVersion.version;
+            delete blipVersion.permissions;
+            for (const columnName of Object.keys(blipVersion)) {
+                const columnIndex = columnsIndex[columnName];
+                if (columnIndex === undefined) {
+                    columnsIndex[columnName] = Object.keys(columnsIndex).length;
+                }
+            }
+            blipVersion.id = id;
+            blipVersion.id_version = id_version;
+            blipVersion.lastupdate = lastupdate;
+            blipVersion.name = name;
+            blipVersion.version = version;
+            blipVersion.permissions = permissions;
         }
 
-        const data = await response.json();
-        for (const blipId in data) {
-            const blipVersions = data[blipId];
-            this.state.myBlips[blipId] = blipVersions[blipVersions.length - 1];
-        }
+        this.state.allBlips = allBlips;
+        this.state.allBlipsRows = [];
+        this.state.allBlipsColumns = [];
 
-        this.state.isLoadingMyBlips = false;
-        this.setState(this.state);
+        this.addAllBlipColumn('Author');
+        this.addAllBlipColumn('Name');
+        this.addAllBlipColumn('Last update');
+        for (const columnName of Object.keys(columnsIndex)) {
+            this.addAllBlipColumn(columnName);
+        }
+        for (const blipVersions of allBlips) {
+            // list all blips
+            const blipVersion = blipVersions[blipVersions.length - 1];
+            const row = [];
+
+            if (blipVersion.permissions) {
+                const ownerPermission = blipVersion.permissions.filter(permission => permission.rights.indexOf('owner') !== -1)[0];
+                row.push(ownerPermission ? ownerPermission.userId : '');
+            } else {
+                row.push('');
+            }
+
+            row.push(blipVersion.name);
+
+            const lastUpdateDate = parseDate(blipVersion.lastupdate);
+            if (lastUpdateDate) {
+                row.push(`${lastUpdateDate.getFullYear()}-${lastUpdateDate.getMonth() + 1}-${lastUpdateDate.getDate()}`);
+            } else {
+                row.push('');
+            }
+
+            const rowInitialLength = row.length;
+
+            for (const entry of Object.entries(columnsIndex)) {
+                const columnName = entry[0];
+                const columnIndex = entry[1];
+                const columnValue = blipVersion[columnName];
+                while (row.length - rowInitialLength < columnIndex) {
+                    row.push('');
+                }
+                row[columnIndex + rowInitialLength] = columnValue !== undefined ? columnValue : '';
+            }
+            this.addAllBlip(row);
+        }
     }
 
     async refreshAllBlips() {
         this.state.isLoadingAllBlips = true;
         this.setState(this.state);
 
-        const allBlipsResponse = await this.props.callApi('GET', `${this.props.baseUrl}/blips`);
-        if (allBlipsResponse.ok) {
-            let allBlips = await allBlipsResponse.json();
-            allBlips = Object.values(allBlips);
-            allBlips.sort(function(a, b) {
-                const nameA = a[a.length - 1].name.trim().toLowerCase();
-                const nameB = b[b.length - 1].name.trim().toLowerCase();
-                if (nameA < nameB) return -1;
-                else if (nameA > nameB) return 1;
-                return 0;
-            });
-            const columnsIndex = {};
-            for (const blipVersions of allBlips) {
-                const blipVersion = blipVersions[blipVersions.length - 1];
-                const { id, id_version, lastupdate, name, version, permissions } = blipVersion;
-                delete blipVersion.id;
-                delete blipVersion.id_version;
-                delete blipVersion.lastupdate;
-                delete blipVersion.name;
-                delete blipVersion.version;
-                delete blipVersion.permissions;
-                for (const columnName of Object.keys(blipVersion)) {
-                    const columnIndex = columnsIndex[columnName];
-                    if (columnIndex === undefined) {
-                        columnsIndex[columnName] = Object.keys(columnsIndex).length;
-                    }
-                }
-                blipVersion.id = id;
-                blipVersion.id_version = id_version;
-                blipVersion.lastupdate = lastupdate;
-                blipVersion.name = name;
-                blipVersion.version = version;
-                blipVersion.permissions = permissions;
+        try {
+            const allBlipsResponse = await this.props.callApi('GET', `${this.props.baseUrl}/blips`);
+            if (allBlipsResponse.ok) {
+                this.displayAllBlips(await allBlipsResponse.json());
             }
-
-            this.state.allBlips = allBlips;
-            this.state.allBlipsRows = [];
-            this.state.allBlipsColumns = [];
-
-            this.addAllBlipColumn('Author');
-            this.addAllBlipColumn('Name');
-            this.addAllBlipColumn('Last update');
-            for (const columnName of Object.keys(columnsIndex)) {
-                this.addAllBlipColumn(columnName);
-            }
-            for (const blipVersions of allBlips) {
-                // list all blips
-                const blipVersion = blipVersions[blipVersions.length - 1];
-                const row = [];
-
-                if (blipVersion.permissions) {
-                    const ownerPermission = blipVersion.permissions.filter(permission => permission.rights.indexOf('owner') !== -1)[0];
-                    row.push(ownerPermission ? ownerPermission.userId : '');
-                } else {
-                    row.push('');
-                }
-
-                row.push(blipVersion.name);
-
-                const lastUpdateDate = parseDate(blipVersion.lastupdate);
-                if (lastUpdateDate) {
-                    row.push(`${lastUpdateDate.getFullYear()}-${lastUpdateDate.getMonth() + 1}-${lastUpdateDate.getDate()}`);
-                } else {
-                    row.push('');
-                }
-
-                const rowInitialLength = row.length;
-
-                for (const entry of Object.entries(columnsIndex)) {
-                    const columnName = entry[0];
-                    const columnIndex = entry[1];
-                    const columnValue = blipVersion[columnName];
-                    while (row.length - rowInitialLength < columnIndex) {
-                        row.push('');
-                    }
-                    row[columnIndex + rowInitialLength] = columnValue !== undefined ? columnValue : '';
-                }
-                this.addAllBlip(row);
-            }
-
+        } catch (e) {
+        } finally {
             this.state.isLoadingAllBlips = false;
             this.setState(this.state);
         }

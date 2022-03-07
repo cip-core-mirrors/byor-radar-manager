@@ -220,14 +220,18 @@ class Themes extends React.Component {
         this.state.isFirstRefresh = false;
         this.setState(this.state);
         
-        const response = await this.props.callApi('GET', `${this.props.baseUrl}/parameters/themes`);
-        if (response.ok) {
-            this.state.defaultParameters = await response.json();
+        try {
+            const response = await this.props.callApi('GET', `${this.props.baseUrl}/parameters/themes`);
+            if (response.ok) {
+                this.state.defaultParameters = await response.json();
+            }
+            await this.reloadThemesList();
+        } catch (e) {
+            console.error(e);
+        } finally {
+            this.state.isLoading = false;
+            this.setState(this.state);
         }
-        await this.reloadThemesList();
-
-        this.state.isLoading = false;
-        this.setState(this.state);
     }
     
     async componentDidUpdate() {
@@ -546,6 +550,9 @@ class Themes extends React.Component {
                                     )
                                 }
                             </select>
+                        </div>
+                        <div className="radar-version-buttons">
+                            {deleteButton}
                         </div>
                         {
                             this.state.selectedTheme ?
