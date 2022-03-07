@@ -38,19 +38,23 @@ class AllRadars extends React.Component {
     }
 
     async updateRadarsList(updateList = true) {
-        const response = await this.props.callApi('GET', `${this.props.baseUrl}/radars`);
-        this.state.radarsList = await response.json();
-        this.state.radarsList.sort(function(a, b) {
-            if (a.id < b.id) return -1;
-            else if (a.id > b.id) return 1;
-            return 0;
-        });
-        
-        if (updateList) {
-            this.props.update();
+        try {
+            const response = await this.props.callApi('GET', `${this.props.baseUrl}/radars`);
+            this.state.radarsList = await response.json();
+            this.state.radarsList.sort(function(a, b) {
+                if (a.id < b.id) return -1;
+                else if (a.id > b.id) return 1;
+                return 0;
+            });
+            
+            if (updateList) {
+                this.props.update();
+            }
+    
+            this.setState(this.state);
+        } catch (e) {
+            
         }
-
-        this.setState(this.state);
     }
 
     async deleteRadar(radarId) {

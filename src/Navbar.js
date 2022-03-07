@@ -18,6 +18,7 @@ class Navbar extends React.Component {
         authenticated: this.props.authenticated,
         userInfo: this.props.userInfo,
         permissions: this.props.permissions,
+        signInText: 'Sign in',
       };
     }
 
@@ -27,35 +28,37 @@ class Navbar extends React.Component {
 
     async getUserInfo() {
       const baseUrl = process.env.REACT_APP_IAM_SERVICE || process.env.REACT_APP_IAM_URL; 
-      let response
-      try {
-        response = await this.props.callApi('GET', `${baseUrl}/userinfo`);
-      } catch(e) {
-        response = {
-          ok: false,
-        }
-      }
 
-      if (!response.ok) {
-        console.error('Error when authenticating');
-        window.localStorage.removeItem('access_token');
+      try {
+        let response = await this.props.callApi('GET', `${baseUrl}/userinfo`);
+
+        if (!response.ok) {
+          console.error('Error when authenticating');
+          window.localStorage.removeItem('access_token');
+          this.state.userInfo = undefined;
+          this.state.authenticated = false;
+          this.state.permissions = {};
+          this.handleUserInfo();
+          return;
+        }
+  
+        const userInfo = await response.json();
+        this.state.userInfo = userInfo;
+        this.state.authenticated = true;
+  
+        response = await this.props.callApi('GET', `${this.props.baseUrl}/permissions`);
+        const permissions = await response.json();
+        this.state.permissions.createRadar = permissions.create_radar;
+        this.state.permissions.adminUser = permissions.admin_user;
+  
+        this.handleUserInfo();
+      } catch(e) {
+        this.state.signInText = 'Network error';
         this.state.userInfo = undefined;
         this.state.authenticated = false;
         this.state.permissions = {};
         this.handleUserInfo();
-        return;
       }
-
-      const userInfo = await response.json();
-      this.state.userInfo = userInfo;
-      this.state.authenticated = true;
-
-      response = await this.props.callApi('GET', `${this.props.baseUrl}/permissions`);
-      const permissions = await response.json();
-      this.state.permissions.createRadar = permissions.create_radar;
-      this.state.permissions.adminUser = permissions.admin_user;
-
-      this.handleUserInfo();
     }
 
     async componentDidMount() {
@@ -133,7 +136,7 @@ class Navbar extends React.Component {
                                   style={{cursor: 'pointer'}}
                                   href={this.props.signIn}
                                 >
-                                  Sign in
+                                  {this.state.signInText}
                                 </a>
                               )
                             }

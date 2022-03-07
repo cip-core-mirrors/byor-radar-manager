@@ -150,7 +150,7 @@ class App extends React.Component {
       try {
         response = await fetch(url, config);
       } catch (e) {
-        reject();
+        reject(e);
         return;
       }
 
