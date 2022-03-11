@@ -39,6 +39,7 @@ class Blips extends React.Component {
             blipIds: [],
             allBlips: [],
             allBlipsColumns: [],
+            allBlipsUserColumns: [],
             allBlipsRows: [],
             changedAllBlipsRows: {},
             blipRowStyles: {},
@@ -128,13 +129,23 @@ class Blips extends React.Component {
         this.state.allBlips = allBlips;
         this.state.allBlipsRows = [];
         this.state.allBlipsColumns = [];
+        this.state.allBlipsUserColumns = Object.keys(columnsIndex);
 
         this.addAllBlipColumn('Author');
         this.addAllBlipColumn('Name');
         this.addAllBlipColumn('Last update');
-        for (const columnName of Object.keys(columnsIndex)) {
+        for (const columnName of this.state.allBlipsUserColumns) {
             this.addAllBlipColumn(columnName);
         }
+        this.state.allBlipsUserColumns.sort(function(a, b) {
+            const aL = a.toLowerCase();
+            const bL = b.toLowerCase();
+
+            if (aL < bL) return -1;
+            else if (aL > bL) return 1;
+            return 0;
+        });
+
         for (const blipVersions of allBlips) {
             // list all blips
             const blipVersion = blipVersions[blipVersions.length - 1];
@@ -518,15 +529,51 @@ class Blips extends React.Component {
                                 placeholder="Column name"
                                 id={`${addColumnId}-create`}
                             />
+                            <select
+                                className="custom-select"
+                                id={`${addColumnId}-create-dropdown`}
+                                style={{
+                                    width: 'max-content',
+                                    maxWidth: 250,
+                                }}
+                                defaultValue="disabled"
+                            >
+                                <option value="disabled" disabled>Select an existing column</option>
+                                <option value=""></option>
+                                {
+                                    parent.state.createBlip ?
+                                        this.state.allBlipsUserColumns.map(function(column, index) {
+                                            if (parent.state.createBlip[column] !== undefined) return null;
+
+                                            return <option
+                                                value={column}
+                                                key={index}
+                                            >
+                                                {column}
+                                            </option>
+                                        })
+                                    : null
+                                }
+                            </select>
                             <input
                                 readOnly
                                 value="Add column"
                                 className="submit-btn btn btn-lg btn-primary"
                                 onClick={async function(e) {
-                                    const input = document.getElementById(`${addColumnId}-create`);
-                                    const columnName = input.value;
+                                    let columnName;
+
+                                    const dropdown = document.getElementById(`${addColumnId}-create-dropdown`);
+                                    columnName = dropdown.value;
+                                    if (!columnName) {
+                                        const input = document.getElementById(`${addColumnId}-create`);
+                                        columnName = input.value;
+                                        input.value = "";
+                                    } else {
+                                        dropdown.value = "disabled";
+                                    }
+
                                     if (!columnName) return;
-                                    input.value = "";
+
                                     parent.state.createBlip[columnName] = "";
                                     parent.state.returnMessage3 = undefined;
                                     parent.setState(parent.state);
@@ -655,15 +702,51 @@ class Blips extends React.Component {
                                     placeholder="Column name"
                                     id={addColumnId}
                                 />
+                                <select
+                                    className="custom-select"
+                                    id={`${addColumnId}-dropdown`}
+                                    style={{
+                                        width: 'max-content',
+                                        maxWidth: 250,
+                                    }}
+                                    defaultValue="disabled"
+                                >
+                                    <option value="disabled" disabled>Select an existing column</option>
+                                    <option value=""></option>
+                                    {
+                                        parent.state.selectedBlip ?
+                                            this.state.allBlipsUserColumns.map(function(column, index) {
+                                                if (parent.state.selectedBlip[column] !== undefined) return null;
+
+                                                return <option
+                                                    value={column}
+                                                    key={index}
+                                                >
+                                                    {column}
+                                                </option>
+                                            })
+                                        : null
+                                    }
+                                </select>
                                 <input
                                     readOnly
                                     value="Add column"
                                     className="submit-btn btn btn-lg btn-primary"
                                     onClick={async function(e) {
-                                        const input = document.getElementById(addColumnId);
-                                        const columnName = input.value;
+                                        let columnName;
+
+                                        const dropdown = document.getElementById(`${addColumnId}-dropdown`);
+                                        columnName = dropdown.value;
+                                        if (!columnName) {
+                                            const input = document.getElementById(`${addColumnId}`);
+                                            columnName = input.value;
+                                            input.value = "";
+                                        } else {
+                                            dropdown.value = "disabled";
+                                        }
+
                                         if (!columnName) return;
-                                        input.value = "";
+
                                         parent.state.selectedBlip[columnName] = "";
                                         parent.setState(parent.state);
                                     }}
