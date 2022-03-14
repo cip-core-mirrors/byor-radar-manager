@@ -526,7 +526,7 @@ class Blips extends React.Component {
                             <input
                                 type="text"
                                 className="form-control form-control-alt"
-                                placeholder="Column name"
+                                placeholder="Type a column name or select an existing one"
                                 id={`${addColumnId}-create`}
                             />
                             <select
@@ -699,7 +699,7 @@ class Blips extends React.Component {
                                 <input
                                     type="text"
                                     className="form-control form-control-alt"
-                                    placeholder="Column name"
+                                    placeholder="Type a column name or select an existing one"
                                     id={addColumnId}
                                 />
                                 <select
