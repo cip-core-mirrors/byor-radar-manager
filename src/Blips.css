@@ -61,7 +61,7 @@
     align-items: center;
     grid-auto-flow: column;
     grid-column-gap: 1em;
-    grid-template-columns: auto min-content;
+    grid-template-columns: auto min-content min-content;
 }
 
 th {
