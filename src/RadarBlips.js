@@ -910,7 +910,7 @@ class RadarBlips extends React.Component {
                             className="btn btn-lg btn-flat-primary new-ring-btn"
                             id="new-ring-btn"
                             style={{
-                                display: this.state.rings.length < 5 ? 'block' : 'none'
+                                display: this.state.rings.length < 10 ? 'block' : 'none'
                             }}
                             onClick={parent.newRing}
                         >

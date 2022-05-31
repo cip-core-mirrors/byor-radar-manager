@@ -198,6 +198,30 @@
   background-color: var(--victoria);
 }
 
+.theme-5{
+  background-color: green;
+}
+
+.theme-6 {
+  background-color: blue;
+}
+
+.theme-7 {
+  background-color: yellow;
+}
+
+.theme-8 {
+  background-color: brown;
+}
+
+.theme-9 {
+  background-color: red;
+}
+
+.theme-10 {
+  background-color: purple;
+}
+
 /* The container <div> - needed to position the dropdown content */
 .dropdown {
   position: relative;
