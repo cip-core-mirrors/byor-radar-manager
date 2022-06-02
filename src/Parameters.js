@@ -191,6 +191,38 @@ class Parameters extends React.Component {
                                     }} />
                                 </div>
                             )
+                        } else if (param.name === 'lastPageHTML') {
+                            return (
+                                <div className="form-group" key={param.name}>
+                                    <label className="paramName">{param.displayName || param.name}&nbsp;</label>
+                                    {
+                                        param.tooltip ?
+                                            <span className="help-tooltip">
+                                                <i className="icon icon-md">help_outline</i>
+                                                <div className="tooltip bs-tooltip-top" role="tooltip">
+                                                    <div className="tooltip-inner">{param.tooltip}</div>
+                                                </div>
+                                            </span>
+                                        : <span className="help-tooltip"/>
+                                    }
+                                    <textarea
+                                        className="form-control form-control-lg"
+                                        id={param.name}
+                                        rows="5"
+                                        style={{
+                                            marginBottom: '1em',
+                                        }}
+                                        defaultValue={param.value || (param.default || "")}
+                                        onChange={function(e) {
+                                            param.value = e.target.value
+                                            parent.handleChange(parameters);
+                                        }}
+                                    />
+                                    <div className="dangerousInnerHTML border-bottom border-top border-left border-right" dangerouslySetInnerHTML={{
+                                        __html: param.value,
+                                    }} />
+                                </div>
+                            )
                         } else if (param.name === 'themeId') {
                             return (
                                 <div className="form-group" key={param.name}>
